@@ -1,0 +1,30 @@
+<odoo>
+
+    <!-- Main Menu -->
+    <menuitem 
+        id="hospital_main_menu"
+        name="Hospital Management"
+        sequence="1"/>
+
+    <!-- Patient Menu -->
+    <menuitem 
+            id="menu_patient"
+    name="Patients"
+    parent="hospital_main_menu"
+    action="patient_action"/>
+
+    <!-- Doctor Menu -->
+    <menuitem 
+        id="menu_doctor"
+        name="Doctors"
+        parent="hospital_main_menu"
+        action="doctor_action"
+        sequence="2"/>
+
+    <!-- Appointment Menu -->
+      <menuitem id="menu_appointment"
+              name="Appointments"
+              parent="hospital_main_menu"
+              action="appointment_action"/>
+
+</odoo>
