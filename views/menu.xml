@@ -1,0 +1,40 @@
+<odoo>
+
+    <!-- Main Menu -->
+    <menuitem 
+        id="hospital_main_menu"
+        name="Hospital Management"
+        sequence="1"/>
+
+    <!-- Patient Menu -->
+    <menuitem 
+        id="menu_patient"
+        name="Patients"
+        parent="hospital_main_menu"
+        action="action_patient"
+        sequence="1"/>
+
+    <!-- Doctor Menu -->
+    <menuitem 
+        id="menu_doctor"
+        name="Doctors"
+        parent="hospital_main_menu"
+        action="action_doctor"
+        sequence="2"/>
+
+    <!-- Appointment Menu -->
+    <menuitem 
+        id="menu_appointment"
+        name="Appointments"
+        parent="hospital_main_menu"
+        action="appointment_action"
+        sequence="3"/>
+
+    <!--  Specialization -->
+        <menuitem id="menu_specialization"
+                name="Specializations"
+                parent="hospital_main_menu"
+                action="action_specialization"
+                sequence="4"/>
+
+</odoo>
