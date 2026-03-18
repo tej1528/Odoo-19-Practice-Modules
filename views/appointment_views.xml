@@ -1,7 +1,10 @@
 <odoo>
 
+<<<<<<< HEAD
     
 
+=======
+>>>>>>> a696a75f8807b8629a81fc61083237e383570b85
     <!-- Appointment Sequence -->
     <record id="seq_appointment_code" model="ir.sequence">
         <field name="name">Appointment Code</field>

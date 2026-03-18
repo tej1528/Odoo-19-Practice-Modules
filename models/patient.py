@@ -79,6 +79,7 @@ class HospitalPatient(models.Model):
             'view_mode': 'list,form',
             'res_model': 'hospital.appointment',
             'domain': [('patient_id', '=', self.id)],
+<<<<<<< HEAD
         }
     
     def action_view_appointments(self):
@@ -89,4 +90,6 @@ class HospitalPatient(models.Model):
             'res_model': 'hospital.appointment',
             'domain': [('patient_id', '=', self.id)],
             'context': {'default_patient_id': self.id},
+=======
+>>>>>>> a696a75f8807b8629a81fc61083237e383570b85
         }

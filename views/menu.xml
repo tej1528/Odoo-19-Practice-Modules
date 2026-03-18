@@ -8,17 +8,25 @@
 
     <!-- Patient Menu -->
     <menuitem 
+<<<<<<< HEAD
         id="menu_patient"
         name="Patients"
         parent="hospital_main_menu"
         action="action_patient"
         sequence="1"/>
+=======
+            id="menu_patient"
+    name="Patients"
+    parent="hospital_main_menu"
+    action="patient_action"/>
+>>>>>>> a696a75f8807b8629a81fc61083237e383570b85
 
     <!-- Doctor Menu -->
     <menuitem 
         id="menu_doctor"
         name="Doctors"
         parent="hospital_main_menu"
+<<<<<<< HEAD
         action="action_doctor"
         sequence="2"/>
 
@@ -36,5 +44,15 @@
                 parent="hospital_main_menu"
                 action="action_specialization"
                 sequence="4"/>
+=======
+        action="doctor_action"
+        sequence="2"/>
+
+    <!-- Appointment Menu -->
+      <menuitem id="menu_appointment"
+              name="Appointments"
+              parent="hospital_main_menu"
+              action="appointment_action"/>
+>>>>>>> a696a75f8807b8629a81fc61083237e383570b85
 
 </odoo>
