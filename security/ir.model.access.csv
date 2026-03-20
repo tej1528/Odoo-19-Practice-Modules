@@ -1,8 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-
-<<<<<<< HEAD
-access_appointment,access_appointment,model_hospital_appointment,base.group_user,1,1,1,1
-access_specialization_user,access_specialization_user,model_hospital_specialization,base.group_user,1,1,1,1
-=======
-access_appointment,access_appointment,model_hospital_appointment,base.group_user,1,1,1,1
->>>>>>> a696a75f8807b8629a81fc61083237e383570b85

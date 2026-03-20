@@ -1,0 +1,162 @@
+<odoo>
+
+    <!-- ===================== -->
+    <!-- FORM VIEW (INHERIT) -->
+    <!-- ===================== -->
+    <record id="view_partner_form_inherit_hospital" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.hospital</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">100</field>
+
+        <field name="arch" type="xml">
+
+            <!-- ===================== -->
+            <!-- CODE ABOVE NAME -->
+            <!-- ===================== -->
+            <xpath expr="//field[@name='name']" position="before">
+
+                <!-- Patient Code -->
+                <div invisible="not is_patient">
+                    <h2 style="color:#0d6efd; font-weight:bold;">
+                        <field name="code" readonly="1"/>
+                    </h2>
+                </div>
+
+                <!-- Doctor Code -->
+                <div invisible="not is_doctor">
+                    <h2 style="color:#198754; font-weight:bold;">
+                        <field name="doctor_code" readonly="1"/>
+                    </h2>
+                </div>
+
+            </xpath>
+
+            <!-- ===================== -->
+            <!-- SMART BUTTON -->
+            <!-- ===================== -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_appointments"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-calendar"
+                        invisible="not (is_patient or is_doctor) or appointment_count == 0">
+                    <field name="appointment_count"
+                        widget="statinfo"
+                        string="Appointments"/>
+                </button>
+            </xpath>
+
+            <!-- ===================== -->
+            <!-- HIDE EXTRA FIELDS -->
+            <!-- ===================== -->
+            <xpath expr="//field[@name='company_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='parent_id']" position="replace"/>
+            <xpath expr="//field[@name='company_type']" position="replace"/>
+
+            
+            <xpath expr="//field[@name='vat']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='function']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='website']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='category_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- ===================== -->
+            <!-- RIGHT SIDE INFO -->
+            <!-- ===================== -->
+            <xpath expr="//sheet//group[1]" position="inside">
+
+                <group>
+
+                    <!-- Patient Info -->
+                    <group string="Patient Info" invisible="not is_patient">
+                        <field name="gender"/>
+                        <field name="date_of_birth"/>
+                        <field name="age" readonly="1"/>
+                        <field name="blood_group"/>
+                    </group>
+
+                    <!-- Doctor Info -->
+                    <group string="Doctor Info" invisible="not is_doctor">
+                        <field name="specialization_id"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="fees" widget="monetary"/>
+                    </group>
+
+                </group>
+
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- PATIENT LIST -->
+    <!-- ===================== -->
+    <record id="view_patient_list" model="ir.ui.view">
+        <field name="name">res.partner.patient.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code" string="Patient ID"/>
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="email"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- DOCTOR LIST -->
+    <!-- ===================== -->
+    <record id="view_doctor_list" model="ir.ui.view">
+        <field name="name">res.partner.doctor.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="doctor_code" string="Doctor ID"/>
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="email"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- ACTIONS -->
+    <!-- ===================== -->
+
+    <!-- Patient -->
+    <record id="action_patient" model="ir.actions.act_window">
+        <field name="name">Patients</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_patient_list"/>
+        <field name="domain">[('is_patient','=',True)]</field>
+        <field name="context">{'default_is_patient': True}</field>
+    </record>
+
+    <!-- Doctor -->
+    <record id="action_doctor" model="ir.actions.act_window">
+        <field name="name">Doctors</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_doctor_list"/>
+        <field name="domain">[('is_doctor','=',True)]</field>
+        <field name="context">{'default_is_doctor': True}</field>
+    </record>
+
+</odoo>
