@@ -106,6 +106,9 @@ class ResPartner(models.Model):
                 if vals.get('doctor_code', 'New') == 'New':
                     vals['doctor_code'] = self.env['ir.sequence'].next_by_code('hospital.doctor') or 'DR000'
 
+                # 🔥 ADD THIS LINE
+                if not vals.get('user_id'):
+                    vals['user_id'] = self.env.uid
 
         return super().create(vals_list)
 
@@ -123,7 +126,6 @@ class ResPartner(models.Model):
             else:
                 rec.age = 0
 
-    # =====================
     # APPOINTMENT COUNT
     # =====================
     def _compute_appointment_count(self):
@@ -139,7 +141,37 @@ class ResPartner(models.Model):
             else:
                 rec.appointment_count = 0
 
+
+    requested_appointment_count = fields.Integer(
+    compute="_compute_requested_appointment_count")
+
+    user_id = fields.Many2one('res.users', string="Related User")
+    # Doctor Request Button
     # =====================
+    def _compute_requested_appointment_count(self):
+        for rec in self:
+            if rec.is_doctor:
+                rec.requested_appointment_count = self.env['hospital.appointment'].search_count([
+                    ('doctor_id', '=', rec.id),
+                    ('status', '=', 'requested')
+                ])
+            else:
+                rec.requested_appointment_count = 0
+
+    def action_view_requested_appointments(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Requested Appointments',
+            'res_model': 'hospital.appointment',
+            'view_mode': 'list,form',
+            'domain': [
+                ('doctor_id', '=', self.id),
+                ('status', '=', 'requested')
+            ],
+            'context': {'default_doctor_id': self.id}
+        }
+
     # SMART BUTTON ACTION
     # =====================
     def action_view_appointments(self):

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- CONFIRM EMAIL -->
+        <record id="email_template_confirm" model="mail.template">
+            <field name="name">Appointment Confirm</field>
+            <field name="subject">Appointment Confirmed</field>
+            <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
+
+            <field name="email_to">
+                ${object.patient_id.email},${object.doctor_id.user_id.email}
+            </field>
+
+            <field name="body_html" type="html">
+                <![CDATA[
+                <p>Hello,</p>
+
+                <p>Your appointment has been <b>CONFIRMED</b>.</p>
+
+                <ul>
+                    <li>Patient: ${object.patient_id.name}</li>
+                    <li>Doctor: ${object.doctor_id.name}</li>
+                    <li>Start Time: ${object.start_time}</li>
+                    <li>End Time: ${object.end_time}</li>
+                </ul>
+
+                <a href="/web#id=${object.id}&amp;model=hospital.appointment&amp;view_type=form">
+                    View Appointment
+                </a>
+                ]]>
+            </field>
+        </record>
+</odoo>
+<odoo>
+        <!-- CANCEL EMAIL -->
+        <record id="email_template_cancel" model="mail.template">
+            <field name="name">Appointment Cancel</field>
+            <field name="subject">Appointment Cancelled</field>
+            <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
+
+            <field name="email_to">
+                ${object.patient_id.email},${object.doctor_id.user_id.email}
+            </field>
+
+            <field name="body_html" type="html">
+                <![CDATA[
+                <p>Hello,</p>
+
+                <p>Your appointment has been <b>CANCELLED</b>.</p>
+
+                <p>Reason: ${object.cancel_reason}</p>
+                ]]>
+            </field>
+        </record>
+
+    </data>
+</odoo>

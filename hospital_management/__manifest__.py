@@ -6,17 +6,18 @@
     'author': 'Tejash Ardeshna',
     'license': 'LGPL-3',
 
-    'depends': ['base'],
+    'depends': ['base', 'mail'],
 
     'data': [
-        'security/ir.model.access.csv',
-        'Data/sequence.xml',
-        'views/res_partner_views.xml',
-        'views/appointment_views.xml',
-        'views/appointment_action.xml',
-        'views/specialization_views.xml',
-        'views/menu.xml',
-    ],
+    'security/ir.model.access.csv',
+    'data/sequence.xml',          
+    'views/res_partner_views.xml',
+    'data/mail_templates.xml',     
+    'views/appointment_views.xml',
+    'views/appointment_action.xml',
+    'views/specialization_views.xml',
+    'views/menu.xml',
+],
 
     'assets': {
         'web.assets_backend': [

@@ -1,5 +1,4 @@
 <odoo>
-    
     <!-- LIST VIEW -->
     <!-- ===================== -->
     <record id="view_specialization_list" model="ir.ui.view">
@@ -8,7 +7,6 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                
             </list>
         </field>
     </record>

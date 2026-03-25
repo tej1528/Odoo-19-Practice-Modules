@@ -1,119 +1,115 @@
 <odoo>
+    <data>
 
-    <!-- Appointment Sequence -->
-    <record id="seq_appointment_code" model="ir.sequence">
-        <field name="name">Appointment Code</field>
-        <field name="code">appointment.code</field>
-        <field name="prefix">APT</field>
-        <field name="padding">4</field>
-    </record>
+        <!-- Appointment Sequence -->
+        <record id="seq_appointment_code" model="ir.sequence">
+            <field name="name">Appointment Code</field>
+            <field name="code">appointment.code</field>
+            <field name="prefix">APT</field>
+            <field name="padding">4</field>
+        </record>
 
-    <!-- Appointment List View -->
-    <record id="view_appointment_list" model="ir.ui.view">
-        <field name="name">hospital.appointment.list</field>
-        <field name="model">hospital.appointment</field>
+        <!-- Appointment List View -->
+        <record id="view_appointment_list" model="ir.ui.view">
+            <field name="name">hospital.appointment.list</field>
+            <field name="model">hospital.appointment</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="code"/>
+                    <field name="patient_id"/>
+                    <field name="doctor_id"/>
+                    <field name="specialization_id"/>
+                    <field name="start_time"/>
+                    <field name="end_time"/>
+                    <field name="fees" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="status"/>
+                </list>
+            </field>
+        </record>
 
-        <field name="arch" type="xml">
-            <list>
-                <field name="code" readonly="1"/>
-                 <field name="patient_id"/>
-                <field name="doctor_id"/>
-                <field name="specialization_id"/>
-                <field name="start_time"/>
-                <field name="end_time"/>
-                
-                <field name="fees" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                <field name="status"/>
-            </list>
-        </field>
-    </record>
+        <!-- Appointment Form View -->
+        <record id="view_appointment_form" model="ir.ui.view">
+            <field name="name">hospital.appointment.form</field>
+            <field name="model">hospital.appointment</field>
+            <field name="arch" type="xml">
+                <form string="Appointment">
 
-    <!-- Appointment Form View -->
-    <record id="view_appointment_form" model="ir.ui.view">
-        <field name="name">hospital.appointment.form</field>
-        <field name="model">hospital.appointment</field>
+                    <header>
 
-        <field name="arch" type="xml">
-            <form string="Appointment">
+                        <!-- REQUEST -->
+                        <button name="action_requested"
+                                string="Request"
+                                type="object"
+                                class="btn-primary"
+                                invisible="status != 'draft'"/>
 
-            <!-- =====================
-            SMART BUTTON 
-            
-            <xpath expr="//div[@name='button_box']" position="inside">
-                <button name="action_view_appointments"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-calendar"
-                        invisible="not is_patient and not is_doctor">
-                    <field name="appointment_count"
-                           widget="statinfo"
-                           string="Appointments"/>
-                </button>
-            </xpath> -->
+                        <!-- ACCEPT -->
+                        <button name="action_confirm"
+                                string="Accept"
+                                type="object"
+                                class="btn-success"
+                                invisible="status != 'requested' or not is_doctor_user"
+                                groups="base.group_user"/>
 
-                <header>
+                        <!-- DONE -->
+                        <button name="action_done"
+                                string="Done"
+                                type="object"
+                                class="btn-success"
+                                invisible="status != 'confirmed'"/>
 
-                    <button name="action_confirm"
-                            string="Confirm"
-                            type="object"
-                            class="btn-primary"
-                            invisible="status != 'draft'"/>
+                        <!-- CANCEL -->
+                        <button name="action_cancel"
+                                string="Cancel"
+                                type="object"
+                                class="btn-danger"
+                                invisible="status not in ['requested','confirmed']"/>
 
-                    <button name="action_done"
-                            string="Done"
-                            type="object"
-                            class="btn-success"
-                            invisible="status != 'confirmed'"/>
+                        <field name="status"
+                               widget="statusbar"
+                               statusbar_visible="draft,requested,confirmed,done,cancel"/>
 
-                    <button name="action_cancel"
-                            string="Cancel"
-                            type="object"
-                            class="btn-danger"
-                            invisible="status not in ['draft','confirmed']"/>
+                    </header>
 
-                    <field name="status"
-                           widget="statusbar"
-                           statusbar_visible="draft,confirmed,done,cancel"/>
+                    <sheet>
 
-                </header>
-
-                <sheet>
-                    
-                    <group>
-                        <h1 style="color:#198754; font-weight:bold;">
-                            <field name="code" readonly="1"/>
-                        </h1>
-                    </group>
-                                        <!-- TOP GROUP -->
-                    <group string="Appointment Details" col="2">
-
-                        <!-- LEFT -->
                         <group>
-                            
-                            <field name="patient_id"/>
-                            <field name="doctor_id"/>
-                            <field name="specialization_id"/>
+                            <h1 style="color:#198754; font-weight:bold;">
+                                <field name="code" readonly="1"/>
+                            </h1>
                         </group>
 
-                        <!-- RIGHT -->
-                        <group>
-                            <field name="start_time"/>
-                            <field name="end_time"/>
-                            <field name="currency_id" invisible="1"/>
-                            <field name="fees" widget="monetary"/>
+                        <group string="Appointment Details" col="2">
+
+                            <group>
+                                <field name="patient_id"/>
+                                <field name="doctor_id"/>
+                                <field name="specialization_id"/>
+                                <field name="is_doctor_user"/>
+                            </group>
+
+                            <group>
+                                <field name="start_time"/>
+                                <field name="end_time"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="fees" widget="monetary"/>
+                            </group>
+
                         </group>
 
-                    </group>
-
-                        <!--  NOTES BELOW -->
                         <group string="Notes">
-                            <field name="notes" colspan="2" placeholder="Enter notes here..."/>
+                            <field name="notes" colspan="2"/>
                         </group>
 
-                </sheet>
+                        <group string="Cancel Reason" invisible="status != 'cancel'">
+                            <field name="cancel_reason" readonly="1"/>
+                        </group>
 
-            </form>
-        </field>
-    </record>
+                    </sheet>
 
+                </form>
+            </field>
+        </record>
+
+    </data>
 </odoo>

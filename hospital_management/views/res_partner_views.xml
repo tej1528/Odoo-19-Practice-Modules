@@ -45,6 +45,18 @@
                         widget="statinfo"
                         string="Appointments"/>
                 </button>
+
+                 <!-- 🔥 REQUESTED APPOINTMENTS BUTTON -->
+                <button name="action_view_requested_appointments"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-clock-o"
+                        invisible="not is_doctor or requested_appointment_count == 0">
+
+                    <field name="requested_appointment_count"
+                        widget="statinfo"
+                        string="Requests"/>
+                </button>
             </xpath>
 
             <!-- ===================== -->
@@ -90,6 +102,7 @@
 
                     <!-- Doctor Info -->
                     <group string="Doctor Info" invisible="not is_doctor">
+                        <field name="user_id"/>
                         <field name="specialization_id"/>
                         <field name="company_id" invisible="1"/>
                         <field name="currency_id" invisible="1"/>
@@ -103,6 +116,30 @@
         </field>
     </record>
 
+    <!-- Wizard XML -->
+    <!-- ===================== -->
+    <record id="view_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">appointment.cancel.wizard.form</field>
+        <field name="model">appointment.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancel Appointment">
+                <group>
+                    <field name="reason"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_cancel"
+                        string="Confirm Cancel"
+                        type="object"
+                        class="btn-danger"/>
+                    <button string="Close"
+                            special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    
     <!-- ===================== -->
     <!-- PATIENT LIST -->
     <!-- ===================== -->
