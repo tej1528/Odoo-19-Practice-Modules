@@ -72,79 +72,98 @@ class HospitalAppointment(models.Model):
     ], default='draft', tracking=True)
 
 
-
     # COMMON EMAIL FUNCTION
-    def _send_email(self, template_xmlid):
+    def _send_email(self, template_xmlid, email_to=None):
         template = self.env.ref(template_xmlid, raise_if_not_found=False)
 
         if not template:
-            raise ValidationError("Email template not found!")
+            return
 
         for rec in self:
-            template.send_mail(rec.id, force_send=True)
+            email_values = {}
 
+            if email_to:
+                email_values = {
+                    'email_to': email_to,
+                    'recipient_ids': [],
+                }
+
+            template.send_mail(
+                rec.id,
+                force_send=True,
+                email_values=email_values
+            )
 
     # BUTTON ACTIONS
     def action_requested(self):
         for rec in self:
-            rec.status = 'requested'
 
-            rec.message_post(
-                body="Appointment Requested",
-                partner_ids=[rec.patient_id.id]
-            )
-
-        return True
-
-
-
-    def action_confirm(self):
-        for rec in self:
-
-             # VALIDATIONS
-            if not rec.patient_id.email:
-                raise ValidationError("Patient email missing!")
-
-            if not rec.doctor_id:
-                raise ValidationError("Doctor not selected!")
-
-            if not (rec.doctor_id.user_id and rec.doctor_id.user_id.email) and not rec.doctor_id.email:
+            if not rec.doctor_id.email:
                 raise ValidationError("Doctor email missing!")
 
-            rec.status = 'confirmed'
+            rec.status = 'requested'
 
-            rec._send_email('hospital_management.email_template_confirm')
-        
-            rec.message_post(
-                body="Appointment Confirmed ",
-                partner_ids=[rec.patient_id.id]
+            # doctor ne mail
+            rec._send_email(
+                'hospital_management.email_template_appointment_requested',
+                rec.doctor_id.email
             )
         return True
     
-
-    def action_done(self):
+    def action_confirm(self):
         for rec in self:
-            rec.status = 'done'
 
-        return {
-        'type': 'ir.actions.client',
-        'tag': 'reload',
-    }
+            if not rec.patient_id.email:
+                raise ValidationError("Patient email missing!")
 
+            rec.status = 'confirmed'
 
-
-    def action_cancel(self):
-        for rec in self:
-            rec.status = 'cancel'
-
-            rec._send_email('hospital_management.email_template_cancel')
-
-            rec.message_post(
-                body="Appointment Cancelled",
-                partner_ids=[rec.patient_id.id]
+            # patient ne mail
+            rec._send_email(
+                'hospital_management.email_template_confirm',
+                rec.patient_id.email
             )
 
         return True
+    
+    def action_done(self):
+        self.write({'status': 'done'})
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    def action_cancel(self):
+        self.ensure_one()
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Cancel Appointment',
+            'res_model': 'appointment.cancel.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_appointment_id': self.id}
+        }
+
+    def action_cancel_confirm(self):
+        """Wizard mathi call thase"""
+        for rec in self:
+
+            rec.status = 'cancel'
+
+            if rec.patient_id.email:
+                rec._send_email(
+                    'hospital_management.email_template_cancel',
+                    rec.patient_id.email
+                )
+
+        return True
+
+    # ================= SEQUENCE =================
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for rec in records:
+            if rec.code == 'New':
+                rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
+        return records
 
     # ONCHANGE
     @api.onchange('doctor_id')
@@ -190,13 +209,14 @@ class HospitalAppointment(models.Model):
             if patient_conflict:
                 raise ValidationError("Patient already has an appointment in this time slot!")
 
-    # SEQUENCE
-    @api.model_create_multi
-    def create(self, vals_list):
-        records = super().create(vals_list)
+    # # SEQUENCE
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     records = super().create(vals_list)
 
-        for rec in records:
-            if rec.code == 'New':
-                rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
+    #     for rec in records:
+    #         if rec.code == 'New':
+    #             rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
 
-        return records
+    #     return records
+    

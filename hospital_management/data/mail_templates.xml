@@ -2,25 +2,54 @@
 <odoo>
     <data>
 
-        <!-- CONFIRM -->
-        <record id="email_template_confirm" model="mail.template">
-            <field name="name">Appointment Confirm</field>
+        <!-- ================= REQUEST (DOCTOR) ================= -->
+        <record id="email_template_appointment_requested" model="mail.template">
+            <field name="name">Appointment Requested</field>
             <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
-            <field name="email_from">{{ (user.email_formatted) }}</field>
-            <field name="partner_to">{{ object.patient_id.email }}</field>
-            <field name="subject">Appointment Confirm - {{ object.code }}</field>
+
+            <field name="email_from"> {{ user.email or 'workwithme5001@gmail.com' }} </field>
+            <field name="email_to"> {{ object.doctor_id.email }} </field>
+
+            <field name="subject"> Appointment Requested ({{ object.code }}) </field>
 
             <field name="body_html" type="html">
                 <div>
-                    <p>Hello <t t-esc="object.patient_id.name"/></p>
+                    <p>Hello <strong><t t-out="object.doctor_id.name"/></strong>,</p>
 
-                    <p>Your appointment is <b>CONFIRMED</b>.</p>
+                    <p>New appointment request received.</p>
 
                     <ul>
-                        <li>Doctor: <t t-esc="object.doctor_id.name"/></li>
-                        <li>Start: <t t-esc="object.start_time"/></li>
-                        <li>End: <t t-esc="object.end_time"/></li>
-                        <li>Fees: <t t-esc="object.fees"/></li>
+                        <li><b>Patient:</b> <t t-out="object.patient_id.name"/></li>
+                        <li><b>Time:</b> <t t-out="object.start_time"/></li>
+                    </ul>
+
+                    <p>Please review in system.</p>
+                </div>
+            </field>
+        </record>
+
+
+        <!-- ================= CONFIRM (PATIENT) ================= -->
+        <record id="email_template_confirm" model="mail.template">
+            <field name="name">Appointment Confirm</field>
+            <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
+
+            <field name="email_from"> {{ user.email or 'workwithme5001@gmail.com' }} </field>
+            <field name="email_to">{{ object.patient_id.email }}</field>
+
+            <field name="subject">Appointment Confirmed ({{ object.code }}) </field>
+
+            <field name="body_html" type="html">
+                <div>
+                    <p>Hello <strong><t t-out="object.patient_id.name"/></strong>,</p>
+
+                    <p>Your appointment is <b style="color:green;">CONFIRMED</b>.</p>
+
+                    <ul>
+                        <li><b>Doctor:</b> <t t-out="object.doctor_id.name"/></li>
+                        <li><b>Start:</b> <t t-out="object.start_time"/></li>
+                        <li><b>End:</b> <t t-out="object.end_time"/></li>
+                        <li><b>Fees:</b> ₹<t t-out="object.fees"/></li>
                     </ul>
 
                     <p>Thank you</p>
@@ -28,24 +57,27 @@
             </field>
         </record>
 
-        <!-- CANCEL -->
+
+        <!-- ================= CANCEL ================= -->
         <record id="email_template_cancel" model="mail.template">
             <field name="name">Appointment Cancel</field>
             <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
 
+            <!-- ✅ SAFE sender -->
+            <field name="email_from"> {{ user.email or 'workwithme5001@gmail.com' }} </field>
             <field name="email_to">{{ object.patient_id.email }}</field>
-
-            <field name="subject">
-                Appointment Cancelled - {{ object.code }}
-            </field>
-
-            <field name="email_from">workwithme5001@gmail.com</field>
+            <field name="subject"> Appointment Cancelled ({{ object.code }}) </field>
 
             <field name="body_html" type="html">
                 <div>
-                    <p>Hello <t t-esc="object.patient_id.name"/></p>
+                    <p>Hello <strong><t t-out="object.patient_id.name"/></strong>,</p>
 
-                    <p>Your appointment is <b>CANCELLED</b>.</p>
+                    <p>Your appointment is <b style="color:red;">CANCELLED</b>.</p>
+
+                    <p>
+                        <b>Reason:</b>
+                        <t t-out="object.cancel_reason or 'Not specified'"/>
+                    </p>
 
                     <p>Thank you</p>
                 </div>
