@@ -5,12 +5,10 @@ from odoo.exceptions import ValidationError
 class HospitalAppointment(models.Model):
     _name = 'hospital.appointment'
     _description = 'Hospital Appointment'
-   
+    _inherit = ['mail.thread', 'mail.activity.mixin']  
     _rec_name = 'code'
 
-    # =========================
     # BASIC
-    # =========================
     code = fields.Char(
         string="Appointment Code",
         readonly=True,
@@ -29,8 +27,6 @@ class HospitalAppointment(models.Model):
         'res.partner',
         string="Doctor",
         domain=[('is_doctor', '=', True)],
-        # required=True,
-        # ondelete='cascade'
         ondelete='set null'
     )
 
@@ -51,13 +47,14 @@ class HospitalAppointment(models.Model):
         currency_field='currency_id'
     )
 
-    notes = fields.Text(string="")
+    notes = fields.Text()
     cancel_reason = fields.Text(string="Cancel Reason")
 
-    start_time = fields.Datetime(string="Start Time")
-    end_time = fields.Datetime(string="End Time")
+    start_time = fields.Datetime()
+    end_time = fields.Datetime()
 
     is_doctor_user = fields.Boolean(compute="_compute_is_doctor_user")
+
     @api.depends('doctor_id')
     def _compute_is_doctor_user(self):
         for rec in self:
@@ -65,9 +62,7 @@ class HospitalAppointment(models.Model):
                 rec.doctor_id.user_id.id == self.env.uid
             ) if rec.doctor_id and rec.doctor_id.user_id else False
 
-    # =========================
     # STATUS
-    # =========================
     status = fields.Selection([
         ('draft', 'Draft'),
         ('requested', 'Requested'),
@@ -76,81 +71,82 @@ class HospitalAppointment(models.Model):
         ('cancel', 'Cancelled')
     ], default='draft', tracking=True)
 
-    # =========================
+
+
+    # COMMON EMAIL FUNCTION
+    def _send_email(self, template_xmlid):
+        template = self.env.ref(template_xmlid, raise_if_not_found=False)
+
+        if not template:
+            raise ValidationError("Email template not found!")
+
+        for rec in self:
+            template.send_mail(rec.id, force_send=True)
+
+
     # BUTTON ACTIONS
-    # =========================
     def action_requested(self):
         for rec in self:
             rec.status = 'requested'
 
-    def action_confirm(self):
-        for rec in self:
-            rec.status = 'confirmed'
-
-            template = self.env.ref(
-                'hospital_management.email_template_confirm',
-                raise_if_not_found=False
+            rec.message_post(
+                body="Appointment Requested",
+                partner_ids=[rec.patient_id.id]
             )
 
-            if template:
-                template.send_mail(rec.id, force_send=True)
+        return True
 
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Success',
-                'message': 'Appointment confirmed & email sent!',
-                'type': 'success',
-            }
-        }
+
+
+    def action_confirm(self):
+        for rec in self:
+
+             # VALIDATIONS
+            if not rec.patient_id.email:
+                raise ValidationError("Patient email missing!")
+
+            if not rec.doctor_id:
+                raise ValidationError("Doctor not selected!")
+
+            if not (rec.doctor_id.user_id and rec.doctor_id.user_id.email) and not rec.doctor_id.email:
+                raise ValidationError("Doctor email missing!")
+
+            rec.status = 'confirmed'
+
+            rec._send_email('hospital_management.email_template_confirm')
+        
+            rec.message_post(
+                body="Appointment Confirmed ",
+                partner_ids=[rec.patient_id.id]
+            )
+        return True
+    
 
     def action_done(self):
         for rec in self:
             rec.status = 'done'
 
+        return {
+        'type': 'ir.actions.client',
+        'tag': 'reload',
+    }
+
+
+
     def action_cancel(self):
         for rec in self:
             rec.status = 'cancel'
 
-            template = self.env.ref(
-                'hospital_management.email_template_cancel',
-                raise_if_not_found=False
+            rec._send_email('hospital_management.email_template_cancel')
+
+            rec.message_post(
+                body="Appointment Cancelled",
+                partner_ids=[rec.patient_id.id]
             )
 
-            if template:
-                template.send_mail(rec.id, force_send=True)
+        return True
 
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Cancelled',
-                'message': 'Appointment cancelled & email sent!',
-                'type': 'warning',
-            }
-        }
-
-    # =========================
-    # AUTO DOCTOR SELECT 🔥
-    # =========================
-    @api.model
-    def default_get(self, fields):
-        res = super().default_get(fields)
-
-        doctor = self.env['res.partner'].search([
-            ('user_id', '=', self.env.uid),
-            ('is_doctor', '=', True)
-        ], limit=1)
-
-        if doctor:
-            res['doctor_id'] = doctor.id
-
-        return res
-
-    # =========================
     # ONCHANGE
-    # =========================
     @api.onchange('doctor_id')
     def _onchange_doctor(self):
         for rec in self:
@@ -161,15 +157,12 @@ class HospitalAppointment(models.Model):
                 rec.fees = 0.0
                 rec.specialization_id = False
 
-    # =========================
     # VALIDATIONS
-    # =========================
     @api.constrains('start_time', 'end_time')
     def check_appointment_time(self):
         for rec in self:
-            if rec.start_time and rec.end_time:
-                if rec.end_time <= rec.start_time:
-                    raise ValidationError("End Time must be greater than Start Time.")
+            if rec.start_time and rec.end_time and rec.end_time <= rec.start_time:
+                raise ValidationError("End Time must be greater than Start Time.")
 
     @api.constrains('patient_id', 'doctor_id', 'start_time', 'end_time')
     def _check_time_overlap(self):
@@ -197,25 +190,13 @@ class HospitalAppointment(models.Model):
             if patient_conflict:
                 raise ValidationError("Patient already has an appointment in this time slot!")
 
-    # =========================
     # SEQUENCE
-    # =========================
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
 
         for rec in records:
-            # sequence logic already applied above
             if rec.code == 'New':
                 rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
-
-            # EMAIL SEND 🔥
-            template = self.env.ref(
-                'hospital_management.email_template_appointment',
-                raise_if_not_found=False
-            )
-
-            # if template and rec.status == 'requested':
-            #     template.send_mail(rec.id, force_send=True)
 
         return records

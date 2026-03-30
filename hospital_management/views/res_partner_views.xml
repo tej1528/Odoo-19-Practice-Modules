@@ -102,7 +102,7 @@
 
                     <!-- Doctor Info -->
                     <group string="Doctor Info" invisible="not is_doctor">
-                        <field name="user_id"/>
+                        <field name="user_id" required="1"/>
                         <field name="specialization_id"/>
                         <field name="company_id" invisible="1"/>
                         <field name="currency_id" invisible="1"/>

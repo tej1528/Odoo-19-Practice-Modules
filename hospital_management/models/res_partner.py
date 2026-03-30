@@ -1,7 +1,6 @@
 from odoo import models, fields, api
 from datetime import date
 
-
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
@@ -146,6 +145,7 @@ class ResPartner(models.Model):
     compute="_compute_requested_appointment_count")
 
     user_id = fields.Many2one('res.users', string="Related User")
+    
     # Doctor Request Button
     # =====================
     def _compute_requested_appointment_count(self):
