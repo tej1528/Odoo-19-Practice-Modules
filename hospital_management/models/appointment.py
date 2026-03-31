@@ -16,6 +16,12 @@ class HospitalAppointment(models.Model):
         default="New"
     )
 
+    display_name = fields.Char(
+        string="Display Name",
+        compute="_compute_display_name",
+        store=True
+    )
+    
     patient_id = fields.Many2one(
         'res.partner',
         string="Patient",
@@ -103,6 +109,10 @@ class HospitalAppointment(models.Model):
 
             rec.status = 'requested'
 
+            rec.message_post(
+            body=f" Appointment requested & mail send successfully"
+            )
+
             # doctor ne mail
             rec._send_email(
                 'hospital_management.email_template_appointment_requested',
@@ -117,6 +127,10 @@ class HospitalAppointment(models.Model):
                 raise ValidationError("Patient email missing!")
 
             rec.status = 'confirmed'
+
+            rec.message_post(
+            body=f" Appointment Confirmed & mail send successfully"
+            )
 
             # patient ne mail
             rec._send_email(
@@ -142,8 +156,11 @@ class HospitalAppointment(models.Model):
             'context': {'default_appointment_id': self.id}
         }
 
+    def action_reset_to_draft(self):
+        for rec in self:
+            rec.status = 'draft'
+
     def action_cancel_confirm(self):
-        """Wizard mathi call thase"""
         for rec in self:
 
             rec.status = 'cancel'
@@ -153,7 +170,6 @@ class HospitalAppointment(models.Model):
                     'hospital_management.email_template_cancel',
                     rec.patient_id.email
                 )
-
         return True
 
     # ================= SEQUENCE =================
@@ -209,14 +225,3 @@ class HospitalAppointment(models.Model):
             if patient_conflict:
                 raise ValidationError("Patient already has an appointment in this time slot!")
 
-    # # SEQUENCE
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     records = super().create(vals_list)
-
-    #     for rec in records:
-    #         if rec.code == 'New':
-    #             rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
-
-    #     return records
-    

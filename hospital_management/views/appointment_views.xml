@@ -70,6 +70,12 @@
                                 class="btn-danger"
                                 invisible="status not in ('requested','confirmed')"/>
 
+                        <button name="action_reset_to_draft"
+                                string="Reset to Draft"
+                                type="object"
+                                class="btn-secondary"
+                                invisible="status != 'cancel'"/>
+
                         <field name="status"
                                widget="statusbar"
                                statusbar_visible="draft,requested,confirmed,done,cancel"/>
@@ -111,14 +117,14 @@
                             <field name="cancel_reason" readonly="1"/>
                         </group>
 
-                        <!-- ✅ RIGHT SIDE CHATTER -->
-                    <div class="oe_chatter o-aside">
+                    
+                    </sheet>
+    <!-- ✅ RIGHT SIDE CHATTER -->
+                    <chatter>
                         <field name="message_follower_ids" widget="mail_followers"/>
                         <field name="activity_ids" widget="mail_activity"/>
                         <field name="message_ids" widget="mail_thread"/>
-                    </div>
-                    </sheet>
-
+                    </chatter>
                     
 
                 </form>

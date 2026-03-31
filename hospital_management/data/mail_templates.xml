@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-
         <!-- ================= REQUEST (DOCTOR) ================= -->
         <record id="email_template_appointment_requested" model="mail.template">
             <field name="name">Appointment Requested</field>
@@ -18,12 +17,18 @@
 
                     <p>New appointment request received.</p>
 
-                    <ul>
-                        <li><b>Patient:</b> <t t-out="object.patient_id.name"/></li>
-                        <li><b>Time:</b> <t t-out="object.start_time"/></li>
-                    </ul>
-
-                    <p>Please review in system.</p>
+                    <p style="margin-top:20px;">
+                        <a t-att-href="'/web#id=%s&amp;model=hospital.appointment&amp;view_type=form' % object.id"
+                        style="background-color:#875A7B;
+                                color:#fff;
+                                padding:10px 16px;
+                                text-decoration:none;
+                                border-radius:6px;
+                                display:inline-block;">
+                        🔍 View Appointment
+                        </a>
+                    </p>
+                    <p> thank You.. </p>
                 </div>
             </field>
         </record>
@@ -47,8 +52,8 @@
 
                     <ul>
                         <li><b>Doctor:</b> <t t-out="object.doctor_id.name"/></li>
-                        <li><b>Start:</b> <t t-out="object.start_time"/></li>
-                        <li><b>End:</b> <t t-out="object.end_time"/></li>
+                        <li><b>Start:</b> <t t-out="format_datetime(object.start_time)"/></li>
+                        <li><b>End:</b> <t t-out="format_datetime(object.end_time)"/></li>
                         <li><b>Fees:</b> ₹<t t-out="object.fees"/></li>
                     </ul>
 
@@ -63,7 +68,7 @@
             <field name="name">Appointment Cancel</field>
             <field name="model_id" ref="hospital_management.model_hospital_appointment"/>
 
-            <!-- ✅ SAFE sender -->
+            
             <field name="email_from"> {{ user.email or 'workwithme5001@gmail.com' }} </field>
             <field name="email_to">{{ object.patient_id.email }}</field>
             <field name="subject"> Appointment Cancelled ({{ object.code }}) </field>
@@ -74,6 +79,12 @@
 
                     <p>Your appointment is <b style="color:red;">CANCELLED</b>.</p>
 
+                    <ul>
+                        <li><b>Doctor:</b> <t t-out="object.doctor_id.name"/></li>
+                        <li><b>Start:</b> <t t-out="format_datetime(object.start_time)"/></li>
+                        <li><b>End:</b> <t t-out="format_datetime(object.end_time)"/></li>
+                    </ul>
+                    
                     <p>
                         <b>Reason:</b>
                         <t t-out="object.cancel_reason or 'Not specified'"/>

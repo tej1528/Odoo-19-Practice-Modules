@@ -75,7 +75,7 @@ class ResPartner(models.Model):
 
     # =====================
     # AUTO PREVIEW (ONCHANGE )
-    # =====================
+    # =====================zz
     @api.onchange('is_patient', 'is_doctor')
     def _onchange_preview_code(self):
         if self.is_patient and self.code == 'New':

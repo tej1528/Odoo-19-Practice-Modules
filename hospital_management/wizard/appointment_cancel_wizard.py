@@ -25,12 +25,12 @@ class AppointmentCancelWizard(models.TransientModel):
         if appointment.patient_id.email:
             appointment._send_email(
                 'hospital_management.email_template_cancel',
-                appointment.patient_id.email   # ✅ IMPORTANT FIX
+                appointment.patient_id.email  
             )
 
         # ================= CHATTER =================
         appointment.message_post(
-            body=f"Appointment Cancelled<br/><b>Reason:</b> {self.reason}",
+            body=f"Appointment Cancelled, Reason:-{self.reason}",
             message_type='comment',
             subtype_xmlid="mail.mt_note"
         )
