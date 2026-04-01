@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="report_appointment_pdf">
+
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+
+                    <div class="page" style="font-size:14px;">
+
+                        <!-- HEADER -->
+                        <div style="width:100%; overflow:hidden; margin-bottom:10px;">
+
+                            <div style="float:left; width:70%;">
+                                <h2 style="color:#5dade2; margin:0;">
+                                    Appointment - <span t-esc="doc.code"/>
+                                </h2>
+                            </div>
+
+                            <div style="float:right; width:30%; text-align:right;">
+
+                                <t t-set="color" t-value="
+                                    'background-color:#5cb85c;' if doc.status == 'confirm'
+                                    else 'background-color:#f0ad4e;' if doc.status == 'draft'
+                                    else 'background-color:#d9534f;' if doc.status == 'cancel'
+                                    else 'background-color:#777;'
+                                "/>
+
+                                <span t-att-style="color + ' color:white; padding:6px 14px; border-radius:14px; font-size:12px; text-transform:capitalize;'">
+                                    <span t-esc="doc.status"/>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <hr/>
+
+                        <!-- MAIN SECTION -->
+                        <div style="width:100%; margin-top:20px; overflow:hidden;">
+
+                            <div style="width:48%; float:left;">
+
+                                <h3 style="color:#5dade2;">Appointment Info</h3>
+
+                                <p><strong>Patient:</strong>
+                                    <span t-esc="doc.patient_id.name"/>
+                                </p>
+
+                                <p><strong>Doctor:</strong>
+                                    <span t-esc="doc.doctor_id.name"/>
+                                </p>
+
+                                <p><strong>Specialization:</strong>
+                                    <span t-esc="doc.specialization_id.name"/>
+                                </p>
+
+                                
+
+                            </div>
+
+                            <div style="width:48%; float:right;">
+
+                                <h3 style="color:#5dade2;">Schedule</h3>
+
+                                <p><strong>Start:</strong>
+                                    <span t-field="doc.start_time" t-options='{"widget": "datetime"}'/>
+                                </p>
+
+                                <p><strong>End:</strong>
+                                    <span t-field="doc.end_time" t-options='{"widget": "datetime"}'/>
+                                </p>
+
+                                
+
+                            </div>
+
+                        </div>
+
+                        <hr style="clear:both;"/>
+
+                        <!-- FEES (FIXED ALIGNMENT) -->
+                        <div style="margin-top:20px;">
+
+                            <table style="width:100%; border-collapse:collapse;">
+
+                                <thead>
+                                    <tr style="border-bottom:1px solid #000;">
+                                        <th style="text-align:left; padding:6px;">Description</th>
+                                        <th style="text-align:right; padding:6px;">Amount</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <!-- FEES -->
+                                    <tr>
+                                        <td style="padding:6px;">Doctor Fees</td>
+                                        <td style="text-align:right; padding:6px;">
+                                            <span t-field="doc.fees"
+                                                  t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                    </tr>
+
+                                    <!-- LINE -->
+                                    <!-- <tr>
+                                        <td colspan="2">
+                                            <hr style="margin:5px 0; border:1px solid #000;"/>
+                                        </td>
+                                    </tr> -->
+
+                                    <!-- TOTAL -->
+                                    <!-- <tr>
+                                        <td style="padding:6px;"><strong>Total</strong></td>
+                                        <td style="text-align:right; padding:6px;">
+                                            <strong t-field="doc.fees"
+                                                    t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                    </tr> -->
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <hr/>
+
+                        <!-- CANCEL -->
+                        <t t-if="doc.status == 'cancel'">
+
+                            <div style="margin-top:15px;">
+                                <h3 style="color:#d9534f;">Cancellation Reason</h3>
+
+                                <p>
+                                    <span t-esc="doc.cancel_reason"/>
+                                </p>
+                            </div>
+
+                        </t>
+
+                    </div>
+
+                </t>
+            </t>
+        </t>
+
+    </template>
+
+</odoo>

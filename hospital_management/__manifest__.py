@@ -12,11 +12,13 @@
     'security/ir.model.access.csv',
     'data/sequence.xml',          
     'views/res_partner_views.xml',
+    'reports/appointment_report.xml',
     'data/mail_templates.xml',     
     'views/appointment_views.xml',
     'views/appointment_action.xml',
     'views/specialization_views.xml',
     'views/menu.xml',
+    'reports/appointment_report_template.xml',
 ],
 
     'assets': {

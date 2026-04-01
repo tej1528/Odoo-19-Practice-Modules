@@ -1,6 +1,6 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-
+import base64
 
 class HospitalAppointment(models.Model):
     _name = 'hospital.appointment'
@@ -94,6 +94,25 @@ class HospitalAppointment(models.Model):
                     'recipient_ids': [],
                 }
 
+            pdf = self.env['ir.actions.report']._render_qweb_pdf(
+                'hospital_management.report_appointment_pdf',
+                [rec.id]
+            )[0]
+
+            
+            attachment = self.env['ir.attachment'].create({
+                'name': f'Appointment-{rec.code}.pdf',
+                'type': 'binary',
+                'datas': base64.b64encode(pdf),
+                'res_model': self._name,
+                'res_id': rec.id,
+                'mimetype': 'application/pdf',
+            })
+
+            email_values.update({
+                'attachment_ids': [attachment.id]
+            })
+
             template.send_mail(
                 rec.id,
                 force_send=True,
@@ -128,6 +147,8 @@ class HospitalAppointment(models.Model):
 
             rec.status = 'confirmed'
 
+            template = self.env.ref('hospital_management.email_template_confirm')
+            
             rec.message_post(
             body=f" Appointment Confirmed & mail send successfully"
             )

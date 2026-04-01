@@ -50,15 +50,7 @@
 
                     <p>Your appointment is <b style="color:green;">CONFIRMED</b>.</p>
 
-                    <ul>
-                        <li><b>Doctor:</b> <t t-out="object.doctor_id.name"/></li>
-                        <li><b>Start:</b> <t t-out="format_datetime(object.start_time)"/></li>
-                        <li><b>End:</b> <t t-out="format_datetime(object.end_time)"/></li>
-                        <li><b>Fees:</b> ₹<t t-out="object.fees"/></li>
-                    </ul>
-
-                    <p>Thank you</p>
-                </div>
+                    </div>
             </field>
         </record>
 
@@ -79,18 +71,6 @@
 
                     <p>Your appointment is <b style="color:red;">CANCELLED</b>.</p>
 
-                    <ul>
-                        <li><b>Doctor:</b> <t t-out="object.doctor_id.name"/></li>
-                        <li><b>Start:</b> <t t-out="format_datetime(object.start_time)"/></li>
-                        <li><b>End:</b> <t t-out="format_datetime(object.end_time)"/></li>
-                    </ul>
-                    
-                    <p>
-                        <b>Reason:</b>
-                        <t t-out="object.cancel_reason or 'Not specified'"/>
-                    </p>
-
-                    <p>Thank you</p>
                 </div>
             </field>
         </record>
