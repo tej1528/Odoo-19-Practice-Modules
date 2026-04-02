@@ -61,6 +61,8 @@ class HospitalAppointment(models.Model):
 
     is_doctor_user = fields.Boolean(compute="_compute_is_doctor_user")
 
+    doctor_description = fields.Text(string="Doctor Description")
+    
     @api.depends('doctor_id')
     def _compute_is_doctor_user(self):
         for rec in self:
@@ -73,6 +75,7 @@ class HospitalAppointment(models.Model):
         ('draft', 'Draft'),
         ('requested', 'Requested'),
         ('confirmed', 'Confirmed'),
+        ('processing', 'Processing'),
         ('done', 'Done'),
         ('cancel', 'Cancelled')
     ], default='draft', tracking=True)
@@ -161,6 +164,10 @@ class HospitalAppointment(models.Model):
 
         return True
     
+    def action_processing(self):
+        for rec in self:
+            rec.status = 'processing'
+
     def action_done(self):
         self.write({'status': 'done'})
         return {'type': 'ir.actions.client', 'tag': 'reload'}

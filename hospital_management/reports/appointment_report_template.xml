@@ -56,7 +56,9 @@
                                     <span t-esc="doc.specialization_id.name"/>
                                 </p>
 
-                                
+                                <p><strong>Doctor Fees:</strong>
+                                     <span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                </p>                                
 
                             </div>
 
@@ -81,7 +83,7 @@
                         <hr style="clear:both;"/>
 
                         <!-- FEES (FIXED ALIGNMENT) -->
-                        <div style="margin-top:20px;">
+                        <!-- <div style="margin-top:20px;">
 
                             <table style="width:100%; border-collapse:collapse;">
 
@@ -92,16 +94,16 @@
                                     </tr>
                                 </thead>
 
-                                <tbody>
+                                <tbody> -->
 
                                     <!-- FEES -->
-                                    <tr>
+                                    <!-- <tr>
                                         <td style="padding:6px;">Doctor Fees</td>
                                         <td style="text-align:right; padding:6px;">
                                             <span t-field="doc.fees"
                                                   t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
                                         </td>
-                                    </tr>
+                                    </tr> -->
 
                                     <!-- LINE -->
                                     <!-- <tr>
@@ -119,19 +121,48 @@
                                         </td>
                                     </tr> -->
 
-                                </tbody>
+                                <!-- </tbody>
 
                             </table>
 
                         </div>
 
-                        <hr/>
+                        <hr/> -->
+
+                        <!-- Notes -->
+                            <div style="margin-top:15px;">
+                                <h5 style="color:#d9534f;">Notes</h5>
+                                <p>
+                                    <span t-esc="doc.notes"/>
+                                </p>
+                            </div>
+                        
+                        
+                        <!-- description
+                        <t t-if="doc.status == 'cancel'">
+                            <div style="margin-top:15px;">
+                                <h3 style="color:#d9534f;">Description</h3>
+                                <p>
+                                    <span t-esc="doc.cancel_reason"/>
+                                </p>
+                            </div>
+                        </t> -->
+
+                        <!-- Doctor Description -->
+                        <t t-if="doc.doctor_description">
+                            <div style="margin-top:15px;">
+                                <h5 style="color:#5dade2;">Doctor Notes</h5>
+                                <p>
+                                    <span t-esc="doc.doctor_description"/>
+                                </p>
+                            </div>
+                        </t>
 
                         <!-- CANCEL -->
                         <t t-if="doc.status == 'cancel'">
 
                             <div style="margin-top:15px;">
-                                <h3 style="color:#d9534f;">Cancellation Reason</h3>
+                                <h5 style="color:#d9534f;">Cancellation Reason</h5>
 
                                 <p>
                                     <span t-esc="doc.cancel_reason"/>

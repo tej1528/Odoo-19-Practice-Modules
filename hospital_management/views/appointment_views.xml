@@ -40,7 +40,7 @@
             <field name="model">hospital.appointment</field>
             <field name="arch" type="xml">
                 
-                <!-- 🔥 IMPORTANT CLASS ADDED -->
+                <!--  IMPORTANT CLASS ADDED -->
                 <form string="Appointment" class="o_form_view o_xxl_form_view">
 
                     <!-- HEADER -->
@@ -56,29 +56,35 @@
                                 string="Accept"
                                 type="object"
                                 class="btn-success"
-                                invisible="status != 'requested' or not is_doctor_user"/>
+                                invisible="status != 'requested'"/>
+
+                        <button name="action_processing"
+                                string="Start Processing"
+                                type="object"
+                                class="btn-primary"
+                                invisible="status != 'confirmed'"/>
 
                         <button name="action_done"
                                 string="Done"
                                 type="object"
                                 class="btn-success"
-                                invisible="status != 'confirmed'"/>
+                                invisible="status != 'processing'"/>
 
                         <button name="action_cancel"
                                 string="Cancel"
                                 type="object"
                                 class="btn-danger"
-                                invisible="status not in ('requested','confirmed')"/>
+                                invisible="status != 'requested' and status != 'confirmed'"/>
 
                         <button name="action_reset_to_draft"
                                 string="Reset to Draft"
                                 type="object"
                                 class="btn-secondary"
                                 invisible="status != 'cancel'"/>
-
+                        
                         <field name="status"
                                widget="statusbar"
-                               statusbar_visible="draft,requested,confirmed,done,cancel"/>
+                               statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
 
                     </header>
 
@@ -109,17 +115,23 @@
                         </group>
 
                         <group string="Notes">
-                            <field name="notes" colspan="2"/>
+                            <field name="notes" colspan="2" nolabel="1"/>
+                        </group>
+
+                        <group string="Doctor Notes" invisible="status != 'processing' and status != 'done'">
+                            <field name="doctor_description"
+                                nolabel="1"
+                                readonly="status == 'done'" />
                         </group>
 
                         <group string="Cancel Reason"
-                               invisible="status != 'cancel'">
-                            <field name="cancel_reason" readonly="1"/>
+                            invisible="status != 'cancel'">
+                            <field name="cancel_reason" readonly="1" nolabel="1"/>
                         </group>
 
                     
                     </sheet>
-    <!-- ✅ RIGHT SIDE CHATTER -->
+                    <!--  RIGHT SIDE CHATTER -->
                     <chatter>
                         <field name="message_follower_ids" widget="mail_followers"/>
                         <field name="activity_ids" widget="mail_activity"/>
