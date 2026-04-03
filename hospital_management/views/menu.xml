@@ -1,5 +1,13 @@
 <odoo>
 
+        <!-- ACTION -->
+        <record id="action_appointment" model="ir.actions.act_window">
+            <field name="name">Appointments</field>
+            <field name="res_model">hospital.appointment</field>
+
+            <field name="view_mode">tree,form,kanban,graph,pivot,calendar</field>
+        </record>
+    
     <!-- Main Menu -->
     <menuitem 
         id="hospital_main_menu"
@@ -34,11 +42,21 @@
         sequence="3"/>
 
     <!--  Specialization -->
-        <menuitem id="menu_specialization"
-                name="Specializations"
-                parent="hospital_main_menu"
-                action="action_specialization"
-                sequence="4"/>
+    <menuitem id="menu_specialization"
+        name="Specializations"
+        parent="hospital_main_menu"
+        action="action_specialization"
+        sequence="4"/>
 
+    <menuitem id="menu_hospital_config"
+          name="Configuration"
+          parent="hospital_main_menu"
+          sequence="10"/>
+
+    <menuitem id="menu_hospital_settings"
+          name="Settings"
+          parent="menu_hospital_config"
+          action="base_setup.action_general_configuration"
+          sequence="1"/>
 
 </odoo>

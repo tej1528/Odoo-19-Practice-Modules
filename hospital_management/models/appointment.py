@@ -1,6 +1,8 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 import base64
+from datetime import timedelta
+
 
 class HospitalAppointment(models.Model):
     _name = 'hospital.appointment'
@@ -49,15 +51,15 @@ class HospitalAppointment(models.Model):
     )
 
     fees = fields.Monetary(
-        string="Doctor Fees",
-        currency_field='currency_id'
+    string="Doctor Fees",
+    currency_field='currency_id'
     )
 
     notes = fields.Text()
     cancel_reason = fields.Text(string="Cancel Reason")
 
-    start_time = fields.Datetime()
-    end_time = fields.Datetime()
+    start_time = fields.Datetime(required=True)
+    end_time = fields.Datetime(required=True)
 
     is_doctor_user = fields.Boolean(compute="_compute_is_doctor_user")
 
@@ -169,6 +171,11 @@ class HospitalAppointment(models.Model):
             rec.status = 'processing'
 
     def action_done(self):
+        for rec in self:
+            if not rec.doctor_description:
+                raise ValidationError(
+                    " Please enter Doctor Notes."
+                )
         self.write({'status': 'done'})
         return {'type': 'ir.actions.client', 'tag': 'reload'}
 
@@ -201,6 +208,20 @@ class HospitalAppointment(models.Model):
         return True
 
     # ================= SEQUENCE =================
+    @api.model
+    def get_formview_action(self, access_uid=None):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Create Appointment',
+            'res_model': 'appointment.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_start_time': self.env.context.get('default_start'),
+                'default_end_time': self.env.context.get('default_stop'),
+            }
+        }
+    
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -209,17 +230,7 @@ class HospitalAppointment(models.Model):
                 rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
         return records
 
-    # ONCHANGE
-    @api.onchange('doctor_id')
-    def _onchange_doctor(self):
-        for rec in self:
-            if rec.doctor_id:
-                rec.fees = rec.doctor_id.fees
-                rec.specialization_id = rec.doctor_id.specialization_id
-            else:
-                rec.fees = 0.0
-                rec.specialization_id = False
-
+    
     # VALIDATIONS
     @api.constrains('start_time', 'end_time')
     def check_appointment_time(self):
@@ -252,4 +263,26 @@ class HospitalAppointment(models.Model):
 
             if patient_conflict:
                 raise ValidationError("Patient already has an appointment in this time slot!")
+    
 
+    #----------------------- ONCHANGE-----------------------
+
+    @api.onchange('doctor_id')
+    def _onchange_doctor(self):
+        for rec in self:
+            if rec.doctor_id:
+                rec.fees = rec.doctor_id.fees
+                rec.specialization_id = rec.doctor_id.specialization_id
+            else:
+                rec.fees = 0.0
+                rec.specialization_id = False
+
+    @api.onchange('start_time')
+    def _onchange_start_time(self):
+        if self.start_time:
+            duration = int(
+                self.env['ir.config_parameter'].sudo().get_param(
+                    'hospital.appointment_duration', default=30
+                )
+            )
+            self.end_time = self.start_time + timedelta(minutes=duration)

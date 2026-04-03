@@ -6,7 +6,7 @@
     'author': 'Tejash Ardeshna',
     'license': 'LGPL-3',
 
-    'depends': ['base', 'mail'],
+    'depends': ['base', 'mail', 'base_setup'],
 
     'data': [
     'security/ir.model.access.csv',
@@ -16,6 +16,7 @@
     'data/mail_templates.xml',     
     'views/appointment_views.xml',
     'views/appointment_action.xml',
+    'views/res_config_settings_view.xml',
     'views/specialization_views.xml',
     'views/menu.xml',
     'reports/appointment_report_template.xml',
