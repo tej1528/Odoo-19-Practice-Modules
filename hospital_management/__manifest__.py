@@ -6,7 +6,7 @@
     'author': 'Tejash Ardeshna',
     'license': 'LGPL-3',
 
-    'depends': ['base', 'mail', 'base_setup'],
+    'depends': ['base', 'mail', 'base_setup', 'web'],
 
     'data': [
     'security/ir.model.access.csv',
@@ -25,6 +25,7 @@
     'assets': {
         'web.assets_backend': [
             'hospital_management/static/src/css/hide_action.css',
+            'hospital_management/static/src/js/calendar_override.js',
         ],
     },
 

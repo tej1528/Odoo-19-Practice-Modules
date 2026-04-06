@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <data>
+    <!-- <data> -->
 
         <!-- ===================== -->
         <!-- SEQUENCE -->
@@ -95,11 +95,7 @@
             </field>
         </record>
 
-        <!-- ===================== -->
-        <!-- CALENDAR VIEW -->
-        <!-- ===================== -->
-        <odoo>
-
+    <!-- <odoo> -->
     <!-- ===================== -->
     <!-- Calendar View -->
     <!-- ===================== -->
@@ -111,10 +107,10 @@
                       date_start="start_time"
                       date_stop="end_time"
                       color="doctor_id"
+                      js_class="custom_calendar"
                       mode="week"
                       create="true"
-                      event_open_popup="true"
-                      form_view_id="view_appointment_wizard_form">
+                      event_open_popup="true">
 
                 <field name="patient_id"/>
                 <field name="doctor_id"/>
@@ -123,7 +119,7 @@
             </calendar>
         </field>
     </record>
-
+    
 
     <!-- ===================== -->
     <!-- Wizard View -->
@@ -162,7 +158,7 @@
         <field name="target">new</field>
     </record>
 
-</odoo>
+<!-- </odoo> -->
         
 
         <!-- ===================== -->
@@ -297,5 +293,5 @@
     </field>
 </record>
 
-    </data>
+    <!-- </data> -->
 </odoo>

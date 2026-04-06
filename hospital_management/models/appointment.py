@@ -279,7 +279,7 @@ class HospitalAppointment(models.Model):
 
     @api.onchange('start_time')
     def _onchange_start_time(self):
-        if self.start_time:
+        if self.start_time and not self.end_time:
             duration = int(
                 self.env['ir.config_parameter'].sudo().get_param(
                     'hospital.appointment_duration', default=30
