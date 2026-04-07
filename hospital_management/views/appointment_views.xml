@@ -1,297 +1,283 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <!-- <data> -->
 
-        <!-- ===================== -->
-        <!-- SEQUENCE -->
-        <!-- ===================== -->
-        <record id="seq_appointment_code" model="ir.sequence">
-            <field name="name">Appointment Code</field>
-            <field name="code">appointment.code</field>
-            <field name="prefix">APT</field>
-            <field name="padding">4</field>
-        </record>
-
-        <!-- ===================== -->
-        <!-- LIST VIEW -->
-        <!-- ===================== -->
-        <record id="view_appointment_list" model="ir.ui.view">
-            <field name="name">hospital.appointment.list</field>
-            <field name="model">hospital.appointment</field>
-            <field name="arch" type="xml">
-                <list >
-                    <field name="code"/>
-                    <field name="patient_id"/>
-                    <field name="doctor_id"/>
-                    <field name="specialization_id"/>
-                    <field name="start_time"/>
-                    <field name="end_time"/>
-                    <field name="fees" widget="monetary"/>
-                    <field name="currency_id" column_invisible="1"/>
-                    <field name="status"
-                     widget="badge"
-                    decoration-muted="status == 'draft'"
-                    decoration-info="status == 'requested'"
-                    decoration-primary="status == 'confirmed'"
-                    decoration-warning="status == 'processing'"
-                    decoration-success="status == 'done'"
-                    decoration-danger="status == 'cancel'"/>
-                </list>
-            </field>
-        </record>
-
-        
-        <!-- KANBAN VIEW -->
-        <!-- ===================== -->
-        <record id="view_appointment_kanban" model="ir.ui.view">
-            <field name="name">hospital.appointment.kanban</field>
-            <field name="model">hospital.appointment</field>
-            <field name="arch" type="xml">
-                <kanban>
-                    <field name="code"/>
-                    <field name="patient_id"/>
-                    <field name="doctor_id"/>
-                    <field name="status"/>
-
-                    <templates>
-                        <t t-name="card">
-                            <div class="oe_kanban_card">
-                                <strong><field name="code"/></strong>
-                                <div><field name="patient_id"/></div>
-                                <div><field name="doctor_id"/></div>
-                                <div>Status: <field name="status"/></div>
-                            </div>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
-        </record>
-
-        <!-- ===================== -->
-        <!-- GRAPH VIEW -->
-        <!-- ===================== -->
-        <record id="view_appointment_graph" model="ir.ui.view">
-            <field name="name">hospital.appointment.graph</field>
-            <field name="model">hospital.appointment</field>
-            <field name="arch" type="xml">
-                <graph string="Appointments Analysis" type="bar">
-                    <field name="status" type="row"/>
-                    <field name="id" type="measure" operator="count" string="Appointments"/>
-                </graph>
-            </field>
-        </record>
-
-        <!-- ===================== -->
-        <!-- PIVOT VIEW -->
-        <!-- ===================== -->
-        <record id="view_appointment_pivot" model="ir.ui.view">
-            <field name="name">hospital.appointment.pivot</field>
-            <field name="model">hospital.appointment</field>
-            <field name="arch" type="xml">
-                <pivot>
-                    <field name="doctor_id" type="row"/>
-                    <field name="status" type="col"/>
-                </pivot>
-            </field>
-        </record>
-
-    <!-- <odoo> -->
     <!-- ===================== -->
-    <!-- Calendar View -->
+    <!-- SEQUENCE -->
+    <!-- ===================== -->
+    <record id="seq_appointment_code" model="ir.sequence">
+        <field name="name">Appointment Code</field>
+        <field name="code">appointment.code</field>
+        <field name="prefix">APT</field>
+        <field name="padding">4</field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- LIST VIEW -->
+    <!-- ===================== -->
+    <record id="view_appointment_list" model="ir.ui.view">
+        <field name="name">hospital.appointment.list</field>
+        <field name="model">hospital.appointment</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="specialization_id"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+                <field name="fees" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="status"
+                       widget="badge"
+                       decoration-muted="status == 'draft'"
+                       decoration-info="status == 'requested'"
+                       decoration-primary="status == 'confirmed'"
+                       decoration-warning="status == 'processing'"
+                       decoration-success="status == 'done'"
+                       decoration-danger="status == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- KANBAN VIEW -->
+    <!-- ===================== -->
+    <record id="view_appointment_kanban" model="ir.ui.view">
+        <field name="name">hospital.appointment.kanban</field>
+        <field name="model">hospital.appointment</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="code"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="status"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="code"/></strong>
+                            <div><field name="patient_id"/></div>
+                            <div><field name="doctor_id"/></div>
+                            <div>Status: <field name="status"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- GRAPH VIEW -->
+    <!-- ===================== -->
+    <record id="view_appointment_graph" model="ir.ui.view">
+        <field name="name">hospital.appointment.graph</field>
+        <field name="model">hospital.appointment</field>
+        <field name="arch" type="xml">
+            <graph string="Appointments Analysis" type="bar">
+                <field name="status" type="row"/>
+                <field name="id" type="measure" operator="count" string="Appointments"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- PIVOT VIEW -->
+    <!-- ===================== -->
+    <record id="view_appointment_pivot" model="ir.ui.view">
+        <field name="name">hospital.appointment.pivot</field>
+        <field name="model">hospital.appointment</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="doctor_id" type="row"/>
+                <field name="status" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- wizard form -->
+    <record id="view_hospital_appointment_form_quick_create" model="ir.ui.view">
+        <field name="name">hospital.appointment.form.create</field>
+        <field name="model">hospital.appointment</field>
+        <field name="arch" type="xml">
+            <form string="Appointment" class="o_form_view o_xxl_form_view">
+                <sheet>
+                    <group>
+                        <h1>
+                            <field name="code" readonly="1"/>
+                        </h1>
+                    </group>
+
+                    <group string="Appointment Details" col="2">
+                        <group>
+                            <field name="patient_id"/>
+                            <field name="doctor_id"/>
+                            <field name="specialization_id"/>
+                        </group>
+
+                        <group>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="fees" widget="monetary"/>
+                        </group>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes" colspan="2" nolabel="1"/>
+                    </group>
+
+                    <group string="Doctor Notes"
+                           invisible="status != 'processing' and status != 'done'">
+                        <field name="doctor_description"
+                               placeholder="Enter doctor notes..."
+                               nolabel="1"
+                               readonly="status == 'done'"/>
+                    </group>
+
+                    <group string="Cancel Reason" invisible="status != 'cancel'">
+                        <field name="cancel_reason" readonly="1" nolabel="1"/>
+                    </group>
+                </sheet>
+
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+
+            </form>
+        </field>
+    </record>
+    <!-- ===================== -->
+    <!-- CALENDAR VIEW -->
     <!-- ===================== -->
     <record id="view_appointment_calendar" model="ir.ui.view">
         <field name="name">hospital.appointment.calendar</field>
         <field name="model">hospital.appointment</field>
         <field name="arch" type="xml">
-            <calendar string="Appointments"
-                      date_start="start_time"
-                      date_stop="end_time"
-                      color="doctor_id"
-                      js_class="custom_calendar"
-                      mode="week"
-                      create="true"
-                      event_open_popup="true">
+            <calendar js_class="hospital_calendar"
+                        string="Appointments"
+                        date_start="start_time"
+                        date_stop="end_time"
+                        color="doctor_id"
+                        event_open_popup="true"
+                        quick_create="true"
+                        create_name_field="code"
+                        quick_create_view_id="%(hospital_management.view_hospital_appointment_form_quick_create)d"
+                        event_limit="10">
 
                 <field name="patient_id"/>
                 <field name="doctor_id"/>
                 <field name="status"/>
-
             </calendar>
         </field>
     </record>
-    
 
     <!-- ===================== -->
-    <!-- Wizard View -->
+    <!-- FORM VIEW -->
     <!-- ===================== -->
-    <record id="view_appointment_wizard_form" model="ir.ui.view">
-        <field name="name">appointment.wizard.form</field>
-        <field name="model">appointment.wizard</field>
+    <record id="view_appointment_form" model="ir.ui.view">
+        <field name="name">hospital.appointment.form</field>
+        <field name="model">hospital.appointment</field>
         <field name="arch" type="xml">
-            <form string="Create Appointment">
+            <form string="Appointment" class="o_form_view o_xxl_form_view">
+
+                <header>
+                    <button name="action_requested" string="Request" type="object"
+                            class="btn-primary" invisible="status != 'draft'"/>
+
+                    <button name="action_confirm" string="Accept" type="object"
+                            class="btn-success" invisible="status != 'requested'"/>
+
+                    <button name="action_processing" string="Start Processing" type="object"
+                            class="btn-primary" invisible="status != 'confirmed'"/>
+
+                    <button name="action_done" string="Done" type="object"
+                            class="btn-success" invisible="status != 'processing'"/>
+
+                    <button name="action_cancel" string="Cancel" type="object"
+                            class="btn-danger"
+                            invisible="status != 'requested' and status != 'confirmed'"/>
+
+                    <button name="action_reset_to_draft" string="Reset to Draft"
+                            type="object" class="btn-secondary"
+                            invisible="status != 'cancel'"/>
+
+                    <field name="status"
+                           widget="statusbar"
+                           statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <h1>
+                            <field name="code" readonly="1"/>
+                        </h1>
+                    </group>
+
+                    <group string="Appointment Details" col="2">
+                        <group>
+                            <field name="patient_id"/>
+                            <field name="doctor_id"/>
+                            <field name="specialization_id"/>
+                        </group>
+
+                        <group>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="fees" widget="monetary"/>
+                        </group>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes" colspan="2" nolabel="1"/>
+                    </group>
+
+                    <group string="Doctor Notes"
+                           invisible="status != 'processing' and status != 'done'">
+                        <field name="doctor_description"
+                               placeholder="Enter doctor notes..."
+                               nolabel="1"
+                               readonly="status == 'done'"/>
+                    </group>
+
+                    <group string="Cancel Reason" invisible="status != 'cancel'">
+                        <field name="cancel_reason" readonly="1" nolabel="1"/>
+                    </group>
+                </sheet>
+
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- CANCEL WIZARD -->
+    <!-- ===================== -->
+    <record id="view_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">appointment.cancel.wizard.form</field>
+        <field name="model">appointment.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancel Appointment">
                 <group>
-                    <field name="patient_id"/>
-                    <field name="doctor_id"/>
-                    <field name="start_time"/>
-                    <field name="end_time"/>
+                    <field name="appointment_id" invisible="1"/>
+                    <field name="reason"/>
                 </group>
                 <footer>
-                    <button name="action_create_appointment"
+                    <button name="action_confirm_cancel"
                             type="object"
-                            string="Create"
+                            string="Confirm"
                             class="btn-primary"/>
-                    <button string="Cancel" special="cancel"/>
+                    <button string="Close" special="cancel"/>
                 </footer>
             </form>
         </field>
     </record>
 
-
-    <!-- ===================== -->
-    <!-- Wizard Action -->
-    <!-- ===================== -->
-    <record id="action_appointment_wizard" model="ir.actions.act_window">
-        <field name="name">Create Appointment</field>
-        <field name="res_model">appointment.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_appointment_wizard_form"/>
-        <field name="target">new</field>
-    </record>
-
-<!-- </odoo> -->
-        
-
-        <!-- ===================== -->
-        <!-- FORM VIEW -->
-        <!-- ===================== -->
-        <record id="view_appointment_form" model="ir.ui.view">
-            <field name="name">hospital.appointment.form</field>
-            <field name="model">hospital.appointment</field>
-            <field name="arch" type="xml">
-                
-                <!--  IMPORTANT CLASS ADDED -->
-                <form string="Appointment" class="o_form_view o_xxl_form_view">
-
-                    <!-- HEADER -->
-                    <header>
-
-                        <button name="action_requested"
-                                string="Request"
-                                type="object"
-                                class="btn-primary"
-                                invisible="status != 'draft'"/>
-
-                        <button name="action_confirm"
-                                string="Accept"
-                                type="object"
-                                class="btn-success"
-                                invisible="status != 'requested'"/>
-
-                        <button name="action_processing"
-                                string="Start Processing"
-                                type="object"
-                                class="btn-primary"
-                                invisible="status != 'confirmed'"/>
-
-                        <button name="action_done"
-                                string="Done"
-                                type="object"
-                                class="btn-success"
-                                invisible="status != 'processing'"/>
-
-                        <button name="action_cancel"
-                                string="Cancel"
-                                type="object"
-                                class="btn-danger"
-                                invisible="status != 'requested' and status != 'confirmed'"/>
-
-                        <button name="action_reset_to_draft"
-                                string="Reset to Draft"
-                                type="object"
-                                class="btn-secondary"
-                                invisible="status != 'cancel'"/>
-                        
-                        <field name="status"
-                               widget="statusbar"
-                               statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
-
-                    </header>
-
-                    <!-- MAIN CONTENT (UNCHANGED) -->
-                    <sheet>
-
-                        <group>
-                            <h1>
-                                <field name="code" readonly="1"/>
-                            </h1>
-                        </group>
-
-                        <group string="Appointment Details" col="2">
-
-                            <group>
-                                <field name="patient_id"/>
-                                <field name="doctor_id"/>
-                                <field name="specialization_id"/>
-                            </group>
-
-                            <group>
-                                <field name="start_time"/>
-                                <field name="end_time"/>
-                                <field name="currency_id" invisible="1"/>
-                                <field name="fees" widget="monetary"/>
-                            </group>
-
-                        </group>
-
-                        <group string="Notes">
-                            <field name="notes" colspan="2" nolabel="1"/>
-                        </group>
-
-                        <group string="Doctor Notes" invisible="status != 'processing' and status != 'done'">
-                            <field name="doctor_description"
-                                placeholder="Enter doctor notes..."
-                                nolabel="1"
-                                readonly="status == 'done'" />
-                        </group>
-
-                        <group string="Cancel Reason"
-                            invisible="status != 'cancel'">
-                            <field name="cancel_reason" readonly="1" nolabel="1"/>
-                        </group>
-
-                    
-                    </sheet>
-                    <!--  RIGHT SIDE CHATTER -->
-                    <chatter>
-                        <field name="message_follower_ids" widget="mail_followers"/>
-                        <field name="activity_ids" widget="mail_activity"/>
-                        <field name="message_ids" widget="mail_thread"/>
-                    </chatter>
-                    
-
-                </form>
-
-            </field>
-        </record>
-        <record id="view_cancel_wizard_form" model="ir.ui.view">
-    <field name="name">appointment.cancel.wizard.form</field>
-    <field name="model">appointment.cancel.wizard</field>
-    <field name="arch" type="xml">
-        <form string="Cancel Appointment">
-            <group>
-                <field name="appointment_id" invisible="1"/>
-                <field name="reason"/>
-            </group>
-            <footer>
-                <button name="action_confirm_cancel"
-                        type="object"
-                        string="Confirm"
-                        class="btn-primary"/>
-                <button string="Close" special="cancel"/>
-            </footer>
-        </form>
-    </field>
-</record>
-
-    <!-- </data> -->
 </odoo>
