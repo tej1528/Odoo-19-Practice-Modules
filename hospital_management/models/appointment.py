@@ -217,26 +217,33 @@ class HospitalAppointment(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_start_time': self.env.context.get('default_start'),
-                'default_end_time': self.env.context.get('default_stop'),
-            }
+    'default_start_time': self.env.context.get('default_start_time'),
+    'default_end_time': self.env.context.get('default_end_time'),
+}
         }
     
     @api.model_create_multi
     def create(self, vals_list):
-        records = super().create(vals_list)
-        for rec in records:
-            if rec.code == 'New':
-                rec.code = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
-        return records
+        for vals in vals_list:
+            if vals.get('code', 'New') == 'New':
+                vals['code'] = self.env['ir.sequence'].next_by_code('appointment.code') or 'New'
+        return super().create(vals_list)
 
-    
+    @api.model
+    def default_get(self, fields):
+        res = super().default_get(fields)
+
+        if self.env.context.get('default_doctor_id'):
+            res['doctor_id'] = self.env.context.get('default_doctor_id')
+
+        return res
+
     # VALIDATIONS
     @api.constrains('start_time', 'end_time')
-    def check_appointment_time(self):
+    def _check_time_values(self):
         for rec in self:
             if rec.start_time and rec.end_time and rec.end_time <= rec.start_time:
-                raise ValidationError("End Time must be greater than Start Time.")
+                raise ValidationError("End Time must be after Start Time.")
 
     @api.constrains('patient_id', 'doctor_id', 'start_time', 'end_time')
     def _check_time_overlap(self):
@@ -265,6 +272,7 @@ class HospitalAppointment(models.Model):
                 raise ValidationError("Patient already has an appointment in this time slot!")
     
 
+
     #----------------------- ONCHANGE-----------------------
 
     @api.onchange('doctor_id')
@@ -279,10 +287,8 @@ class HospitalAppointment(models.Model):
 
     @api.onchange('start_time')
     def _onchange_start_time(self):
-        if self.start_time and not self.end_time:
-            duration = int(
-                self.env['ir.config_parameter'].sudo().get_param(
-                    'hospital.appointment_duration', default=30
-                )
-            )
+        """ Automatically set end_time based on config duration """
+        if self.start_time:
+            # Get duration from system parameters (stored by res.config.settings)
+            duration = int(self.env['ir.config_parameter'].sudo().get_param('hospital.appointment_duration', default=30))
             self.end_time = self.start_time + timedelta(minutes=duration)

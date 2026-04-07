@@ -56,7 +56,7 @@
     <menuitem id="menu_hospital_settings"
           name="Settings"
           parent="menu_hospital_config"
-          action="base_setup.action_general_configuration"
+          action="action_hospital_settings"
           sequence="1"/>
 
 </odoo>

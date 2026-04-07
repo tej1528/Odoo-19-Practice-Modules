@@ -1,34 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
+
+    <record id="module_category_hospital" model="ir.module.category">
+    <field name="name">Hospital</field>
+    <field name="sequence">25</field>
+</record>
+
+    <!-- ACTION -->
+    <record id="action_hospital_settings" model="ir.actions.act_window">
+    <field name="name">Hospital Settings</field>
+    <field name="res_model">res.config.settings</field>
+    <field name="view_mode">form</field>
+    <field name="context"> {'module': 'hospital_management'} </field>
+</record>
+
+    <!-- SETTINGS VIEW -->
     <record id="view_hospital_settings" model="ir.ui.view">
         <field name="name">hospital.settings.view</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
 
-            <xpath expr="//form" position="inside">
-                <div class="app_settings_block" data-string="Hospital">
-                    <h2>Hospital</h2>
+            <!-- ✅ Odoo 19 correct target -->
+           <xpath expr="//form" position="inside">
 
-                    <div class="row mt16 o_settings_container">
-                        <div class="col-12 col-lg-6 o_setting_box">
+    <app name="hospital_management" string="Hospital">
 
-                            <div class="o_setting_left_pane"/>
-                            <div class="o_setting_right_pane">
-                                <label for="appointment_duration"/>
-                                <div class="text-muted">
-                                    Default appointment duration in minutes
-                                </div>
-                                <field name="appointment_duration"/>
-                            </div>
+        <block title="Hospital Settings">
 
-                        </div>
-                    </div>
+            <setting id="appointment_duration_setting">
 
+                <label for="appointment_duration"/>
+
+                <div class="text-muted">
+                    Set appointment duration (1 to 60 minutes)
                 </div>
-            </xpath>
 
+                <field name="appointment_duration"/>
+
+            </setting>
+
+        </block>
+
+    </app>
+
+</xpath>
+    
         </field>
     </record>
 

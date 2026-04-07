@@ -7,6 +7,7 @@
     'license': 'LGPL-3',
 
     'depends': ['base', 'mail', 'base_setup', 'web'],
+    'images': ['static/description/icon.png'],
 
     'data': [
     'security/ir.model.access.csv',

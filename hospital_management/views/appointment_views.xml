@@ -46,23 +46,66 @@
         <field name="name">hospital.appointment.kanban</field>
         <field name="model">hospital.appointment</field>
         <field name="arch" type="xml">
-            <kanban>
-                <field name="code"/>
-                <field name="patient_id"/>
-                <field name="doctor_id"/>
-                <field name="status"/>
+            <kanban default_order="start_time desc">
+    <templates>
+        <t t-name="card">
 
-                <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_card">
-                            <strong><field name="code"/></strong>
-                            <div><field name="patient_id"/></div>
-                            <div><field name="doctor_id"/></div>
-                            <div>Status: <field name="status"/></div>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
+            <div>
+
+                <!--  Top Row: Name + Fees -->
+                <div class="d-flex justify-content-between">
+
+                    <!-- Name -->
+                    <div class="fw-bold fs-5">
+                        <field name="patient_id"/>
+                    </div>
+
+                    <!-- Fees -->
+                    <div class="fw-bold text-end">
+                        <field name="fees" widget="monetary"/>
+                    </div>
+
+                </div>
+
+                <!--  Code -->
+                <div class="text-muted mt-1">
+                    <field name="code"/>
+                </div>
+
+                <!--  Doctor -->
+                <div class="mt-1">
+                    <field name="doctor_id"/>
+                </div>
+
+                <!--  Date + Status -->
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    
+                    <!-- Date -->
+                    <div class="text-muted">
+                        <field name="start_time"/>
+                        <span> - </span>
+                        <field name="end_time"/>
+                    </div>
+
+                    <!-- Status Badge -->
+                    <span t-att-class="'badge ' + (
+                        record.status.raw_value == 'done' and 'bg-success' or
+                        record.status.raw_value == 'draft' and 'bg-secondary' or
+                        record.status.raw_value == 'confirmed' and 'bg-primary' or
+                        record.status.raw_value == 'processing' and 'bg-warning' or
+                        record.status.raw_value == 'cancel' and 'bg-danger' or
+                        'bg-info'
+                    )">
+                        <field name="status"/>
+                    </span>
+
+                </div>
+
+            </div>
+
+        </t>
+    </templates>
+</kanban>
         </field>
     </record>
 
@@ -155,20 +198,14 @@
         <field name="name">hospital.appointment.calendar</field>
         <field name="model">hospital.appointment</field>
         <field name="arch" type="xml">
-            <calendar js_class="hospital_calendar"
-                        string="Appointments"
-                        date_start="start_time"
-                        date_stop="end_time"
-                        color="doctor_id"
-                        event_open_popup="true"
-                        quick_create="true"
-                        create_name_field="code"
-                        quick_create_view_id="%(hospital_management.view_hospital_appointment_form_quick_create)d"
-                        event_limit="10">
-
+            <calendar js_class="hospital_calendar" 
+                      string="Appointments" 
+                      date_start="start_time" 
+                      date_stop="end_time" 
+                      event_open_popup="true" 
+                      quick_create="false">
                 <field name="patient_id"/>
                 <field name="doctor_id"/>
-                <field name="status"/>
             </calendar>
         </field>
     </record>
