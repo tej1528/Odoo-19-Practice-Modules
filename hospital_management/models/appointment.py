@@ -2,6 +2,7 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 import base64
 from datetime import timedelta
+from datetime import datetime
 
 
 class HospitalAppointment(models.Model):
@@ -62,9 +63,23 @@ class HospitalAppointment(models.Model):
     end_time = fields.Datetime(required=True)
 
     is_doctor_user = fields.Boolean(compute="_compute_is_doctor_user")
-
     doctor_description = fields.Text(string="Doctor Description")
-    
+
+    processing_start_time = fields.Datetime("Processing Start", readonly=True)
+    total_processing_time = fields.Float("Total Processing Time (Minutes)", readonly=True)
+
+    @api.depends('processing_start_time', 'status')
+    def _compute_duration_timer(self):
+        for rec in self:
+            if rec.status == 'processing' and rec.processing_start_time:
+
+                now = datetime.now()
+                start = fields.Datetime.to_datetime(rec.processing_start_time)
+                diff = now - start
+                rec.duration_timer = diff.total_seconds() / 3600.0
+            else:
+                rec.duration_timer = 0.0
+
     @api.depends('doctor_id')
     def _compute_is_doctor_user(self):
         for rec in self:
@@ -169,14 +184,18 @@ class HospitalAppointment(models.Model):
     def action_processing(self):
         for rec in self:
             rec.status = 'processing'
-
+            rec.processing_start_time = fields.Datetime.now()
+  
     def action_done(self):
         for rec in self:
             if not rec.doctor_description:
-                raise ValidationError(
-                    " Please enter Doctor Notes."
-                )
-        self.write({'status': 'done'})
+                raise ValidationError("Please enter Doctor Notes.")
+
+            if rec.processing_start_time:
+                diff = fields.Datetime.now() - rec.processing_start_time
+                rec.total_processing_time = diff.total_seconds() / 60.0
+            
+            rec.status = 'done'
         return {'type': 'ir.actions.client', 'tag': 'reload'}
 
     def action_cancel(self):

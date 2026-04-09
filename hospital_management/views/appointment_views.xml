@@ -62,7 +62,10 @@
 
                     <!-- Fees -->
                     <div class="fw-bold text-end">
-                        <field name="fees" widget="monetary"/>
+                        <field name="fees"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"/>
+                        <field name="currency_id" invisible="1"/>
                     </div>
 
                 </div>
@@ -78,29 +81,40 @@
                 </div>
 
                 <!--  Date + Status -->
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    
-                    <!-- Date -->
-                    <div class="text-muted">
-                        <field name="start_time"/>
-                        <span> - </span>
-                        <field name="end_time"/>
-                    </div>
+                <div class="d-flex justify-content-between align-items-start mt-2">
+    
+    <div>
+        <div class="text-muted">
+    <t t-set="start" t-value="format_datetime(record.start_time.raw_value, 'MMM d, hh:mm a')"/>
+    <t t-set="end" t-value="format_datetime(record.end_time.raw_value, 'hh:mm a')"/>
 
-                    <!-- Status Badge -->
-                    <span t-att-class="'badge ' + (
-                        record.status.raw_value == 'done' and 'bg-success' or
-                        record.status.raw_value == 'draft' and 'bg-secondary' or
-                        record.status.raw_value == 'confirmed' and 'bg-primary' or
-                        record.status.raw_value == 'processing' and 'bg-warning' or
-                        record.status.raw_value == 'cancel' and 'bg-danger' or
-                        'bg-info'
-                    )">
-                        <field name="status"/>
-                    </span>
+    <span t-esc="start"/>
+    <span> - </span>
+    <span t-esc="end"/>
+</div>
 
-                </div>
+        <div class="mt-1" invisible="status != 'processing'">
+            <field name="processing_start_time" invisible="1"/>
+            <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
+        </div>
+    </div>
 
+    <span t-att-class="'badge ' + {
+        'draft': 'text-bg-secondary',
+        'requested': 'text-bg-info',
+        'confirmed': 'text-bg-primary',
+        'processing': 'text-bg-warning',
+        'done': 'text-bg-success',
+        'cancel': 'text-bg-danger'
+    }[record.status.raw_value]">
+        <field name="status"/>
+    </span>
+</div>
+
+                <!-- <div class="d-flex justify-content-end mt-1" invisible="status != 'processing'">
+                    <field name="processing_start_time" invisible="1"/>
+                    <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
+                </div> -->
             </div>
 
         </t>
@@ -169,12 +183,12 @@
                         <field name="notes" colspan="2" nolabel="1"/>
                     </group>
 
-                    <group string="Doctor Notes"
-                           invisible="status != 'processing' and status != 'done'">
+                    <group string="Doctor Notes" invisible="status != 'processing' and status != 'done'">
                         <field name="doctor_description"
-                               placeholder="Enter doctor notes..."
-                               nolabel="1"
-                               readonly="status == 'done'"/>
+                            placeholder="Enter doctor notes..."
+                            colspan="2"
+                            nolabel="1"
+                            readonly="status == 'done'"/>
                     </group>
 
                     <group string="Cancel Reason" invisible="status != 'cancel'">
@@ -202,10 +216,12 @@
                       string="Appointments" 
                       date_start="start_time" 
                       date_stop="end_time" 
+                      color="status"
                       event_open_popup="true" 
                       quick_create="false">
                 <field name="patient_id"/>
                 <field name="doctor_id"/>
+                <field name="status"/>
             </calendar>
         </field>
     </record>
@@ -214,85 +230,69 @@
     <!-- FORM VIEW -->
     <!-- ===================== -->
     <record id="view_appointment_form" model="ir.ui.view">
-        <field name="name">hospital.appointment.form</field>
-        <field name="model">hospital.appointment</field>
-        <field name="arch" type="xml">
-            <form string="Appointment" class="o_form_view o_xxl_form_view">
+    <field name="name">hospital.appointment.form</field>
+    <field name="model">hospital.appointment</field>
+    <field name="arch" type="xml">
+        <form string="Appointment" class="o_form_view o_xxl_form_view">
+            <header>
+                <button name="action_requested" string="Request" type="object" class="btn-primary" invisible="status != 'draft'"/>
+                <button name="action_confirm" string="Accept" type="object" class="btn-success" invisible="status != 'requested'"/>
+                <button name="action_processing" string="Start Processing" type="object" class="btn-primary" invisible="status != 'confirmed'"/>
+                <button name="action_done" string="Done" type="object" class="btn-success" invisible="status != 'processing'"/>
 
-                <header>
-                    <button name="action_requested" string="Request" type="object"
-                            class="btn-primary" invisible="status != 'draft'"/>
+                <button name="action_cancel" string="Cancel" type="object" class="btn-danger" invisible="status not in ['requested', 'confirmed']"/>
+                <button name="action_reset_to_draft" string="Reset to Draft" type="object" class="btn-secondary" invisible="status != 'cancel'"/>
 
-                    <button name="action_confirm" string="Accept" type="object"
-                            class="btn-success" invisible="status != 'requested'"/>
+                <field name="status" widget="statusbar" statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
+                
+            </header>
 
-                    <button name="action_processing" string="Start Processing" type="object"
-                            class="btn-primary" invisible="status != 'confirmed'"/>
+            <sheet>
+                <group>
+                    <h1><field name="code" readonly="1"/></h1>
+                <div class="d-flex justify-content-end mt-2" invisible="status != 'processing'">
+                    <field name="processing_start_time" invisible="1"/>
+                    <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
+                </div>
+                </group>
 
-                    <button name="action_done" string="Done" type="object"
-                            class="btn-success" invisible="status != 'processing'"/>
-
-                    <button name="action_cancel" string="Cancel" type="object"
-                            class="btn-danger"
-                            invisible="status != 'requested' and status != 'confirmed'"/>
-
-                    <button name="action_reset_to_draft" string="Reset to Draft"
-                            type="object" class="btn-secondary"
-                            invisible="status != 'cancel'"/>
-
-                    <field name="status"
-                           widget="statusbar"
-                           statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
-                </header>
-
-                <sheet>
+                <group string="Appointment Details" col="2">
                     <group>
-                        <h1>
-                            <field name="code" readonly="1"/>
-                        </h1>
+                        <field name="patient_id"/>
+                        <field name="doctor_id"/>
+                        <field name="specialization_id"/>
                     </group>
-
-                    <group string="Appointment Details" col="2">
-                        <group>
-                            <field name="patient_id"/>
-                            <field name="doctor_id"/>
-                            <field name="specialization_id"/>
-                        </group>
-
-                        <group>
-                            <field name="start_time"/>
-                            <field name="end_time"/>
-                            <field name="currency_id" invisible="1"/>
-                            <field name="fees" widget="monetary"/>
-                        </group>
+                    <group>
+                        <field name="start_time"/>
+                        <field name="end_time"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="fees" widget="monetary"/>
+                        
+                        <field name="total_processing_time" widget="float_time" invisible="status != 'done'" string="Total Duration"/>
                     </group>
+                </group>
 
-                    <group string="Notes">
-                        <field name="notes" colspan="2" nolabel="1"/>
-                    </group>
+                <group string="Notes">
+                    <field name="notes" colspan="2" nolabel="1"/>
+                </group>
 
-                    <group string="Doctor Notes"
-                           invisible="status != 'processing' and status != 'done'">
-                        <field name="doctor_description"
-                               placeholder="Enter doctor notes..."
-                               nolabel="1"
-                               readonly="status == 'done'"/>
-                    </group>
+                <group string="Doctor Notes" invisible="status not in ['processing', 'done']">
+                    <field name="doctor_description" placeholder="Enter doctor notes..." colspan="2" nolabel="1" readonly="status == 'done'"/>
+                </group>
 
-                    <group string="Cancel Reason" invisible="status != 'cancel'">
-                        <field name="cancel_reason" readonly="1" nolabel="1"/>
-                    </group>
-                </sheet>
+                <group string="Cancel Reason" invisible="status != 'cancel'">
+                    <field name="cancel_reason" readonly="1" nolabel="1"/>
+                </group>
+            </sheet>
 
-                <chatter>
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </chatter>
-
-            </form>
-        </field>
-    </record>
+            <chatter>
+                <field name="message_follower_ids"/>
+                <field name="activity_ids"/>
+                <field name="message_ids"/>
+            </chatter>
+        </form>
+    </field>
+</record>
 
     <!-- ===================== -->
     <!-- CANCEL WIZARD -->

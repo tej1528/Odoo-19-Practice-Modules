@@ -22,7 +22,7 @@ class HospitalCalendarController extends CalendarController {
                 ["hospital.appointment_duration", "30"]
             );
             const duration = parseInt(durationStr);
-            
+
             // Calculate end date
             const startDate = new Date(start);
             const endDate = new Date(startDate.getTime() + duration * 60000);
