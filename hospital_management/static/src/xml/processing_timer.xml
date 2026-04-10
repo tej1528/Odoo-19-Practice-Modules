@@ -1,9 +1,12 @@
 <templates xml:space="preserve">
 
     <t t-name="hospital.ProcessingTimer">
-        <div class="badge rounded-pill text-bg-info px-3 py-2">
-            <i class="fa fa-clock-o me-1"/>
+        <div class="badge text-bg-info d-inline-flex align-items-center"
+             style="height: 24px; font-size: 13px; padding: 0 8px;">
+
+            <i class="fa fa-clock-o me-1" style="font-size: 12px;"/>
             <t t-esc="state.time"/>
+
         </div>
     </t>
 

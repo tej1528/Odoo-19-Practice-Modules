@@ -41,12 +41,20 @@
         action="appointment_action"
         sequence="3"/>
 
+    <!-- report Menu -->
+    <menuitem 
+        id="menu_appointment_report"
+        name="Report"
+        parent="menu_appointment"
+        action="action_appointment_report_wizard"
+        sequence="20"/>
+
     <!--  Specialization -->
     <menuitem id="menu_specialization"
         name="Specializations"
         parent="hospital_main_menu"
         action="action_specialization"
-        sequence="4"/>
+        sequence="5"/>
 
     <menuitem id="menu_hospital_config"
           name="Configuration"

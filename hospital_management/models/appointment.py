@@ -97,6 +97,31 @@ class HospitalAppointment(models.Model):
         ('cancel', 'Cancelled')
     ], default='draft', tracking=True)
 
+    #kanban drag and drop 
+    def write(self, vals):
+        if 'status' in vals:
+            allowed = {
+                'draft': ['requested'],
+                'requested': ['confirmed', 'cancel'],
+                'confirmed': ['processing', 'cancel'],
+                'processing': ['done'],
+                'done': [],
+                'cancel': ['draft'],
+            }
+
+            for rec in self:
+                current = rec.status
+                new = vals['status']
+
+                if current == new:
+                    continue
+
+                if new not in allowed.get(current, []):
+                    raise ValidationError(
+                        f"Invalid transition: {current} → {new}"
+                    )
+
+        return super().write(vals)
 
     # COMMON EMAIL FUNCTION
     def _send_email(self, template_xmlid, email_to=None):
@@ -193,7 +218,7 @@ class HospitalAppointment(models.Model):
 
             if rec.processing_start_time:
                 diff = fields.Datetime.now() - rec.processing_start_time
-                rec.total_processing_time = diff.total_seconds() / 60.0
+                rec.total_processing_time = diff.total_seconds() / 3600.0
             
             rec.status = 'done'
         return {'type': 'ir.actions.client', 'tag': 'reload'}
