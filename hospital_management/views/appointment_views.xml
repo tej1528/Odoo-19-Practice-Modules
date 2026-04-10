@@ -43,85 +43,100 @@
     <!-- KANBAN VIEW -->
     <!-- ===================== -->
     <record id="view_appointment_kanban" model="ir.ui.view">
-        <field name="name">hospital.appointment.kanban</field>
-        <field name="model">hospital.appointment</field>
-        <field name="arch" type="xml">
-            <kanban default_order="start_time desc">
-    <templates>
-        <t t-name="card">
+    <field name="name">hospital.appointment.kanban</field>
+    <field name="model">hospital.appointment</field>
+    <field name="arch" type="xml">
 
-            <div>
+        <kanban default_order="start_time desc">
 
-                <!--  Top Row: Name + Fees -->
-                <div class="d-flex justify-content-between">
+            <!-- REQUIRED FIELDS -->
+            <field name="patient_id"/>
+            <field name="fees"/>
+            <field name="currency_id"/>
+            <field name="code"/>
+            <field name="doctor_id"/>
+            <field name="start_time"/>
+            <field name="end_time"/>
+            <field name="status"/>
+            <field name="processing_start_time"/>
 
-                    <!-- Name -->
-                    <div class="fw-bold fs-5">
-                        <field name="patient_id"/>
+            <templates>
+                <t t-name="card">
+
+                    <div>
+
+                        <!-- Top Row -->
+                        <div class="d-flex justify-content-between">
+                            <div class="fw-bold fs-5">
+                                <field name="patient_id"/>
+                            </div>
+
+                            <div class="fw-bold text-end">
+                                <field name="fees"
+                                    widget="monetary"
+                                    options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" invisible="1"/>
+                            </div>
+                        </div>
+
+                        <!-- Code -->
+                        <div class="text-muted mt-1">
+                            <field name="code"/>
+                        </div>
+
+                        <!-- Doctor -->
+                        <div class="mt-1">
+                            <field name="doctor_id"/>
+                        </div>
+
+                        <!-- Date + Status -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div>
+
+                                <div class="text-muted">
+                                    <t t-if="record.start_time.raw_value and record.end_time.raw_value">
+
+                                        <t t-set="start"
+                                           t-value="luxon.DateTime.fromISO(record.start_time.raw_value).toFormat('MMM d, hh:mm a')"/>
+
+                                        <t t-set="end"
+                                           t-value="luxon.DateTime.fromISO(record.end_time.raw_value).toFormat('hh:mm a')"/>
+
+                                        <span t-esc="start"/>
+                                        <span> - </span>
+                                        <span t-esc="end"/>
+
+                                    </t>
+                                </div>
+
+                                <!-- Processing Timer -->
+                                <div class="mt-1" invisible="status != 'processing'">
+                                    <field name="processing_start_time" invisible="1"/>
+                                    <widget name="processing_timer"
+                                        options="{'start_time_field': 'processing_start_time'}"/>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <field name="status" widget="badge"
+                                decoration-secondary="status == 'draft'"
+                                decoration-info="status == 'requested'"
+                                decoration-primary="status == 'confirmed'"
+                                decoration-warning="status == 'processing'"
+                                decoration-success="status == 'done'"
+                                decoration-danger="status == 'cancel'"/>
+
+                        </div>
+
                     </div>
 
-                    <!-- Fees -->
-                    <div class="fw-bold text-end">
-                        <field name="fees"
-                            widget="monetary"
-                            options="{'currency_field': 'currency_id'}"/>
-                        <field name="currency_id" invisible="1"/>
-                    </div>
+                </t>
+            </templates>
 
-                </div>
+        </kanban>
 
-                <!--  Code -->
-                <div class="text-muted mt-1">
-                    <field name="code"/>
-                </div>
-
-                <!--  Doctor -->
-                <div class="mt-1">
-                    <field name="doctor_id"/>
-                </div>
-
-                <!--  Date + Status -->
-                <div class="d-flex justify-content-between align-items-start mt-2">
-    
-    <div>
-        <div class="text-muted">
-    <t t-set="start" t-value="format_datetime(record.start_time.raw_value, 'MMM d, hh:mm a')"/>
-    <t t-set="end" t-value="format_datetime(record.end_time.raw_value, 'hh:mm a')"/>
-
-    <span t-esc="start"/>
-    <span> - </span>
-    <span t-esc="end"/>
-</div>
-
-        <div class="mt-1" invisible="status != 'processing'">
-            <field name="processing_start_time" invisible="1"/>
-            <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
-        </div>
-    </div>
-
-    <span t-att-class="'badge ' + {
-        'draft': 'text-bg-secondary',
-        'requested': 'text-bg-info',
-        'confirmed': 'text-bg-primary',
-        'processing': 'text-bg-warning',
-        'done': 'text-bg-success',
-        'cancel': 'text-bg-danger'
-    }[record.status.raw_value]">
-        <field name="status"/>
-    </span>
-</div>
-
-                <!-- <div class="d-flex justify-content-end mt-1" invisible="status != 'processing'">
-                    <field name="processing_start_time" invisible="1"/>
-                    <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
-                </div> -->
-            </div>
-
-        </t>
-    </templates>
-</kanban>
-        </field>
-    </record>
+    </field>
+</record>
 
     <!-- ===================== -->
     <!-- GRAPH VIEW -->
