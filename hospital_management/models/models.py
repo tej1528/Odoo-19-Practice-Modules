@@ -1,6 +1,5 @@
 from odoo import models, fields, api
 
-
 class HospitalManagement(models.Model):
     _name = 'hospital_management.hospital_management'
     _description = 'Hospital Management'

@@ -5,3 +5,4 @@ access_specialization_user,access_specialization_user,model_hospital_specializat
 access_cancel_wizard,access.cancel.wizard,model_appointment_cancel_wizard,base.group_user,1,1,1,1
 access_hospital_appointment,hospital.appointment,model_hospital_appointment,,1,1,1,1
 access_appointment_wizard,appointment.wizard,model_appointment_wizard,,1,1,1,1
+access_appointment_report_wizard,appointment.report.wizard,model_appointment_report_wizard,base.group_user,1,1,1,1

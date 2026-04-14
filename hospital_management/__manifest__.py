@@ -9,18 +9,19 @@
     'depends': ['base', 'mail', 'base_setup', 'web'],
     'images': ['static/description/icon.png'],
 
-    'data': [
+'data': [
     'security/ir.model.access.csv',
-    'data/sequence.xml',          
-    'views/res_partner_views.xml',
+    'data/sequence.xml',
+    'data/mail_templates.xml',
+    'reports/appointment_report_template.xml',
     'reports/appointment_report.xml',
-    'data/mail_templates.xml',     
-    'views/appointment_views.xml',
+    'wizard/appointment_report_wizard.xml',
     'views/appointment_action.xml',
+    'views/res_partner_views.xml',
+    'views/appointment_views.xml',
     'views/res_config_settings_view.xml',
     'views/specialization_views.xml',
     'views/menu.xml',
-    'reports/appointment_report_template.xml',
 ],
 
     'assets': {

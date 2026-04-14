@@ -10,8 +10,6 @@ class ResConfigSettings(models.TransientModel):
         default=30
     )
 
-    
-
     @api.constrains('appointment_duration')
     def _check_appointment_duration(self):
         for rec in self:

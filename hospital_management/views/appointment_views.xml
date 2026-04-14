@@ -166,27 +166,6 @@
         </field>
     </record>
 
-    #wizard for reports
-    <record id="view_appointment_report_wizard" model="ir.ui.view">
-    <field name="name">appointment.report.wizard.form</field>
-    <field name="model">appointment.report.wizard</field>
-    <field name="arch" type="xml">
-        <form string="Appointment Report">
-            <group>
-                <field name="start_date"/>
-                <field name="end_date"/>
-            </group>
-            <footer>
-                <button name="action_generate_report"
-                        string="Generate"
-                        type="object"
-                        class="btn-primary"/>
-                <button string="Cancel" special="cancel"/>
-            </footer>
-        </form>
-    </field>
-</record>
-
     <!-- wizard form for appointment-->
     <record id="view_hospital_appointment_form_quick_create" model="ir.ui.view">
         <field name="name">hospital.appointment.form.create</field>

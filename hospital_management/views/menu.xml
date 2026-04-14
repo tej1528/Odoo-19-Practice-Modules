@@ -1,70 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-        <!-- ACTION -->
-        <record id="action_appointment" model="ir.actions.act_window">
-            <field name="name">Appointments</field>
-            <field name="res_model">hospital.appointment</field>
-
-            <field name="view_mode">tree,form,kanban,graph,pivot,calendar</field>
-        </record>
-    
-    <!-- Main Menu -->
     <menuitem 
         id="hospital_main_menu"
         name="Hospital Management"
         sequence="1"/>
 
-    <!-- Patient Menu -->
-    <menuitem 
+    <record id="action_appointment" model="ir.actions.act_window">
+        <field name="name">Appointments</field>
+        <field name="res_model">hospital.appointment</field>
+        <field name="view_mode">list,form,kanban,graph,pivot,calendar</field>
+    </record>
 
+    <menuitem 
         id="menu_patient"
         name="Patients"
         parent="hospital_main_menu"
         action="action_patient"
-        sequence="1"/>
+        sequence="10"/>
 
-
-    <!-- Doctor Menu -->
     <menuitem 
         id="menu_doctor"
         name="Doctors"
         parent="hospital_main_menu"
-
         action="action_doctor"
-        sequence="2"/>
-
-    <!-- Appointment Menu -->
-    <menuitem 
-        id="menu_appointment"
-        name="Appointments"
-        parent="hospital_main_menu"
-        action="appointment_action"
-        sequence="3"/>
-
-    <!-- report Menu -->
-    <menuitem 
-        id="menu_appointment_report"
-        name="Report"
-        parent="menu_appointment"
-        action="action_appointment_report_wizard"
         sequence="20"/>
 
-    <!--  Specialization -->
-    <menuitem id="menu_specialization"
-        name="Specializations"
+    <menuitem id="menu_appointment"
+        name="Appointments"
         parent="hospital_main_menu"
-        action="action_specialization"
-        sequence="5"/>
+        action="action_appointment"
+        sequence="30"/>
+
+    <menuitem id="menu_reporting_root"
+    name="Reporting"
+    parent="hospital_main_menu"
+    action="action_appointment_report_wizard"
+    sequence="40"/>
+
+    <menuitem id="menu_appointment_report_wizard"
+            name="Appointment Report"
+            parent="menu_reporting_root"
+            action="action_appointment_report_wizard"
+            sequence="10"/>
 
     <menuitem id="menu_hospital_config"
-          name="Configuration"
-          parent="hospital_main_menu"
-          sequence="10"/>
+              name="Configuration"
+              parent="hospital_main_menu"
+              sequence="100"/>
+
+    <menuitem id="menu_specialization"
+              name="Specializations"
+              parent="menu_hospital_config"
+              action="action_specialization"
+              sequence="10"/>
 
     <menuitem id="menu_hospital_settings"
-          name="Settings"
-          parent="menu_hospital_config"
-          action="action_hospital_settings"
-          sequence="1"/>
+              name="Settings"
+              parent="menu_hospital_config"
+              action="action_hospital_settings"
+              sequence="20"/>
 
 </odoo>

@@ -74,60 +74,9 @@
                                     <span t-field="doc.end_time" t-options='{"widget": "datetime"}'/>
                                 </p>
 
-                                
-
                             </div>
 
                         </div>
-
-                        <hr style="clear:both;"/>
-
-                        <!-- FEES (FIXED ALIGNMENT) -->
-                        <!-- <div style="margin-top:20px;">
-
-                            <table style="width:100%; border-collapse:collapse;">
-
-                                <thead>
-                                    <tr style="border-bottom:1px solid #000;">
-                                        <th style="text-align:left; padding:6px;">Description</th>
-                                        <th style="text-align:right; padding:6px;">Amount</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody> -->
-
-                                    <!-- FEES -->
-                                    <!-- <tr>
-                                        <td style="padding:6px;">Doctor Fees</td>
-                                        <td style="text-align:right; padding:6px;">
-                                            <span t-field="doc.fees"
-                                                  t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                                        </td>
-                                    </tr> -->
-
-                                    <!-- LINE -->
-                                    <!-- <tr>
-                                        <td colspan="2">
-                                            <hr style="margin:5px 0; border:1px solid #000;"/>
-                                        </td>
-                                    </tr> -->
-
-                                    <!-- TOTAL -->
-                                    <!-- <tr>
-                                        <td style="padding:6px;"><strong>Total</strong></td>
-                                        <td style="text-align:right; padding:6px;">
-                                            <strong t-field="doc.fees"
-                                                    t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                                        </td>
-                                    </tr> -->
-
-                                <!-- </tbody>
-
-                            </table>
-
-                        </div>
-
-                        <hr/> -->
 
                         <!-- Notes -->
                             <div style="margin-top:15px;">
@@ -137,16 +86,6 @@
                                 </p>
                             </div>
                         
-                        
-                        <!-- description
-                        <t t-if="doc.status == 'cancel'">
-                            <div style="margin-top:15px;">
-                                <h3 style="color:#d9534f;">Description</h3>
-                                <p>
-                                    <span t-esc="doc.cancel_reason"/>
-                                </p>
-                            </div>
-                        </t> -->
 
                         <!-- Doctor Description -->
                         <t t-if="doc.doctor_description">
@@ -176,7 +115,5 @@
                 </t>
             </t>
         </t>
-
     </template>
-
 </odoo>
