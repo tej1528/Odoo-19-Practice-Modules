@@ -7,16 +7,41 @@ class AppointmentReportWizard(models.TransientModel):
     start_date = fields.Date(string="Start Date")
     end_date = fields.Date(string="End Date")
 
-    patient_id = fields.Many2one('res.partner', string="Patient", domain=[('is_patient', '=', True)])
-    doctor_ids = fields.Many2many('res.partner', string="Doctors", domain=[('is_doctor', '=', True)]
-)
-    specialization_ids = fields.Many2many('hospital.specialization', string="Specializations")
+    currency_id = fields.Many2one(
+    'res.currency',
+    string="Currency",
+    default=lambda self: self.env.company.currency_id)
+    
+    patient_ids = fields.Many2many(
+    'res.partner',
+    'wizard_patient_rel',   
+    'wizard_id',
+    'partner_id',
+    string="Patients",
+    domain=[('is_patient', '=', True)])
 
+    doctor_ids = fields.Many2many(
+    'res.partner',
+    'wizard_doctor_rel',  
+    'wizard_id',
+    'partner_id',
+    string="Doctors",
+    domain=[('is_doctor', '=', True)])
+
+    specialization_ids = fields.Many2many('hospital.specialization', string="Specializations")
+    
+    status_ids = fields.Many2many(
+    'hospital.appointment.status',
+    'wizard_status_rel',
+    'wizard_id',
+    'status_id',
+    string="Status")
+    
     def action_show_data(self):
         domain = []
 
-        if self.patient_id:
-            domain.append(('patient_id', '=', self.patient_id.id))
+        if self.patient_ids:
+            domain.append(('patient_id', 'in', self.patient_ids.ids))
 
         if self.doctor_ids:
             domain.append(('doctor_id', 'in', self.doctor_ids.ids))
@@ -29,6 +54,9 @@ class AppointmentReportWizard(models.TransientModel):
 
         if self.end_date:
             domain.append(('end_time', '<=', self.end_date))
+        
+        if self.status_ids:
+            domain.append(('status', 'in', self.status_ids.mapped('code')))
 
         return {
             'type': 'ir.actions.act_window',
@@ -44,8 +72,8 @@ class AppointmentReportWizard(models.TransientModel):
 
         domain = []
 
-        if self.patient_id:
-            domain.append(('patient_id', '=', self.patient_id.id))
+        if self.patient_ids:
+            domain.append(('patient_id', 'in', self.patient_ids.ids))
 
         if self.doctor_ids:
             domain.append(('doctor_id', 'in', self.doctor_ids.ids))
@@ -58,6 +86,9 @@ class AppointmentReportWizard(models.TransientModel):
 
         if self.end_date:
             domain.append(('end_time', '<=', self.end_date))
+
+        if self.status_ids:
+            domain.append(('status', 'in', self.status_ids.mapped('code')))
 
         appointments = self.env['hospital.appointment'].search(domain)
 

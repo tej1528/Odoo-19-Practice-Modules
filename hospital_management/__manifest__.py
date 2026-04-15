@@ -13,6 +13,7 @@
     'security/ir.model.access.csv',
     'data/sequence.xml',
     'data/mail_templates.xml',
+    'data/appointment_status_data.xml',
     'reports/appointment_report_template.xml',
     'reports/appointment_report.xml',
     'reports/appointment_report_Filtering_template.xml',

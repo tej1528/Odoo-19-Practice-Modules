@@ -13,7 +13,8 @@
 
                     <!-- LEFT SIDE -->
                     <group>
-                        <field name="patient_id"
+                        <field name="patient_ids"
+                            widget="many2many_tags"
                             domain="[('is_patient','=',True)]"
                             options="{'no_create': True}"/>
 
@@ -28,6 +29,9 @@
                     <group>
                         <field name="start_date"/>
                         <field name="end_date"/>
+                        <field name="status_ids"
+                        widget="many2many_tags"
+                        options="{'no_create': True}"/>
                     </group>
 
                 </group>

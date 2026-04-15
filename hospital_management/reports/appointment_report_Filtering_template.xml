@@ -1,68 +1,119 @@
 <odoo>
     <template id="report_appointment_pdf">
 
-        <!-- ✅ MUST -->
         <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
 
-            <!-- ✅ MUST -->
-            <t t-call="web.html_container">
-                <t t-call="web.external_layout">
+                
+                    <p style="text-align:right; font-size:12px;">
+                        <strong>Generated On:</strong>
+                        <t t-set="now" t-value="context_timestamp(datetime.datetime.now())"/>
+                        <t t-esc="now.strftime('%d/%m/%Y %I:%M %p')"/>
+                    </p>
 
-                    <div class="page">
+                    
+                    <h2 style="text-align:center; margin-bottom:15px;">
+                        Appointment Summary Report
+                    </h2>
+                    
+                    <p style="font-size:12px; background:#f2f2f2; padding:6px;">
+                        <strong>Filter:</strong>
 
-                    <style>
-                        table {
-                            font-size: 12px;
-                        }
-                        thead {
-                            display: table-header-group;
-                        }
-                    </style>
+                        <t t-if="data and data.get('start_date')">
+                            From: <t t-esc="data.get('start_date').strftime('%d/%m/%Y')"/>
+                        </t>
 
-                        <h2>Appointment Report</h2>
+                        <t t-if="data and data.get('end_date')">
+                            To: <t t-esc="data.get('end_date').strftime('%d/%m/%Y')"/>
+                        </t>
+                    </p>
+                    
 
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Code</th>
-                                    <th>Patient</th>
-                                    <th>Doctor</th>
-                                    <th>Specialization</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Fees</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
 
-                            <tbody>
-                                <t t-set="i" t-value="0"/>
-                                <t t-foreach="docs" t-as="rec">
-                                    <tr>
-                                        <!-- <td><t t-set="i" t-value="i + 1"/></td> -->
-                                        <td><t t-esc="(i or 0) + 1"/></td>
-                                        <td><t t-esc="rec.code"/></td>
-                                        <td><t t-esc="rec.patient_id.name"/></td>
-                                        <td><t t-esc="rec.doctor_id.name"/></td>
-                                        <td><t t-esc="rec.specialization_id.name"/></td>
-                                        <td><t t-esc="context_timestamp(rec.start_time).strftime('%d/%m/%Y') if rec.start_time else ''"/></td>
-                                        <td><t t-esc="context_timestamp(rec.start_time).strftime('%I:%M %p')"/> to
-                                            <t t-esc="context_timestamp(rec.end_time).strftime('%I:%M %p')"/>
-                                        </td>
-                                        <td><t t-esc="rec.fees"/></td>
-                                        <td><t t-esc="rec.status"/></td>                                        
-                                    </tr>
-                                    <t t-set="i" t-value="i + 1"/>
-                                </t>
-                            </tbody>
-                        </table>
+                        <!-- HEADER -->
+                        <thead>
+                            <tr style="background-color:#f2f2f2;">
+                                <th style="width:4%; padding:10px; border:1px solid #000;">#</th>
+                                <th style="width:9%; padding:10px; border:1px solid #000;">Code</th>
+                                <th style="width:11%; padding:10px; border:1px solid #000;">Patient</th>
+                                <th style="width:9%; padding:10px; border:1px solid #000;">Doctor</th>
+                                <th style="width:13%; padding:10px; border:1px solid #000;">Specialization</th>
+                                <th style="width:11%; padding:10px; border:1px solid #000;">Date</th>
+                                <th style="width:18%; padding:10px; border:1px solid #000;">Time</th>
+                                <th style="width:7%; padding:10px; border:1px solid #000;">Fees</th>
+                                <th style="width:8%; padding:10px; border:1px solid #000;">Status</th>
+                            </tr>
+                        </thead>
 
-                    </div>
+                        <tbody>
 
-                </t>
+    <t t-set="i" t-value="1"/>
+
+    <t t-foreach="docs" t-as="rec">
+        <tr>
+            <!-- INDEX -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="i"/>
+            </td>
+
+            <!-- Code -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.code"/>
+            </td>
+
+            <!-- Patient -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.patient_id.name"/>
+            </td>
+
+            <!-- Doctor -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.doctor_id.name"/>
+            </td>
+
+            <!-- Specialization -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.specialization_id.name"/>
+            </td>
+
+            <!-- DATE -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.start_time.strftime('%d/%m/%Y')"/>
+            </td>
+
+            <!-- TIME -->
+            <td style="padding:10px; border:1px solid #000;">
+                <t t-esc="rec.start_time.strftime('%I:%M %p')"/>
+                to
+                <t t-esc="rec.end_time.strftime('%I:%M %p')"/>
+            </td>
+
+            <!-- FEES -->
+            <td style="padding:10px; border:1px solid #000;">
+                <span t-field="rec.fees" t-options='{"widget": "monetary", "display_currency": rec.currency_id or env.company.currency_id }'/>
+            </td>
+
+            <!-- STATUS -->
+            <td style="padding:10px; border:1px solid #000; text-align:center;">
+                <t t-esc="dict(rec._fields['status'].selection).get(rec.status) or '-'"/>
+            </td>
+
+        </tr>
+
+        <!-- 🔥 increment counter -->
+        <t t-set="i" t-value="i + 1"/>
+
+    </t>
+
+</tbody>
+
+                    </table>
+
+                </div>
+
             </t>
-
         </t>
 
     </template>
