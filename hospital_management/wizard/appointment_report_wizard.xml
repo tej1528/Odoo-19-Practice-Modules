@@ -45,15 +45,29 @@
                             special="cancel"
                             class="btn-secondary"/>
 
+                    <button name="action_print_pdf"
+                            string="Print PDF"
+                            type="object"
+                            class="btn btn-success"/>
+
                 </footer>
             </form>
         </field>
     </record>
 
+    <!-- actions -->
     <record id="action_appointment_report_wizard" model="ir.actions.act_window">
         <field name="name">Appointment Report</field>
         <field name="res_model">appointment.report.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
+    </record>
+
+    <record id="action_appointment_report_pdf" model="ir.actions.report">
+        <field name="name">Appointment Report</field>
+        <field name="model">hospital.appointment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hospital_management.report_appointment_pdf</field>
+        <field name="report_file">hospital_management.report_appointment_pdf</field>
     </record>
 </odoo>

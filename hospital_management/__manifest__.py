@@ -15,6 +15,7 @@
     'data/mail_templates.xml',
     'reports/appointment_report_template.xml',
     'reports/appointment_report.xml',
+    'reports/appointment_report_Filtering_template.xml',
     'wizard/appointment_report_wizard.xml',
     'views/appointment_action.xml',
     'views/res_partner_views.xml',

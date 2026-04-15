@@ -38,3 +38,27 @@ class AppointmentReportWizard(models.TransientModel):
             'domain': domain,
             'target': 'current',
         }
+
+    def action_print_pdf(self):
+        self.ensure_one()
+
+        domain = []
+
+        if self.patient_id:
+            domain.append(('patient_id', '=', self.patient_id.id))
+
+        if self.doctor_ids:
+            domain.append(('doctor_id', 'in', self.doctor_ids.ids))
+
+        if self.specialization_ids:
+            domain.append(('specialization_id', 'in', self.specialization_ids.ids))
+
+        if self.start_date:
+            domain.append(('start_time', '>=', self.start_date))
+
+        if self.end_date:
+            domain.append(('end_time', '<=', self.end_date))
+
+        appointments = self.env['hospital.appointment'].search(domain)
+
+        return self.env.ref('hospital_management.action_appointment_report_pdf').report_action(appointments)
