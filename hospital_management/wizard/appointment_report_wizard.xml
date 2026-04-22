@@ -9,7 +9,7 @@
 
             <sheet>
 
-                <group string="Filters" col="2">
+                <group  col="2">
 
                     <!-- LEFT SIDE -->
                     <group>
@@ -24,14 +24,16 @@
 
                         <field name="specialization_ids"
                             widget="many2many_tags"/>
+                        <field name="group_by_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     </group>
 
                     <group>
                         <field name="start_date"/>
                         <field name="end_date"/>
                         <field name="status_ids"
-                        widget="many2many_tags"
-                        options="{'no_create': True}"/>
+                            widget="many2many_tags"
+                            options="{'no_create': True}"/>
+                        
                     </group>
 
                 </group>
@@ -52,7 +54,7 @@
                     <button name="action_print_pdf"
                             string="Print PDF"
                             type="object"
-                            class="btn btn-success"/>
+                            class="btn-primary"/>
 
                 </footer>
             </form>

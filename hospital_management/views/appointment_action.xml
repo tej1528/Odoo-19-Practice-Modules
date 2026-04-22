@@ -1,8 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
     <record id="appointment_action" model="ir.actions.act_window">
         <field name="name">Appointments</field>
         <field name="res_model">hospital.appointment</field>
         <field name="view_mode">list,form,kanban,calendar,graph,pivot</field>
+        <field name="search_view_id" ref="view_hospital_appointment_search"/>
+
     </record>
 </odoo>

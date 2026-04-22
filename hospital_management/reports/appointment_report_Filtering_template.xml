@@ -1,120 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <template id="report_appointment_pdf">
 
+    <template id="report_appointment_pdf">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
-                <div class="page">
 
-                
-                    <p style="text-align:right; font-size:12px;">
-                        <strong>Generated On:</strong>
-                        <t t-set="now" t-value="context_timestamp(datetime.datetime.now())"/>
-                        <t t-esc="now.strftime('%d/%m/%Y %I:%M %p')"/>
-                    </p>
+                <div class="page" style="font-family: 'Helvetica', sans-serif; color: #333;">
 
-                    
-                    <h2 style="text-align:center; margin-bottom:15px;">
-                        Appointment Summary Report
-                    </h2>
-                    
-                    <p style="font-size:12px; background:#f2f2f2; padding:6px;">
-                        <strong>Filter:</strong>
+                    <style>
+                        .text-right { text-align: right; }
 
-                        <t t-if="data and data.get('start_date')">
-                            From: <t t-esc="data.get('start_date').strftime('%d/%m/%Y')"/>
-                        </t>
+                        /* HEADER BOX */
+                        .header-box {
+                            margin-top: 10px;
+                            margin-bottom: 15px;
+                        }
 
-                        <t t-if="data and data.get('end_date')">
-                            To: <t t-esc="data.get('end_date').strftime('%d/%m/%Y')"/>
-                        </t>
-                    </p>
-                    
+                        .header-box table {
+                            width: 100%;
+                            border-collapse: collapse;
+                           
+                        }
 
-                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        .header-box td {
+                            vertical-align: middle;
+                        }
 
-                        <!-- HEADER -->
+                        /* TABLE STYLING */
+                        .appointment-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            border: 1px solid #ccc;
+                        }
+
+                        .appointment-table th {
+                            background-color: #2a7f9e;
+                            color: white;
+                            padding: 12px 10px;
+                            font-size: 13px;
+                            border: 1px solid #236a84;
+                        }
+
+                        .appointment-table td {
+                            padding: 12px 10px;
+                            font-size: 12px;
+                            border: 1px solid #eee;
+                        }
+
+                        .appointment-table tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+
+                        .center { text-align: center; }
+                        .right { text-align: right; }
+                        .nowrap { white-space: nowrap; }
+                    </style>
+
+                    <!-- ✅ HEADER (FIXED) -->
+                    <div class="header-box">
+                        <table>
+                            <tr>
+
+                                <!-- LEFT SIDE -->
+                                <td style="
+                                    width: 60%;
+                                    padding: 12px 15px;
+                                    font-size: 22px;
+                                    font-weight: bold;
+                                    color: #2a7f9e;
+                                    text-transform: uppercase;
+                                ">
+                                    Appointment Summary Report
+                                </td>
+
+                                <!-- RIGHT SIDE -->
+                                <td style="
+                                    width: 40%;
+                                    padding: 10px 15px;
+                                    font-size: 12px;
+                                    text-align: right;
+                                ">
+                                    <div>
+                                        <b>From:</b>
+                                        <t t-set="from_dt" t-value="env.context.get('from_date')"/>
+                                        <t t-if="from_dt">
+                                            <t t-esc="datetime.datetime.strptime(from_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
+                                        </t>
+
+                                        <b style="margin-left: 8px;">To:</b>
+                                        <t t-set="to_dt" t-value="env.context.get('to_date')"/>
+                                        <t t-if="to_dt">
+                                            <t t-esc="datetime.datetime.strptime(to_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
+                                        </t>
+                                    </div>
+
+                                    <div style="margin-top: 4px; color: #666;">
+                                        <b>Generated:</b>
+                                        <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %I:%M %p')"/>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- ✅ APPOINTMENT TABLE -->
+                    <table class="appointment-table">
                         <thead>
-                            <tr style="background-color:#f2f2f2;">
-                                <th style="width:4%; padding:10px; border:1px solid #000;">#</th>
-                                <th style="width:9%; padding:10px; border:1px solid #000;">Code</th>
-                                <th style="width:11%; padding:10px; border:1px solid #000;">Patient</th>
-                                <th style="width:9%; padding:10px; border:1px solid #000;">Doctor</th>
-                                <th style="width:13%; padding:10px; border:1px solid #000;">Specialization</th>
-                                <th style="width:11%; padding:10px; border:1px solid #000;">Date</th>
-                                <th style="width:18%; padding:10px; border:1px solid #000;">Time</th>
-                                <th style="width:7%; padding:10px; border:1px solid #000;">Fees</th>
-                                <th style="width:8%; padding:10px; border:1px solid #000;">Status</th>
+                            <tr>
+                                <th class="center" style="width: 5%;">#</th>
+                                <th style="width: 10%;">Code</th>
+                                <th style="width: 20%;">Patient Name</th>
+                                <th style="width: 15%;">Doctor</th>
+                                <th class="center" style="width: 12%;">Date</th>
+                                <th class="center" style="width: 20%;">Time Slot</th>
+                                <th class="right" style="width: 8%;">Fees</th>
+                                <th class="center" style="width: 10%;">Status</th>
                             </tr>
                         </thead>
 
                         <tbody>
+                            <t t-set="i" t-value="1"/>
 
-    <t t-set="i" t-value="1"/>
+                            <t t-foreach="docs" t-as="rec">
+                                <tr>
+                                    <td class="center">
+                                        <t t-esc="i"/>
+                                    </td>
 
-    <t t-foreach="docs" t-as="rec">
-        <tr>
-            <!-- INDEX -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="i"/>
-            </td>
+                                    <td>
+                                        <t t-esc="rec.code"/>
+                                    </td>
 
-            <!-- Code -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.code"/>
-            </td>
+                                    <td>
+                                        <t t-esc="rec.patient_id.name"/>
+                                    </td>
 
-            <!-- Patient -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.patient_id.name"/>
-            </td>
+                                    <td>
+                                        <t t-esc="rec.doctor_id.name"/>
+                                    </td>
 
-            <!-- Doctor -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.doctor_id.name"/>
-            </td>
+                                    <td class="center">
+                                        <t t-if="rec.start_time"
+                                           t-esc="context_timestamp(rec.start_time).strftime('%d/%m/%Y')"/>
+                                    </td>
 
-            <!-- Specialization -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.specialization_id.name"/>
-            </td>
+                                    <td class="center nowrap">
+                                        <t t-if="rec.start_time"
+                                           t-esc="context_timestamp(rec.start_time).strftime('%I:%M %p')"/>
+                                        <t t-if="rec.end_time">
+                                            - 
+                                            <t t-esc="context_timestamp(rec.end_time).strftime('%I:%M %p')"/>
+                                        </t>
+                                    </td>
 
-            <!-- DATE -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.start_time.strftime('%d/%m/%Y')"/>
-            </td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <span t-field="rec.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                                    </td>
 
-            <!-- TIME -->
-            <td style="padding:10px; border:1px solid #000;">
-                <t t-esc="rec.start_time.strftime('%I:%M %p')"/>
-                to
-                <t t-esc="rec.end_time.strftime('%I:%M %p')"/>
-            </td>
+                                    <td class="center">
+                                        <span t-att-style="
+                                            'color:' + {
+                                                'draft': '#6c757d',
+                                                'requested': '#0dcaf0',
+                                                'confirmed': '#0d6efd',
+                                                'processing': '#ffc107',
+                                                'done': '#198754',
+                                                'cancel': '#dc3545'
+                                            }.get(rec.status, '#000')
+                                            + '; font-weight: bold;'
+                                        ">
+                                            <span t-field="rec.status"/>
+                                        </span>
+                                    </td>
+                                </tr>
 
-            <!-- FEES -->
-            <td style="padding:10px; border:1px solid #000;">
-                <span t-field="rec.fees" t-options='{"widget": "monetary", "display_currency": rec.currency_id or env.company.currency_id }'/>
-            </td>
+                                <t t-set="i" t-value="i + 1"/>
+                            </t>
 
-            <!-- STATUS -->
-            <td style="padding:10px; border:1px solid #000; text-align:center;">
-                <t t-esc="dict(rec._fields['status'].selection).get(rec.status) or '-'"/>
-            </td>
-
-        </tr>
-
-        <!-- 🔥 increment counter -->
-        <t t-set="i" t-value="i + 1"/>
-
-    </t>
-
-</tbody>
-
+                        </tbody>
                     </table>
 
                 </div>
 
             </t>
         </t>
-
     </template>
+
 </odoo>

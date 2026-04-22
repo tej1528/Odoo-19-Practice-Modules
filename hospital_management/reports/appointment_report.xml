@@ -11,7 +11,6 @@
         <field name="binding_model_id" ref="model_hospital_appointment"/>
         <field name="binding_type">report</field>
         <field name="binding_view_types">form</field>
-        <!-- <field name="domain">[('status','=','confirmed')]</field> -->
     </record>
 
 </odoo>
