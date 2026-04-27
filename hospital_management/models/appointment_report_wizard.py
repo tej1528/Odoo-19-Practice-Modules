@@ -29,34 +29,23 @@ class AppointmentReportWizard(models.TransientModel):
     specialization_ids = fields.Many2many('hospital.specialization', string="Specializations")
 
     status_ids = fields.Many2many(
-    'ir.model.fields.selection',
-    string="Statuses",
-    domain="[('field_id.model', '=', 'hospital.appointment'), ('field_id.name', '=', 'status')]")
-    
-#     group_by = fields.Selection([
-#     ('doctor_id', 'Doctor'),
-#     ('patient_id', 'Patient'),
-#     ('status', 'Status'),
-# ], default='doctor_id', string="Group By")
-    
-#     group_by_ids = fields.Many2many(
-#     'ir.model.fields',
-#     string="Group By",
-#     domain="[('model', '=', 'hospital.appointment'), ('ttype', 'in', ['many2one', 'selection'])]"
-# )
+        'ir.model.fields.selection',
+        string="Status",
+        domain="[('field_id.model', '=', 'hospital.appointment'), ('field_id.name', '=', 'status')]"
+    )
 
-    group_by_ids = fields.Many2many('ir.model.fields',
-    string="Group By",
-    domain="""
-        [
-            ('model', '=', 'hospital.appointment'),
-            ('name', 'in', ['patient_id', 'doctor_id', 'status'])
-        ]
-    """
-)
+    group_by_ids = fields.Many2many(
+        'ir.model.fields',
+        string="Group By",
+        domain="""
+            [
+                ('model', '=', 'hospital.appointment'),
+                ('name', 'in', ['patient_id', 'doctor_id', 'status'])
+            ]
+        """
+    )
 
     def _get_report_domain(self):
-        """ Helper method to build the filter domain without causing recursion """
         domain = []
         if self.patient_ids:
             domain.append(('patient_id', 'in', self.patient_ids.ids))
@@ -69,7 +58,9 @@ class AppointmentReportWizard(models.TransientModel):
         if self.end_date:
             domain.append(('end_time', '<=', self.end_date))
         if self.status_ids:
-            domain.append(('status', 'in', self.status_ids.mapped('value')))
+            values = self.status_ids.mapped('value')
+            if values:
+                domain.append(('status', 'in', values))
         return domain
 
     def action_show_data(self):
@@ -78,9 +69,9 @@ class AppointmentReportWizard(models.TransientModel):
         context = {
             'selected_statuses': selected_statuses,
         }
+
         if self.group_by_ids:
-            group_fields = self.group_by_ids.mapped('name')  
-            context['group_by'] = group_fields
+            context['group_by'] = self.group_by_ids.mapped('name')
 
         return {
             'type': 'ir.actions.act_window',
@@ -92,17 +83,64 @@ class AppointmentReportWizard(models.TransientModel):
             'context': context,
         }
 
-        
+    def _get_total(self, records):
+        return sum(records.mapped('fees'))
+
+    def _group_data(self, records):
+
+        group_fields = self.group_by_ids.mapped('name')
+
+        if not group_fields:
+            group_fields = ['doctor_id']  # default
+
+        grouped = {}
+
+        for rec in records:
+
+            current = grouped
+
+            for i, field in enumerate(group_fields):
+
+                if field == 'doctor_id':
+                    key = rec.doctor_id.name or "Undefined Doctor"
+
+                elif field == 'patient_id':
+                    key = rec.patient_id.name or "Undefined Patient"
+
+                elif field == 'status':
+                    key = dict(
+                        self.env['hospital.appointment']._fields['status'].selection
+                    ).get(rec.status, rec.status)
+
+                else:
+                    key = "Undefined"
+
+                if i == len(group_fields) - 1:
+                    current.setdefault(key, [])
+                    current[key].append(rec.id)
+                else:
+                    current.setdefault(key, {})
+                    current = current[key]
+
+        return grouped
+
 
     def action_print_pdf(self):
         self.ensure_one()
-        
-        # FIXED: Call the helper method, NOT action_print_pdf itself
+
         domain = self._get_report_domain()
         appointments = self.env['hospital.appointment'].search(domain)
 
-        return self.env.ref('hospital_management.action_appointment_report_pdf').with_context(
-            generated_on=fields.Datetime.now(),
+        if not appointments:
+            raise UserError("No data found")
+
+        grouped_data = self._group_data(appointments)
+
+        return self.env.ref(
+            'hospital_management.action_appointment_report_pdf'
+        ).with_context(
             from_date=self.start_date,
             to_date=self.end_date,
+            grouped_data=grouped_data,
+            group_by_labels=self.group_by_ids.mapped('name'),
         ).report_action(appointments)

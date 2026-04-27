@@ -1,146 +1,205 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
     <template id="report_appointment_pdf">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
-
                 <div class="page" style="font-family: 'Helvetica', sans-serif; color: #333;">
-
+                    
                     <style>
                         .text-right { text-align: right; }
+                        .center { text-align: center; }
+                        .nowrap { white-space: nowrap; }
 
                         /* HEADER BOX */
                         .header-box {
                             margin-top: 10px;
-                            margin-bottom: 15px;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #2a7f9e;
+                            padding-bottom: 10px;
                         }
 
-                        .header-box table {
-                            width: 100%;
-                            border-collapse: collapse;
-                           
+                        /* GROUP HEADERS STYLING */
+                        .lvl1-header {
+                            background: #2a7f9e;
+                            color: white;
+                            padding: 8px 12px;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-top: 20px;
+                            border-radius: 4px 4px 0 0;
                         }
-
-                        .header-box td {
-                            vertical-align: middle;
+                        .lvl2-header {
+                            background: #e9ecef;
+                            color: #0d6efd;
+                            padding: 6px 15px;
+                            font-size: 14px;
+                            font-weight: bold;
+                            border-left: 4px solid #0d6efd;
+                            margin-top: 5px;
+                        }
+                        .lvl3-header {
+                            background: #f8f9fa;
+                            color: #198754;
+                            padding: 4px 25px;
+                            font-size: 13px;
+                            font-weight: bold;
+                            border-left: 4px solid #198754;
                         }
 
                         /* TABLE STYLING */
                         .appointment-table {
                             width: 100%;
                             border-collapse: collapse;
+                            margin-bottom: 15px;
+                        }
+                        .appointment-table th {
+                            background-color: #f2f2f2;
+                            padding: 10px;
+                            font-size: 12px;
                             border: 1px solid #ccc;
                         }
-
-                        .appointment-table th {
-                            background-color: #2a7f9e;
-                            color: white;
-                            padding: 12px 10px;
-                            font-size: 13px;
-                            border: 1px solid #236a84;
-                        }
-
                         .appointment-table td {
-                            padding: 12px 10px;
+                            padding: 8px 10px;
                             font-size: 12px;
                             border: 1px solid #eee;
                         }
-
-                        .appointment-table tr:nth-child(even) {
-                            background-color: #f9f9f9;
+                        
+                        .total-row {
+                            font-weight: bold;
+                            background-color: #f1f1f1 !important;
                         }
-
-                        .center { text-align: center; }
-                        .right { text-align: right; }
-                        .nowrap { white-space: nowrap; }
+                        .grand-total-box {
+                            text-align: right;
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin-top: 30px;
+                            padding: 10px;
+                            border-top: 2px solid #2a7f9e;
+                            color: #2a7f9e;
+                        }
                     </style>
 
-                    <!-- ✅ HEADER (FIXED) -->
                     <div class="header-box">
-                        <table>
+                        <table style="width: 100%;">
                             <tr>
-
-                                <!-- LEFT SIDE -->
-                                <td style="
-                                    width: 60%;
-                                    padding: 12px 15px;
-                                    font-size: 22px;
-                                    font-weight: bold;
-                                    color: #2a7f9e;
-                                    text-transform: uppercase;
-                                ">
+                                <td style="width: 60%; font-size: 22px; font-weight: bold; color: #2a7f9e; text-transform: uppercase;">
                                     Appointment Summary Report
                                 </td>
-
-                                <!-- RIGHT SIDE -->
-                                <td style="
-                                    width: 40%;
-                                    padding: 10px 15px;
-                                    font-size: 12px;
-                                    text-align: right;
-                                ">
+                                <td style="width: 40%; text-align: right; font-size: 12px;">
                                     <div>
-                                        <b>From:</b>
+                                        <b>From:</b> 
                                         <t t-set="from_dt" t-value="env.context.get('from_date')"/>
-                                        <t t-if="from_dt">
-                                            <t t-esc="datetime.datetime.strptime(from_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
-                                        </t>
-
-                                        <b style="margin-left: 8px;">To:</b>
+                                        <t t-if="from_dt" t-esc="datetime.datetime.strptime(from_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
+                                        <b style="margin-left:8px;">To:</b> 
                                         <t t-set="to_dt" t-value="env.context.get('to_date')"/>
-                                        <t t-if="to_dt">
-                                            <t t-esc="datetime.datetime.strptime(to_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
-                                        </t>
+                                        <t t-if="to_dt" t-esc="datetime.datetime.strptime(to_dt, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
                                     </div>
-
                                     <div style="margin-top: 4px; color: #666;">
-                                        <b>Generated:</b>
-                                        <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %I:%M %p')"/>
+                                        <b>Generated:</b> <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %I:%M %p')"/>
                                     </div>
                                 </td>
-
                             </tr>
                         </table>
                     </div>
 
-                    <!-- ✅ APPOINTMENT TABLE -->
-                    <table class="appointment-table">
-                        <thead>
-                            <tr>
-                                <th class="center" style="width: 5%;">#</th>
-                                <th style="width: 10%;">Code</th>
-                                <th style="width: 20%;">Patient Name</th>
-                                <th style="width: 15%;">Doctor</th>
-                                <th class="center" style="width: 12%;">Date</th>
-                                <th class="center" style="width: 20%;">Time Slot</th>
-                                <th class="right" style="width: 8%;">Fees</th>
-                                <th class="center" style="width: 10%;">Status</th>
-                            </tr>
-                        </thead>
+                    <t t-set="grouped_data" t-value="env.context.get('grouped_data')"/>
+                    <t t-set="gb_labels" t-value="env.context.get('group_by_labels', [])"/>
+                    <t t-set="grand_total" t-value="0"/>
 
-                        <tbody>
-                            <t t-set="i" t-value="1"/>
+                    <t t-if="grouped_data">
+                        <t t-foreach="grouped_data.items()" t-as="lvl1">
+                            
+                            <div class="lvl1-header">
+                                <t t-if="gb_labels and len(gb_labels) >= 1">
+                                    <span style="font-weight: normal; opacity: 0.9;">
+                                        <t t-if="gb_labels[0] == 'doctor_id'">Doctor: </t>
+                                        <t t-elif="gb_labels[0] == 'patient_id'">Patient: </t>
+                                        <t t-elif="gb_labels[0] == 'status'">Status: </t>
+                                    </span>
+                                </t>
+                                <t t-esc="lvl1[0]"/>
+                            </div>
 
-                            <t t-foreach="docs" t-as="rec">
-                                <tr>
-                                    <td class="center">
-                                        <t t-esc="i"/>
-                                    </td>
+                            <t t-if="isinstance(lvl1[1], dict)">
+                                <t t-foreach="lvl1[1].items()" t-as="lvl2">
+                                    
+                                    <div class="lvl2-header">
+                                        <t t-if="gb_labels and len(gb_labels) >= 2">
+                                            <span style="font-weight: normal; color: #666;">
+                                                <t t-if="gb_labels[1] == 'doctor_id'">Doctor: </t>
+                                                <t t-elif="gb_labels[1] == 'patient_id'">Patient: </t>
+                                                <t t-elif="gb_labels[1] == 'status'">Status: </t>
+                                            </span>
+                                        </t>
+                                        <t t-esc="lvl2[0]"/>
+                                    </div>
 
-                                    <td>
-                                        <t t-esc="rec.code"/>
-                                    </td>
+                                    <t t-if="isinstance(lvl2[1], dict)">
+                                        <t t-foreach="lvl2[1].items()" t-as="lvl3">
+                                            
+                                            <div class="lvl3-header">
+                                                <t t-if="gb_labels and len(gb_labels) >= 3">
+                                                    <span style="font-weight: normal; color: #666;">
+                                                        <t t-if="gb_labels[2] == 'doctor_id'">Doctor: </t>
+                                                        <t t-elif="gb_labels[2] == 'patient_id'">Patient: </t>
+                                                        <t t-elif="gb_labels[2] == 'status'">Status: </t>
+                                                    </span>
+                                                </t>
+                                                <t t-esc="lvl3[0]"/>
+                                            </div>
+                                            
+                                            <t t-set="rec_ids" t-value="lvl3[1]"/>
+                                            <t t-call="hospital_management.appointment_table_template"/>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-set="rec_ids" t-value="lvl2[1]"/>
+                                        <t t-call="hospital_management.appointment_table_template"/>
+                                    </t>
+                                </t>
+                            </t>
+                            <t t-else="">
+                                <t t-set="rec_ids" t-value="lvl1[1]"/>
+                                <t t-call="hospital_management.appointment_table_template"/>
+                            </t>
+                        </t>
 
-                                    <td>
-                                        <t t-esc="rec.patient_id.name"/>
-                                    </td>
+                        <div class="grand-total-box">
+                            Grand Total: <t t-esc="grand_total"/>
+                        </div>
+                    </t>
 
-                                    <td>
-                                        <t t-esc="rec.doctor_id.name"/>
-                                    </td>
+                    <t t-if="not grouped_data">
+                        <div class="center" style="margin-top:50px;">No Data Found</div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
 
-                                    <td class="center">
+    <template id="appointment_table_template">
+        <t t-set="records" t-value="env['hospital.appointment'].browse(rec_ids)"/>
+        <table class="appointment-table">
+            <thead>
+                <tr>
+                    <th class="center" style="width: 5%;">#</th>
+                    <th style="width: 15%;">Code</th>
+                    <th style="width: 25%;">Patient Name</th>
+                    <th class="center" style="width: 12%;">Date</th>
+                    <th class="center" style="width: 20%;">Time Slot</th>
+                    <th class="text-right" style="width: 15%;">Fees</th>
+                    <th class="center" style="width: 20%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-set="sub_total" t-value="0"/>
+                <t t-set="i" t-value="1"/>
+                <t t-foreach="records" t-as="rec">
+                    <tr>
+                        <td class="center"><t t-esc="i"/></td>
+                        <td><t t-esc="rec.code"/></td>
+                        <td><t t-esc="rec.patient_id.name"/></td>
+                        <td class="center">
                                         <t t-if="rec.start_time"
                                            t-esc="context_timestamp(rec.start_time).strftime('%d/%m/%Y')"/>
                                     </td>
@@ -153,38 +212,27 @@
                                             <t t-esc="context_timestamp(rec.end_time).strftime('%I:%M %p')"/>
                                         </t>
                                     </td>
-
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <span t-field="rec.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
-                                    </td>
-
-                                    <td class="center">
-                                        <span t-att-style="
-                                            'color:' + {
-                                                'draft': '#6c757d',
-                                                'requested': '#0dcaf0',
-                                                'confirmed': '#0d6efd',
-                                                'processing': '#ffc107',
-                                                'done': '#198754',
-                                                'cancel': '#dc3545'
-                                            }.get(rec.status, '#000')
-                                            + '; font-weight: bold;'
-                                        ">
-                                            <span t-field="rec.status"/>
-                                        </span>
-                                    </td>
-                                </tr>
-
-                                <t t-set="i" t-value="i + 1"/>
-                            </t>
-
-                        </tbody>
-                    </table>
-
-                </div>
-
-            </t>
-        </t>
+                        <td class="text-right">
+                            <span t-field="rec.fees"/>
+                        </td>
+                        <td class="center">
+                            <span t-att-style="'font-weight:bold; color:' + {
+                                'draft': '#6c757d', 'confirmed': '#0d6efd', 'done': '#198754', 'cancel': '#dc3545'
+                            }.get(rec.status, '#000')">
+                                <span t-field="rec.status"/>
+                            </span>
+                        </td>
+                    </tr>
+                    <t t-set="sub_total" t-value="sub_total + rec.fees"/>
+                    <t t-set="grand_total" t-value="grand_total + rec.fees"/>
+                    <t t-set="i" t-value="i + 1"/>
+                </t>
+                <tr class="total-row">
+                    <td colspan="5" class="text-right">Sub Total:</td>
+                    <td class="text-right"><t t-esc="sub_total"/></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </template>
-
 </odoo>
