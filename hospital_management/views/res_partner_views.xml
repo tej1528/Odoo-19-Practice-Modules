@@ -30,6 +30,12 @@
 
             <!-- SMART BUTTON -->
             <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_create_doctor_user"
+                        type="object"
+                        string="create user"
+                        class="btn-primary"
+                        invisible="user_id != False"/>
+
                 <button name="action_view_appointments"
                         type="object"
                         class="oe_stat_button"
@@ -92,7 +98,7 @@
 
                     <!-- Doctor Info -->
                     <group string="Doctor Info" invisible="not is_doctor">
-                        <field name="user_id" required="1"/>
+                        <field name="user_id" invisible="1"/>
                         <field name="specialization_id"/>
                         <field name="company_id" invisible="1"/>
                         <field name="currency_id" invisible="1"/>

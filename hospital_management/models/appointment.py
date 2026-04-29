@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError,AccessError
 import base64
 from datetime import timedelta
 from datetime import datetime
@@ -186,7 +186,10 @@ class HospitalAppointment(models.Model):
     
     def action_confirm(self):
         for rec in self:
-
+            
+            if rec.doctor_id.user_id.id != self.env.user.id:
+                raise UserError("You can only confirm your own appointment.")
+        
             if not rec.patient_id.email:
                 raise ValidationError("Patient email missing!")
 
@@ -250,7 +253,15 @@ class HospitalAppointment(models.Model):
                     rec.patient_id.email
                 )
         return True
+    
+    def check_access_rule(self, operation):
+        super().check_access_rule(operation)
 
+        if self.env.user.has_group('hospital_management.group_doctor'):
+            for rec in self:
+                if rec.doctor_id.user_id != self.env.user:
+                    raise AccessError("Access Denied: Not your appointment.")
+    
     # ================= SEQUENCE =================
     @api.model
     def get_formview_action(self, access_uid=None):

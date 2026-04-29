@@ -72,7 +72,7 @@
         <field name="name">Appointment Report</field>
         <field name="model">hospital.appointment</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">hospital_management.report_appointment_pdf</field>
-        <field name="report_file">hospital_management.report_appointment_pdf</field>
+        <field name="report_name">hospital_management.report_appointment_filter_pdf</field>
+        <field name="report_file">hospital_management.report_appointment_filter_pdf</field>
     </record>
 </odoo>

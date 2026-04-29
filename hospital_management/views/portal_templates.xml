@@ -1,0 +1,99 @@
+<odoo>
+
+    <!-- ================= LIST PAGE ================= -->
+    <template id="portal_my_appointments" name="My Appointments">
+
+        <t t-call="portal.portal_layout">
+
+            <div class="container mt-4">
+                <h2>All Appointments</h2>
+
+                <table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>date</th>
+            <th>Time</th>
+            <th>Fees</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <t t-if="appointments">
+            <t t-foreach="appointments" t-as="rec">
+                <tr>
+                    <td>
+                        <a t-att-href="'/my/appointments/%s' % rec.id">
+                            <t t-esc="rec.code"/>
+                        </a>
+                    </td>
+
+                    <td><t t-esc="rec.patient_id.name"/></td>
+                    <td><t t-esc="rec.doctor_id.name"/></td>
+
+                    <td>
+                        <t t-esc="rec.start_time.strftime('%d-%m-%Y %H:%M')"/>
+                    </td>
+
+                    <td>
+                        <t t-esc="rec.end_time.strftime('%d-%m-%Y %H:%M')"/>
+                    </td>
+
+                    <td>
+                        <t t-esc="rec.fees"/> 
+                    </td>
+
+                    <td>
+                        <!-- STATUS BADGE -->
+                        <span t-att-class="
+                            'badge bg-secondary' if rec.status == 'draft' else
+                            'badge bg-info' if rec.status == 'requested' else
+                            'badge bg-primary' if rec.status == 'confirmed' else
+                            'badge bg-warning' if rec.status == 'processing' else
+                            'badge bg-success' if rec.status == 'done' else
+                            'badge bg-danger'
+                        ">
+                            <t t-esc="rec.status"/>
+                        </span>
+                    </td>
+
+                </tr>
+            </t>
+        </t>
+
+        <t t-else="">
+            <tr>
+                <td colspan="7" class="text-center">
+                    No appointments found
+                </td>
+            </tr>
+        </t>
+    </tbody>
+</table>
+            </div>
+
+        </t>
+    </template>
+
+    <!-- ================= DETAIL PAGE ================= -->
+    <template id="portal_appointment_detail" name="Appointment Detail">
+
+        <t t-call="portal.portal_layout">
+
+            <div class="container mt-4">
+                <h2>Appointment Detail</h2>
+
+                <p><strong>Name:</strong> <t t-esc="appointment.name"/></p>
+                <p><strong>Date:</strong> <t t-esc="appointment.date"/></p>
+                <p><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
+                <p><strong>Patient:</strong> <t t-esc="appointment.patient_id.name"/></p>
+
+            </div>
+
+        </t>
+    </template>
+
+</odoo>

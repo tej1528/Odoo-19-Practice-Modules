@@ -1,5 +1,6 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from datetime import date
+from odoo.exceptions import UserError
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
@@ -78,12 +79,8 @@ class ResPartner(models.Model):
     # =====================zz
     @api.onchange('is_patient', 'is_doctor')
     def _onchange_preview_code(self):
-        if self.is_patient and self.code == 'New':
-            self.code = self.env['ir.sequence'].next_by_code('hospital.patient') or 'PT000'
-
-        if self.is_doctor and self.doctor_code == 'New':
-            self.doctor_code = self.env['ir.sequence'].next_by_code('hospital.doctor') or 'DR000'
-
+        pass
+    
     # =====================
     # CREATE (FINAL SAVE)
     # =====================
@@ -91,26 +88,32 @@ class ResPartner(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
 
-            # 🔥 currency fix
+            # currency fix
             if not vals.get('currency_id'):
                 vals['currency_id'] = self.env.company.currency_id.id
 
-            # Patient
+            # =====================
+            # PATIENT CODE
+            # =====================
             if vals.get('is_patient') or self.env.context.get('default_is_patient'):
-                if vals.get('code', 'New') == 'New':
-                    vals['code'] = self.env['ir.sequence'].next_by_code('hospital.patient') or 'PT000'
+                if not vals.get('code') or vals.get('code') == 'New':
+                    seq = self.env['ir.sequence'].next_by_code('hospital.patient')
+                    if not seq:
+                        raise UserError("Patient sequence not configured.")
+                    vals['code'] = seq
 
-            # Doctor
+            # =====================
+            # DOCTOR CODE
+            # =====================
             if vals.get('is_doctor') or self.env.context.get('default_is_doctor'):
-                if vals.get('doctor_code', 'New') == 'New':
-                    vals['doctor_code'] = self.env['ir.sequence'].next_by_code('hospital.doctor') or 'DR000'
-
-                # 🔥 ADD THIS LINE
-                if not vals.get('user_id'):
-                    vals['user_id'] = self.env.uid
+                if not vals.get('doctor_code') or vals.get('doctor_code') == 'New':
+                    seq = self.env['ir.sequence'].next_by_code('hospital.doctor')
+                    if not seq:
+                        raise UserError("Doctor sequence not configured.")
+                    vals['doctor_code'] = seq
 
         return super().create(vals_list)
-
+    
     # =====================
     # AGE COMPUTE
     # =====================
@@ -191,4 +194,42 @@ class ResPartner(models.Model):
             'view_mode': 'list,form',
             'domain': domain,
             'context': context,
+        }
+    
+    def action_create_doctor_user(self):
+        for rec in self:
+
+            if not rec.is_doctor:
+                raise UserError("This is not a doctor.")
+
+            if rec.user_id:
+                raise UserError("User already exists.")
+
+            if not rec.email:
+                raise UserError("Doctor must have an email.")
+
+            # ✅ create user
+            user = self.env['res.users'].create({
+                'name': rec.name,
+                'login': rec.email,
+                'email': rec.email,
+                'partner_id': rec.id,
+            })
+
+            # 🔗 link doctor → user
+            rec.user_id = user.id
+
+            # 📧 send invitation mail
+            user.with_context(create_user=True).action_reset_password()
+
+        # ✅ popup message
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Success'),
+                'message': _('Doctor user created successfully & invitation sent!'),
+                'type': 'success',
+                'sticky': False,
+            }
         }

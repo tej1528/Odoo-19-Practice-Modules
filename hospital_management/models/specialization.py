@@ -20,7 +20,7 @@ class HospitalSpecialization(models.Model):
     # COUNTS
     # =====================
     doctor_count = fields.Integer(
-        string="Doctors",
+        string="Doctor Count",
         compute="_compute_counts"
     )
 

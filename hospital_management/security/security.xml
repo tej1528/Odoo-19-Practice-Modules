@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Doctor Group -->
+        <record id="group_doctor" model="res.groups">
+            <field name="name">Doctor</field>
+        </record>
+
+        <!-- Doctor can write only own appointments -->
+   <record id="rule_hospital_appointment_doctor" model="ir.rule">
+    <field name="name">Doctor: Own Appointments Only</field>
+    <field name="model_id" ref="model_hospital_appointment"/>
+    <field name="groups" eval="[(4, ref('hospital_management.group_doctor'))]"/>
+    <field name="domain_force"> [('doctor_id.user_id', '=', user.id)] </field>
+    <field name="perm_read" eval="1"/>
+    <field name="perm_write" eval="1"/>
+    <field name="perm_create" eval="0"/>
+    <field name="perm_unlink" eval="0"/>
+</record>
+    </data>
+</odoo>

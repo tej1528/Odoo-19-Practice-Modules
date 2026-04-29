@@ -10,6 +10,7 @@
     'images': ['static/description/icon.png'],
 
 'data': [
+    'security/security.xml',
     'security/ir.model.access.csv',
     'data/sequence.xml',
     'data/mail_templates.xml',
@@ -23,6 +24,8 @@
     'views/appointment_action.xml',
     'views/res_config_settings_view.xml',
     'views/specialization_views.xml',
+    'views/portal_templates.xml',
+    'views/portal_menu.xml',
     'views/menu.xml',
 ],
 
