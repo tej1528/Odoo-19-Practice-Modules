@@ -1,41 +1,35 @@
 <odoo>
-
-    <template id="portal_my_home_appointments"
-              inherit_id="portal.portal_my_home"
-              name="Add Appointments Card">
-
+    <!-- હોમ પેજ પર દેખાતું એપોઇન્ટમેન્ટ કાર્ડ -->
+    <template id="portal_my_home_appointments" inherit_id="portal.portal_my_home" name="Add Appointments Card">
         <xpath expr="//div[@id='portal_common_category']" position="inside">
-
-            <t t-if="request.env.user.has_group('hospital_management.group_hospital_doctor') 
-                or request.env.user.has_group('hospital_management.group_hospital_patient') 
-                or request.env.user.has_group('base.group_system')">
-
+            <t t-if="request.env.user.has_group('hospital_management.group_hospital_doctor') or request.env.user.has_group('hospital_management.group_hospital_patient') or request.env.user.has_group('base.group_system')">
                 <t t-call="portal.portal_docs_entry">
-
-                    <!-- ICON -->
                     <t t-set="icon" t-value="'/portal/static/src/img/portal-connection.svg'"/>
-
-                    <!-- TITLE -->
                     <t t-set="title">Appointments</t>
-
-                    <!-- TEXT -->
-                    <t t-set="text">
-                        View your hospital appointments
-                    </t>
-
-                    <!-- URL -->
+                    <t t-set="text">View your hospital appointments</t>
                     <t t-set="url" t-value="'/my/appointments'"/>
-
-                    <!-- COUNT -->
-                    <t t-set="placeholder_count" t-value="'appointment_count'"/>
-
+                    <t t-set="count" t-value="appointment_count"/>
                     <t t-set="config_card" t-value="True"/>
-
                 </t>
-
             </t>
         </xpath>
-
     </template>
 
+    <!-- આ ભાગ બ્રેડક્રમ્સ (Home / Appointments) બતાવશે -->
+    <template id="portal_breadcrumbs_appointments" inherit_id="portal.portal_breadcrumbs" name="Appointments Breadcrumbs">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <!-- લિસ્ટ પેજ માટે -->
+            <li t-if="page_name == 'appointments'" class="breadcrumb-item active">
+                Appointments
+            </li>
+            
+            <!-- ડિટેલ પેજ માટે (Home / Appointments / APT001) -->
+            <li t-if="page_name == 'appointment_detail'" class="breadcrumb-item">
+                <a href="/my/appointments">Appointments</a>
+            </li>
+            <li t-if="page_name == 'appointment_detail'" class="breadcrumb-item active">
+                <t t-esc="appointment.code"/>
+            </li>
+        </xpath>
+    </template>
 </odoo>

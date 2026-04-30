@@ -1,99 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <!-- ================= LIST PAGE ================= -->
+    <!-- Appointment List Page -->
     <template id="portal_my_appointments" name="My Appointments">
-
         <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
 
-            <div class="container mt-4">
-                <h2>All Appointments</h2>
+            <div class="card mt-3 shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">All Appointments</h3>
+                    </div>
 
-                <table class="table table-bordered mt-3">
-    <thead>
-        <tr>
-            <th>Code</th>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>date</th>
-            <th>Time</th>
-            <th>Fees</th>
-            <th>Status</th>
-        </tr>
-    </thead>
+                    <div t-if="not appointments" class="alert alert-info m-3" role="alert">
+                        There are currently no appointments for your account.
+                    </div>
 
-    <tbody>
-        <t t-if="appointments">
-            <t t-foreach="appointments" t-as="rec">
-                <tr>
-                    <td>
-                        <a t-att-href="'/my/appointments/%s' % rec.id">
-                            <t t-esc="rec.code"/>
-                        </a>
-                    </td>
-
-                    <td><t t-esc="rec.patient_id.name"/></td>
-                    <td><t t-esc="rec.doctor_id.name"/></td>
-
-                    <td>
-                        <t t-esc="rec.start_time.strftime('%d-%m-%Y %H:%M')"/>
-                    </td>
-
-                    <td>
-                        <t t-esc="rec.end_time.strftime('%d-%m-%Y %H:%M')"/>
-                    </td>
-
-                    <td>
-                        <t t-esc="rec.fees"/> 
-                    </td>
-
-                    <td>
-                        <!-- STATUS BADGE -->
-                        <span t-att-class="
-                            'badge bg-secondary' if rec.status == 'draft' else
-                            'badge bg-info' if rec.status == 'requested' else
-                            'badge bg-primary' if rec.status == 'confirmed' else
-                            'badge bg-warning' if rec.status == 'processing' else
-                            'badge bg-success' if rec.status == 'done' else
-                            'badge bg-danger'
-                        ">
-                            <t t-esc="rec.status"/>
-                        </span>
-                    </td>
-
-                </tr>
-            </t>
-        </t>
-
-        <t t-else="">
-            <tr>
-                <td colspan="7" class="text-center">
-                    No appointments found
-                </td>
-            </tr>
-        </t>
-    </tbody>
-</table>
+                    <table t-if="appointments" class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Code</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Date &amp; Time</th>
+                                <th class="text-end">Fees</th>
+                                <th class="text-center pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="appointments" t-as="app">
+                                <tr class="align-middle" 
+                                    t-attf-onclick="window.location.href='/my/appointments/#{app['id']}';" 
+                                    style="cursor: pointer;">
+                                    
+                                    <td class="ps-4">
+                                        <span class="fw-bold text-primary"><t t-esc="app['code']"/></span>
+                                    </td>
+                                    <td><span class="text-muted" t-esc="app['patient_name']"/></td>
+                                    <td>
+                                        <div class="fw-bold"><span t-esc="app['doctor_name']"/></div>
+                                        <div class="small text-muted">
+                                            <i class="fa fa-stethoscope me-1 text-info"/>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div t-if="app.get('start_time_local')" class="small fw-bold text-dark">
+                                            <i class="fa fa-calendar me-1 text-primary"/>
+                                            <t t-esc="app['start_time_local'].strftime('%d-%m-%Y')"/>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="fa fa-clock-o me-1 text-primary"/>
+                                            <t t-if="app.get('start_time_local')">
+                                                <t t-esc="app['start_time_local'].strftime('%I:%M %p')"/>
+                                            </t>
+                                            <t t-if="app.get('end_time_local')">
+                                                <span class="mx-1">-</span>
+                                                <t t-esc="app['end_time_local'].strftime('%I:%M %p')"/>
+                                            </t>
+                                        </div>
+                                    </td>
+                                    <td class="text-end fw-bold">
+                                        <span t-esc="app['fees']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <span t-attf-class="badge rounded-pill p-2 px-3 #{
+                                            'text-bg-success' if app['status'] in ['done', 'finished'] else 
+                                            'text-bg-primary' if app['status'] == 'confirmed' else 
+                                            'text-bg-warning' if app['status'] == 'pending' else 
+                                            'text-bg-danger' if app['status'] == 'cancel' else 
+                                            'text-bg-info'
+                                        }">
+                                            <t t-esc="app['status'].upper() if app['status'] else ''"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
+            <div t-if="pager" class="o_portal_pager d-flex justify-content-center mt-3">
+                <t t-call="portal.pager"/>
+            </div>
         </t>
     </template>
 
-    <!-- ================= DETAIL PAGE ================= -->
+    <!-- Appointment Detail Page -->
     <template id="portal_appointment_detail" name="Appointment Detail">
-
         <t t-call="portal.portal_layout">
-
             <div class="container mt-4">
-                <h2>Appointment Detail</h2>
-
-                <p><strong>Name:</strong> <t t-esc="appointment.name"/></p>
-                <p><strong>Date:</strong> <t t-esc="appointment.date"/></p>
-                <p><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
-                <p><strong>Patient:</strong> <t t-esc="appointment.patient_id.name"/></p>
-
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Appointment Detail - <t t-esc="appointment.code"/></h4>
+                        <span t-attf-class="badge rounded-pill p-2 px-3 #{
+                            'text-bg-success' if appointment.status in ['done', 'finished'] else 
+                            'text-bg-primary' if appointment.status == 'confirmed' else 
+                            'text-bg-warning' if appointment.status == 'pending' else 
+                            'text-bg-danger' if appointment.status == 'cancel' else 
+                            'text-bg-info'
+                        }">
+                            <t t-esc="appointment.status.upper() if appointment.status else ''"/>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted text-uppercase small font-weight-bold border-bottom pb-1">Information</h6>
+                                <p class="mb-1"><strong>Patient:</strong> <t t-esc="appointment.patient_id.name"/></p>
+                                <p class="mb-1"><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
+                                <p class="mb-1"><strong>Fees:</strong> <span t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted text-uppercase small font-weight-bold border-bottom pb-1">Schedule Info</h6>
+                                <div>
+                                    <div t-if="start_time_local" class="fw-bold text-dark mb-1">
+                                        <i class="fa fa-calendar me-2 text-primary"/>
+                                        <t t-esc="start_time_local.strftime('%d-%m-%Y')"/>
+                                    </div>
+                                    <div class="text-muted">
+                                        <i class="fa fa-clock-o me-2 text-primary"/>
+                                        <t t-if="start_time_local">
+                                            <t t-esc="start_time_local.strftime('%I:%M %p')"/>
+                                        </t>
+                                        <t t-if="end_time_local">
+                                            <span class="mx-2">-</span>
+                                            <t t-esc="end_time_local.strftime('%I:%M %p')"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-end">
+                        <a href="/my/appointments" class="btn btn-sm btn-secondary">
+                            <i class="fa fa-arrow-left me-1"/> Back to List
+                        </a>
+                    </div>
+                </div>
             </div>
-
         </t>
     </template>
-
 </odoo>
