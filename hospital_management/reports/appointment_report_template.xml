@@ -2,118 +2,131 @@
 <odoo>
 
     <template id="report_appointment_pdf">
+    <t t-call="web.html_container">
+    <t t-foreach="docs" t-as="doc">
+        <t t-call="web.external_layout">
+            <style>
+                .apt-container { 
+                    font-family: 'Helvetica', 'Arial', sans-serif; 
+                    color: #333; 
+                    margin-top: 100px; 
+                    padding-top: 30px;
+                }
+                .header-title { font-size: 28px; font-weight: bold; color: #5dade2; }
 
-        <t t-call="web.html_container">
-            <t t-foreach="docs" t-as="doc">
-                <t t-call="web.external_layout">
+                .status-badge { padding: 4px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid; display: inline-block; }
+                .status-draft { color: #007bff; border-color: #007bff; background-color: #f0f7ff; }
+                .status-done { color: #28a745; border-color: #28a745; background-color: #f4fff6; }
+                .status-cancel { color: #dc3545; border-color: #dc3545; background-color: #fff5f5; }
+                .status-process { color: #fd7e14; border-color: #fd7e14; background-color: #fffaf0; }
+                
+                .label-header { color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+                .info-grid { margin-top: 15px; }
+                .info-line { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
+                .info-bold { font-weight: bold; margin-right: 5px; }
+                .notes-box { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
+                .table-custom { width: 100%; margin-top: 25px; border-collapse: collapse; }
+                .table-custom thead { background-color: #f8f9fa; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; }
+                .table-custom th { padding: 10px; color: #666; font-size: 12px; text-transform: uppercase; }
+                .table-custom td { padding: 15px 10px; border-bottom: 1px solid #eee; }
+                .total-section { margin-top: 15px; text-align: right; }
+                .total-cyan { color: #008ca1; font-weight: bold; font-size: 18px; }
+                
+                /* નવી સ્ટાઈલ નોટ્સ માટે */
+                .note-title { font-weight: bold; font-size: 13px; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; }
+                .note-text { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 10px; }
+            </style>
 
-                    <div class="page" style="font-size:14px;">
-
-                        <!-- HEADER -->
-                        <div style="width:100%; overflow:hidden; margin-bottom:10px;">
-
-                            <div style="float:left; width:70%;">
-                                <h2 style="color:#5dade2; margin:0;">
-                                    Appointment - <span t-esc="doc.code"/>
-                                </h2>
-                            </div>
-
-                            <div style="float:right; width:30%; text-align:right;">
-
-                                <t t-set="color" t-value="
-                                    'background-color:#5cb85c;' if doc.status == 'confirm'
-                                    else 'background-color:#f0ad4e;' if doc.status == 'draft'
-                                    else 'background-color:#d9534f;' if doc.status == 'cancel'
-                                    else 'background-color:#777;'
-                                "/>
-
-                                <span t-att-style="color + ' color:white; padding:6px 14px; border-radius:14px; font-size:12px; text-transform:capitalize;'">
-                                    <span t-esc="doc.status"/>
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        <hr/>
-
-                        <!-- MAIN SECTION -->
-                        <div style="width:100%; margin-top:20px; overflow:hidden;">
-
-                            <div style="width:48%; float:left;">
-
-                                <h3 style="color:#5dade2;">Appointment Info</h3>
-
-                                <p><strong>Patient:</strong>
-                                    <span t-esc="doc.patient_id.name"/>
-                                </p>
-
-                                <p><strong>Doctor:</strong>
-                                    <span t-esc="doc.doctor_id.name"/>
-                                </p>
-
-                                <p><strong>Specialization:</strong>
-                                    <span t-esc="doc.specialization_id.name"/>
-                                </p>
-
-                                <p><strong>Doctor Fees:</strong>
-                                     <span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                                </p>                                
-
-                            </div>
-
-                            <div style="width:48%; float:right;">
-
-                                <h3 style="color:#5dade2;">Schedule</h3>
-
-                                <p><strong>Start:</strong>
-                                    <span t-field="doc.start_time" t-options='{"widget": "datetime"}'/>
-                                </p>
-
-                                <p><strong>End:</strong>
-                                    <span t-field="doc.end_time" t-options='{"widget": "datetime"}'/>
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <!-- Notes -->
-                            <div style="margin-top:15px;">
-                                <h5 style="color:#d9534f;">Notes</h5>
-                                <p>
-                                    <span t-esc="doc.notes"/>
-                                </p>
-                            </div>
-                        
-
-                        <!-- Doctor Description -->
-                        <t t-if="doc.doctor_description">
-                            <div style="margin-top:15px;">
-                                <h5 style="color:#5dade2;">Doctor Notes</h5>
-                                <p>
-                                    <span t-esc="doc.doctor_description"/>
-                                </p>
-                            </div>
-                        </t>
-
-                        <!-- CANCEL -->
-                        <t t-if="doc.status == 'cancel'">
-
-                            <div style="margin-top:15px;">
-                                <h5 style="color:#d9534f;">Cancellation Reason</h5>
-
-                                <p>
-                                    <span t-esc="doc.cancel_reason"/>
-                                </p>
-                            </div>
-
-                        </t>
-
+            <div class="page apt-container">
+                <div class="row align-items-center ">
+                    <div class="col-8">
+                        <div class="header-title">Appointment - <t t-esc="doc.code"/></div>
                     </div>
+                    <div class="col-4 text-end">
+                        <span t-attf-class="status-badge status-#{doc.status}">
+                            <t t-esc="dict(doc._fields['status'].selection).get(doc.status)"/>
+                        </span>
+                    </div>
+                </div>
 
-                </t>
-            </t>
+                <div class="row info-grid">
+                    <div class="col-6">
+                        <div class="label-header">PATIENT INFORMATION</div>
+                        <div class="info-line"><span class="info-bold">Patient:</span><t t-esc="doc.patient_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Doctor:</span><t t-esc="doc.doctor_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Specialization:</span><t t-esc="doc.doctor_id.specialization_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Doctor Fees:</span><span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="label-header">SCHEDULE TIME</div>
+                        <div class="info-line">
+                            <span class="info-bold">Start:</span>
+                            <span t-field="doc.start_time" t-options='{"widget": "datetime"}'/>
+                        </div>
+                        <div class="info-line">
+                            <span class="info-bold">End:</span>
+                            <span t-field="doc.end_time" t-options='{"widget": "datetime"}'/>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">DESCRIPTION</th>
+                            <th style="text-align: right; width: 150px;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Consultation Fees</strong></td>
+                            <td style="text-align: right; font-weight: bold;">
+                                <span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Total Section -->
+                <div class="row justify-content-end">
+                    <div class="col-5">
+                        <div class="total-section">
+                            <div style="margin-bottom: 10px;">
+                                <span class="text-muted" style="font-size: 14px;">Subtotal:</span>
+                                <span class="fw-bold ms-4" t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </div>
+                            <div style="border-top: 2px solid #333; padding-top: 10px;">
+                                <span class="total-cyan">Total:</span>
+                                <span class="total-cyan ms-4" t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section (Total પછી અહીં એડ કર્યું છે) -->
+                <div class="notes-box">
+                    <!-- 1. Patient Notes -->
+                    <t t-if="doc.notes">
+                        <div class="note-title" style="color: #d9534f;">Notes</div>
+                        <div class="note-text" t-field="doc.notes"/>
+                    </t>
+
+                    <!-- 2. Doctor Notes -->
+                    <t t-if="doc.doctor_description">
+                        <div class="note-title" style="color: #5dade2;">Doctor Notes</div>
+                        <div class="note-text" t-field="doc.doctor_description"/>
+                    </t>
+
+                    <!-- 3. Cancellation Reason -->
+                    <t t-if="doc.status == 'cancel' and doc.cancel_reason">
+                        <div class="note-title" style="color: #dc3545;">Cancellation Reason</div>
+                        <div class="note-text" t-field="doc.cancel_reason"/>
+                    </t>
+                </div>
+
+            </div>
         </t>
-    </template>
+    </t>
+</t>
+</template>
 </odoo>

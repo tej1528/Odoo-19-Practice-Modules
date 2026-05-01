@@ -341,16 +341,15 @@
                 <button name="action_reset_to_draft" string="Reset to Draft" type="object" class="btn-secondary" invisible="status != 'cancel'"/>
 
                 <field name="status" widget="statusbar" statusbar_visible="draft,requested,confirmed,processing,done,cancel"/>
-                
             </header>
 
             <sheet>
                 <group>
                     <h1><field name="code" readonly="1"/></h1>
-                <div class="d-flex justify-content-end mt-2" invisible="status != 'processing'">
-                    <field name="processing_start_time" invisible="1"/>
-                    <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
-                </div>
+                    <div class="d-flex justify-content-end mt-2" invisible="status != 'processing'">
+                        <field name="processing_start_time" invisible="1"/>
+                        <widget name="processing_timer" options="{'start_time_field': 'processing_start_time'}"/>
+                    </div>
                 </group>
 
                 <group string="Appointment Details" col="2">
@@ -364,21 +363,33 @@
                         <field name="end_time"/>
                         <field name="currency_id" invisible="1"/>
                         <field name="fees" widget="monetary"/>
-                        
                         <field name="total_processing_time" widget="float_time" invisible="status != 'done'" string="Total Duration"/>
                     </group>
                 </group>
 
+                <!-- Notes Section: Widget textarea ઉમેર્યું છે -->
                 <group string="Notes">
-                    <field name="notes" colspan="2" nolabel="1"/>
+                    <field name="notes" readonly="1"  colspan="2" nolabel="1" widget="textarea" style="word-break: break-word; min-height: 100px;"/>
                 </group>
 
+                <!-- Doctor Notes Section -->
                 <group string="Doctor Notes" invisible="status not in ['processing', 'done']">
-                    <field name="doctor_description" placeholder="Enter doctor notes..." colspan="2" nolabel="1" readonly="status == 'done'"/>
+                    <field name="doctor_description" 
+                           placeholder="Enter doctor notes..." 
+                           colspan="2" 
+                           nolabel="1" 
+                           readonly="status == 'done'" 
+                           widget="textarea"
+                           style="word-break: break-word; min-height: 100px;"/>
                 </group>
 
+                <!-- Cancel Reason Section -->
                 <group string="Cancel Reason" invisible="status != 'cancel'">
-                    <field name="cancel_reason" readonly="1" nolabel="1"/>
+                    <field name="cancel_reason" 
+                           readonly="1" 
+                           nolabel="1" 
+                           widget="textarea" 
+                           style="word-break: break-word; min-height: 100px;"/>
                 </group>
             </sheet>
 

@@ -1,143 +1,376 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="action_report_appointment_details" model="ir.actions.report">
+        <field name="name">Appointment Details</field>
+        <field name="model">hospital.appointment</field> <!-- તમારા મોડલનું નામ અહીં લખો -->
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hospital_management.report_appointment_template</field>
+        <field name="report_file">hospital_management.report_appointment_template</field>
+        <field name="binding_model_id" ref="model_hospital_appointment"/>
+        <field name="binding_type">report</field>
+    </record>
+
     <!-- Appointment List Page -->
     <template id="portal_my_appointments" name="My Appointments">
         <t t-call="portal.portal_layout">
-            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <div class="container mt-3">
+                
+                <!-- મેન્યુઅલ બ્રેડક્રમ્સ અહીંથી દૂર કર્યા છે -->
 
-            <div class="card mt-3 shadow-sm border-0">
-                <div class="card-body p-0">
-                    <div class="p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">All Appointments</h3>
-                    </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">All Appointments</h3>
+                        </div>
 
-                    <div t-if="not appointments" class="alert alert-info m-3" role="alert">
-                        There are currently no appointments for your account.
-                    </div>
+                        <div t-if="not appointments" class="alert alert-info m-3" role="alert">
+                            There are currently no appointments for your account.
+                        </div>
 
-                    <table t-if="appointments" class="table table-hover mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4">Code</th>
-                                <th>Patient</th>
-                                <th>Doctor</th>
-                                <th>Date &amp; Time</th>
-                                <th class="text-end">Fees</th>
-                                <th class="text-center pe-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="appointments" t-as="app">
-                                <tr class="align-middle" 
-                                    t-attf-onclick="window.location.href='/my/appointments/#{app['id']}';" 
-                                    style="cursor: pointer;">
-                                    
-                                    <td class="ps-4">
-                                        <span class="fw-bold text-primary"><t t-esc="app['code']"/></span>
-                                    </td>
-                                    <td><span class="text-muted" t-esc="app['patient_name']"/></td>
-                                    <td>
-                                        <div class="fw-bold"><span t-esc="app['doctor_name']"/></div>
-                                        <div class="small text-muted">
-                                            <i class="fa fa-stethoscope me-1 text-info"/>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div t-if="app.get('start_time_local')" class="small fw-bold text-dark">
-                                            <i class="fa fa-calendar me-1 text-primary"/>
-                                            <t t-esc="app['start_time_local'].strftime('%d-%m-%Y')"/>
-                                        </div>
-                                        <div class="small text-muted">
-                                            <i class="fa fa-clock-o me-1 text-primary"/>
-                                            <t t-if="app.get('start_time_local')">
-                                                <t t-esc="app['start_time_local'].strftime('%I:%M %p')"/>
-                                            </t>
-                                            <t t-if="app.get('end_time_local')">
-                                                <span class="mx-1">-</span>
-                                                <t t-esc="app['end_time_local'].strftime('%I:%M %p')"/>
-                                            </t>
-                                        </div>
-                                    </td>
-                                    <td class="text-end fw-bold">
-                                        <span t-esc="app['fees']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
-                                    </td>
-                                    <td class="text-center pe-4">
-                                        <span t-attf-class="badge rounded-pill p-2 px-3 #{
-                                            'text-bg-success' if app['status'] in ['done', 'finished'] else 
-                                            'text-bg-primary' if app['status'] == 'confirmed' else 
-                                            'text-bg-warning' if app['status'] == 'pending' else 
-                                            'text-bg-danger' if app['status'] == 'cancel' else 
-                                            'text-bg-info'
-                                        }">
-                                            <t t-esc="app['status'].upper() if app['status'] else ''"/>
-                                        </span>
-                                    </td>
+                        <table t-if="appointments" class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Code</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Date &amp; Time</th>
+                                    <th class="text-end">Fees</th>
+                                    <th class="text-center pe-4">Status</th>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="appointments" t-as="app">
+                                    <tr class="align-middle" 
+                                        t-attf-onclick="window.location.href='/my/appointments/#{app['id']}';" 
+                                        style="cursor: pointer;">
+                                        
+                                        <td class="ps-4">
+                                            <span class="fw-bold text-primary"><t t-esc="app['code']"/></span>
+                                        </td>
+                                        <td><span class="text-muted" t-esc="app['patient_name']"/></td>
+                                        <td>
+                                            <div class="fw-bold"><span t-esc="app['doctor_name']"/></div>
+                                        </td>
+                                        <td>
+                                            <div t-if="app.get('start_time_local')" class="small fw-bold text-dark">
+                                                <i class="fa fa-calendar me-1 text-primary"/>
+                                                <t t-esc="app['start_time_local'].strftime('%d-%m-%Y')"/>
+                                            </div>
+                                            <div class="small text-muted">
+                                                <i class="fa fa-clock-o me-1 text-primary"/>
+                                                <t t-if="app.get('start_time_local')">
+                                                    <t t-esc="app['start_time_local'].strftime('%I:%M %p')"/>
+                                                </t>
+                                                <t t-if="app.get('end_time_local')">
+                                                    <span class="mx-1">-</span>
+                                                    <t t-esc="app['end_time_local'].strftime('%I:%M %p')"/>
+                                                </t>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold">
+                                            <span t-esc="app['fees']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <span t-attf-class="badge rounded-pill p-2 px-3 #{
+                                                'text-bg-success' if app['status'] in ['done', 'finished'] else 
+                                                'text-bg-primary' if app['status'] == 'confirmed' else 
+                                                'text-bg-warning' if app['status'] == 'pending' else 
+                                                'text-bg-danger' if app['status'] == 'cancel' else 
+                                                'text-bg-info'
+                                            }">
+                                                <t t-esc="app['status'].upper() if app['status'] else ''"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-            <div t-if="pager" class="o_portal_pager d-flex justify-content-center mt-3">
-                <t t-call="portal.pager"/>
+                <div t-if="pager" class="o_portal_pager d-flex justify-content-center mt-3">
+                    <t t-call="portal.pager"/>
+                </div>
             </div>
         </t>
     </template>
 
     <!-- Appointment Detail Page -->
     <template id="portal_appointment_detail" name="Appointment Detail">
-        <t t-call="portal.portal_layout">
-            <div class="container mt-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Appointment Detail - <t t-esc="appointment.code"/></h4>
-                        <span t-attf-class="badge rounded-pill p-2 px-3 #{
-                            'text-bg-success' if appointment.status in ['done', 'finished'] else 
-                            'text-bg-primary' if appointment.status == 'confirmed' else 
-                            'text-bg-warning' if appointment.status == 'pending' else 
-                            'text-bg-danger' if appointment.status == 'cancel' else 
-                            'text-bg-info'
-                        }">
-                            <t t-esc="appointment.status.upper() if appointment.status else ''"/>
-                        </span>
+    <t t-call="portal.portal_layout">
+        <t t-set="wrapwrap_classes" t-value="'o_portal_bg_dark'"/>
+
+        <!-- container માંથી બધી ટોપ સ્પેસ કાઢી નાખી છે -->
+        <div class="container mt-0 pt-0">
+            
+            <!-- પેજર એરો (Prev/Next) ને બ્રેડક્રમની લાઈનમાં સેટ કરવા માટે -44px નેગેટિવ માર્જિન -->
+            <div class="d-flex justify-content-end align-items-center mb-0" style="margin-top: -44px; position: relative; z-index: 999;">
+                <div class="d-flex align-items-center rounded-3 shadow-sm bg-white border" style="height: 32px;">
+                    <a t-attf-href="/my/appointments/#{prev_id}" 
+                       t-attf-class="btn btn-link text-dark #{'disabled text-muted' if not prev_id else ''}" 
+                       style="padding: 2px 12px; border-right: 1px solid #dee2e6; text-decoration: none;">
+                        <i class="fa fa-chevron-left" style="font-size: 12px;"/>
+                    </a>
+                    <a t-attf-href="/my/appointments/#{next_id}" 
+                       t-attf-class="btn btn-link text-dark #{'disabled text-muted' if not next_id else ''}" 
+                       style="padding: 2px 12px; text-decoration: none;">
+                        <i class="fa fa-chevron-right" style="font-size: 12px;"/>
+                    </a>
+                </div>
+            </div>
+
+            <!-- મેઈન રો - mt-3 રાખ્યું છે જેથી કાર્ડ અને હેડર વચ્ચે પ્રોપર જગ્યા રહે -->
+            <div class="row mt-3">
+                <!-- ડાબી બાજુનું સાઇડબાર -->
+                <div class="col-12 col-lg-3">
+                    <div class="card bg-white shadow-sm mb-4 border-0 rounded-3">
+                        <div class="card-body text-center p-4">
+                            <h2 class="fw-bold mb-3">
+                                <span t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                            </h2>
+                            <a t-attf-href="/my/appointments/pdf/#{appointment.id}" class="btn btn-outline-secondary w-100 mb-4 py-2 border shadow-sm">
+                                <i class="fa fa-print me-2"/> View Details (PDF)
+                            </a>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <h6 class="text-muted text-uppercase small font-weight-bold border-bottom pb-1">Information</h6>
-                                <p class="mb-1"><strong>Patient:</strong> <t t-esc="appointment.patient_id.name"/></p>
-                                <p class="mb-1"><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
-                                <p class="mb-1"><strong>Fees:</strong> <span t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/></p>
+                    <div class="text-center small text-muted">
+                        Powered by <strong>Odoo</strong>
+                    </div>
+                </div>
+
+                <!-- જમણી બાજુનું મેઈન કાર્ડ -->
+                <div class="col-12 col-lg-9">
+                    <div class="card shadow-sm border-0 mb-5 rounded-3">
+                        <div class="card-body p-4 p-md-5">
+                            <!-- હેડર અને સ્ટેટસ -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h3 class="mb-0 fw-bold">Appointment - <t t-esc="appointment.code"/></h3>
+                                <span t-attf-class="badge rounded-pill px-3 py-2 #{
+                                    'text-bg-success' if appointment.status in ['done', 'finished'] else 
+                                    'text-bg-primary' if appointment.status == 'confirmed' else 
+                                    'text-bg-warning' if appointment.status == 'pending' else 
+                                    'text-bg-danger' if appointment.status == 'cancel' else 
+                                    'text-bg-info'
+                                }" style="font-size: 0.8rem;">
+                                    <t t-esc="appointment.status.upper() if appointment.status else ''"/>
+                                </span>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <h6 class="text-muted text-uppercase small font-weight-bold border-bottom pb-1">Schedule Info</h6>
-                                <div>
-                                    <div t-if="start_time_local" class="fw-bold text-dark mb-1">
-                                        <i class="fa fa-calendar me-2 text-primary"/>
-                                        <t t-esc="start_time_local.strftime('%d-%m-%Y')"/>
+
+                            <!-- પેશન્ટ અને સેન્ટરની માહિતી -->
+                            <div class="row mb-4">
+                                <div class="col-md-7">
+                                    <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3">Patient Information</h6>
+                                    <p class="mb-1"><strong>Name:</strong> <t t-esc="appointment.patient_id.name"/></p>
+                                    <p class="mb-1"><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
+                                    <p class="mb-1"><strong>Specialization:</strong> <t t-esc="appointment.doctor_id.specialization_id.name or 'General'"/></p>
+                                    <p class="mb-1">
+                                        <strong>Time:</strong> 
+                                        <t t-if="start_time_local" t-esc="start_time_local.strftime('%b %d, %I:%M %p')"/> - 
+                                        <t t-if="end_time_local" t-esc="end_time_local.strftime('%I:%M %p')"/>
+                                    </p>
+                                    <p class="mb-1"><strong>Doctor Fees:</strong> <span t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/></p>
+                                </div>
+                                <div class="col-md-5">
+                                    <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3">Medical Center</h6>
+                                    <p class="mb-0 fw-bold">Medical Care Center</p>
+                                    <p class="text-muted small">123, Health Street, City, India</p>
+                                </div>
+                            </div>
+
+                            <!-- સર્વિસ ટેબલ -->
+                            <div class="table-responsive border-top pt-3">
+                                <table class="table">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="border-top-0 text-muted small text-uppercase">Description</th>
+                                            <th class="border-top-0 text-end text-muted small text-uppercase">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="py-3">
+                                                <div class="fw-bold text-dark">Consultation Fees</div>
+                                            </td>
+                                            <td class="py-3 text-end fw-bold">
+                                                <span t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Total Section -->
+                            <div class="row justify-content-end mb-4">
+                                <div class="col-12 col-md-5">
+                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted">Subtotal:</span>
+                                        <span class="fw-bold" t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
                                     </div>
-                                    <div class="text-muted">
-                                        <i class="fa fa-clock-o me-2 text-primary"/>
-                                        <t t-if="start_time_local">
-                                            <t t-esc="start_time_local.strftime('%I:%M %p')"/>
-                                        </t>
-                                        <t t-if="end_time_local">
-                                            <span class="mx-2">-</span>
-                                            <t t-esc="end_time_local.strftime('%I:%M %p')"/>
-                                        </t>
+                                    <div class="d-flex justify-content-between py-3">
+                                        <h5 class="fw-bold" style="color: #008ca1;">Total:</h5>
+                                        <h5 class="fw-bold" style="color: #008ca1;" t-field="appointment.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Notes Section -->
+                            <div class="border-top pt-4">
+                                <div class="mb-4" t-if="appointment.notes">
+                                    <h6 class="fw-bold" style="color:#d9534f;">Notes</h6>
+                                    <p class="text-muted" style="word-wrap: break-word;"><span t-field="appointment.notes"/></p>
+                                </div>
+                                
+                                <div class="mb-4" t-if="appointment.doctor_description">
+                                    <h6 class="fw-bold" style="color:#5dade2;">Doctor description</h6>
+                                    <p class="text-muted" style="word-wrap: break-word;"><span t-field="appointment.doctor_description"/></p>
+                                </div>
+
+                                <div class="mb-2" t-if="appointment.status == 'cancel' and appointment.cancel_reason">
+                                    <h6 class="fw-bold text-danger">Cancellation Reason</h6>
+                                    <p class="text-muted" style="word-wrap: break-word;"><span t-field="appointment.cancel_reason"/></p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light text-end">
-                        <a href="/my/appointments" class="btn btn-sm btn-secondary">
-                            <i class="fa fa-arrow-left me-1"/> Back to List
-                        </a>
+
+                        <div class="card-footer bg-light border-top p-3 text-end">
+                            <a href="/my/appointments" class="btn btn-sm btn-outline-info bg-white py-2 px-3 fw-bold" style="color: #008ca1; border-color: #008ca1;">
+                                <i class="fa fa-arrow-left me-1"/> Back to My Appointments
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </t>
+</template>
+
+<template id="report_appointment_template">
+    <t t-call="web.html_container">
+    <t t-foreach="docs" t-as="doc">
+        <t t-call="web.external_layout">
+            <style>
+                .apt-container { 
+                    font-family: 'Helvetica', 'Arial', sans-serif; 
+                    color: #333; 
+                    margin-top: 100px; 
+                    padding-top: 30px;
+                }
+                .header-title { font-size: 28px; font-weight: bold; color: #5dade2; }
+
+                .status-badge { padding: 4px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid; display: inline-block; }
+                .status-draft { color: #007bff; border-color: #007bff; background-color: #f0f7ff; }
+                .status-done { color: #28a745; border-color: #28a745; background-color: #f4fff6; }
+                .status-cancel { color: #dc3545; border-color: #dc3545; background-color: #fff5f5; }
+                .status-process { color: #fd7e14; border-color: #fd7e14; background-color: #fffaf0; }
+                
+                .label-header { color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+                .info-grid { margin-top: 15px; }
+                .info-line { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
+                .info-bold { font-weight: bold; margin-right: 5px; }
+                .notes-box { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
+                .table-custom { width: 100%; margin-top: 25px; border-collapse: collapse; }
+                .table-custom thead { background-color: #f8f9fa; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; }
+                .table-custom th { padding: 10px; color: #666; font-size: 12px; text-transform: uppercase; }
+                .table-custom td { padding: 15px 10px; border-bottom: 1px solid #eee; }
+                .total-section { margin-top: 15px; text-align: right; }
+                .total-cyan { color: #008ca1; font-weight: bold; font-size: 18px; }
+                
+                /* નવી સ્ટાઈલ નોટ્સ માટે */
+                .note-title { font-weight: bold; font-size: 13px; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; }
+                .note-text { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 10px; }
+            </style>
+
+            <div class="page apt-container">
+                <div class="row align-items-center ">
+                    <div class="col-8">
+                        <div class="header-title">Appointment - <t t-esc="doc.code"/></div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <span t-attf-class="status-badge status-#{doc.status}">
+                            <t t-esc="dict(doc._fields['status'].selection).get(doc.status)"/>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row info-grid">
+                    <div class="col-6">
+                        <div class="label-header">PATIENT INFORMATION</div>
+                        <div class="info-line"><span class="info-bold">Patient:</span><t t-esc="doc.patient_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Doctor:</span><t t-esc="doc.doctor_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Specialization:</span><t t-esc="doc.doctor_id.specialization_id.name"/></div>
+                        <div class="info-line"><span class="info-bold">Doctor Fees:</span><span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="label-header">SCHEDULE TIME</div>
+                        <div class="info-line">
+                            <span class="info-bold">Start:</span>
+                            <span t-field="doc.start_time" t-options='{"widget": "datetime"}'/>
+                        </div>
+                        <div class="info-line">
+                            <span class="info-bold">End:</span>
+                            <span t-field="doc.end_time" t-options='{"widget": "datetime"}'/>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">DESCRIPTION</th>
+                            <th style="text-align: right; width: 150px;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Consultation Fees</strong></td>
+                            <td style="text-align: right; font-weight: bold;">
+                                <span t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Total Section -->
+                <div class="row justify-content-end">
+                    <div class="col-5">
+                        <div class="total-section">
+                            <div style="margin-bottom: 10px;">
+                                <span class="text-muted" style="font-size: 14px;">Subtotal:</span>
+                                <span class="fw-bold ms-4" t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </div>
+                            <div style="border-top: 2px solid #333; padding-top: 10px;">
+                                <span class="total-cyan">Total:</span>
+                                <span class="total-cyan ms-4" t-field="doc.fees" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section (Total પછી અહીં એડ કર્યું છે) -->
+                <div class="notes-box">
+                    <!-- 1. Patient Notes -->
+                    <t t-if="doc.notes">
+                        <div class="note-title" style="color: #d9534f;">Notes</div>
+                        <div class="note-text" t-field="doc.notes"/>
+                    </t>
+
+                    <!-- 2. Doctor Notes -->
+                    <t t-if="doc.doctor_description">
+                        <div class="note-title" style="color: #5dade2;">Doctor Notes</div>
+                        <div class="note-text" t-field="doc.doctor_description"/>
+                    </t>
+
+                    <!-- 3. Cancellation Reason -->
+                    <t t-if="doc.status == 'cancel' and doc.cancel_reason">
+                        <div class="note-title" style="color: #dc3545;">Cancellation Reason</div>
+                        <div class="note-text" t-field="doc.cancel_reason"/>
+                    </t>
+                </div>
+
+            </div>
         </t>
-    </template>
+    </t>
+</t>
+</template>
 </odoo>
