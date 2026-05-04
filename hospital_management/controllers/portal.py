@@ -1,7 +1,12 @@
-from odoo import http
-from odoo.http import request
-from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from collections import OrderedDict
 from pytz import timezone, UTC
+from odoo import http, fields, _
+from odoo.http import request
+from odoo.fields import Domain  # આ મુખ્ય છે
+from odoo.tools import groupby as group_by_func
+from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 
 class HospitalPortal(CustomerPortal):
 
@@ -11,44 +16,218 @@ class HospitalPortal(CustomerPortal):
             values['appointment_count'] = request.env['hospital.appointment'].search_count([])
         return values
 
-    @http.route(['/my/appointments', '/my/appointments/page/<int:page>'], type='http', auth="user", website=True)
-    def portal_my_appointments(self, page=1, **kw):
-        request_obj = request.env['hospital.appointment']
+    # -------------------------------------------------------------------------
+    # Searchbar & Filter Configurations
+    # -------------------------------------------------------------------------
+
+    def _get_appointment_searchbar_sortings(self):
+        return {
+            'date': {'label': _('Date'), 'order': 'start_time desc'},
+            'code': {'label': _('Appointment No'), 'order': 'code asc'},
+            'patient': {'label': _('Patient'), 'order': 'patient_id asc'},
+            'doctor': {'label': _('Doctor'), 'order': 'doctor_id asc'},
+            'specialization': {'label': _('Specialization'), 'order': 'specialization_id'},
+            'fees': {'label': _('Fees'), 'order': 'fees desc'},
+        }
+
+    def _get_appointment_searchbar_filters(self):
+        today = fields.Date.today()
         
-        # Pager configuration
-        total = request_obj.search_count([])
+        # સમયગાળાની ગણતરી
+        start_of_week = today - timedelta(days=today.weekday())
+        last_week_start = start_of_week - timedelta(weeks=1)
+        start_of_month = today.replace(day=1)
+        last_month_start = start_of_month - relativedelta(months=1)
+        next_month_start = start_of_month + relativedelta(months=1)
+
+        # OrderedDict થી સિક્વન્સ ફિક્સ થશે
+        filters = OrderedDict([
+            ('all', {'label': _('All'), 'domain': []}),
+            
+            # ૧. સ્ટેટસ મુજબ (image_b7bfdc.png મુજબનો ક્રમ)
+            ('draft', {'label': _('Draft'), 'domain': [('status', '=', 'draft')]}),
+            ('requested', {'label': _('Requested'), 'domain': [('status', '=', 'requested')]}),
+            ('confirmed', {'label': _('Confirmed'), 'domain': [('status', '=', 'confirmed')]}),
+            ('processing', {'label': _('Processing'), 'domain': [('status', '=', 'processing')]}),
+            ('done', {'label': _('Done'), 'domain': [('status', '=', 'done')]}),
+            ('cancel', {'label': _('Cancelled'), 'domain': [('status', '=', 'cancel')]}),
+            
+            # ૨. સમયગાળા મુજબ
+            ('this_week', {
+                'label': _('This Week'), 
+                'domain': [('start_time', '>=', start_of_week), ('start_time', '<=', start_of_week + timedelta(days=6))]
+            }),
+            ('last_week', {
+                'label': _('Last Week'), 
+                'domain': [('start_time', '>=', last_week_start), ('start_time', '<', start_of_week)]
+            }),
+            ('this_month', {
+                'label': _('This Month'), 
+                'domain': [('start_time', '>=', start_of_month), ('start_time', '<', next_month_start)]
+            }),
+            ('last_month', {
+                'label': _('Last Month'), 
+                'domain': [('start_time', '>=', last_month_start), ('start_time', '<', start_of_month)]
+            }),
+            ('next_month', {
+                'label': _('Next Month'), 
+                'domain': [('start_time', '>=', next_month_start), ('start_time', '<', next_month_start + relativedelta(months=1))]
+            }),
+            ('this_year', {
+                'label': _('This Year'), 
+                'domain': [
+                    ('start_time', '>=', today.replace(month=1, day=1)), 
+                    ('start_time', '<=', today.replace(month=12, day=31))
+                ]
+            }),
+        ])
+        return filters
+
+    def _get_appointment_searchbar_inputs(self):
+        return {
+        'all': {'input': 'all', 'label': _('Search in All')},
+        'code': {'input': 'code', 'label': _('Search in Code')},
+        'patient': {'input': 'patient', 'label': _('Search in Patient')},
+        'doctor': {'input': 'doctor', 'label': _('Search in Doctor')},
+        'specialization': {'input': 'specialization', 'label': _('Search in Specialization')},
+    }
+
+    def _get_appointment_searchbar_groupby(self):
+        return {
+            'none': {'label': _('None')},
+            'patient_id': {'label': _('Patient')},
+            'doctor_id': {'label': _('Doctor')},
+            'specialization_id': {'label': _('Specialization')},
+            'status': {'label': _('Status')},
+            'start_time:day': {'label': _('Day')},
+            'start_time:week': {'label': _('Week')},
+            'start_time:month': {'label': _('Month')},
+            'start_time:year': {'label': _('Year')},
+        }
+
+    # -------------------------------------------------------------------------
+    # Main Portal Route
+    # -------------------------------------------------------------------------
+
+    @http.route(['/my/appointments', '/my/appointments/page/<int:page>'], type='http', auth="user", website=True)
+    def portal_my_appointments(self, page=1, sortby=None, filterby=None, search=None, search_in='all', groupby=None, **kw):
+        request_obj = request.env['hospital.appointment']
+        values = self._prepare_portal_layout_values()
+
+        searchbar_sortings = self._get_appointment_searchbar_sortings()
+        searchbar_filters = self._get_appointment_searchbar_filters()
+        searchbar_inputs = self._get_appointment_searchbar_inputs()
+        searchbar_groupby = self._get_appointment_searchbar_groupby()
+
+        # Defaults
+        sortby = sortby or 'code' 
+        filterby = filterby or 'all'
+        search_in = search_in or 'all' # સુધારો
+        groupby_value = groupby or 'none'
+
+        # ૧. સોર્ટિંગ ઓર્ડર
+        if groupby_value != 'none':
+            sort_field = groupby_value.split(':')[0] if ':' in groupby_value else groupby_value
+            order = f"{sort_field}, {searchbar_sortings[sortby]['order']}"
+        else:
+            order = searchbar_sortings[sortby]['order']
+
+        # ૨. ફિલ્ટર ડોમેન
+        raw_filter_domain = searchbar_filters.get(filterby, searchbar_filters.get('all'))['domain']
+        domain = Domain(raw_filter_domain)
+
+        # ૩. સર્ચ લોજિક - Odoo 19 Standard
+        if search and search_in:
+            search_domain = [] # અહીં સાદું લિસ્ટ વાપરો
+            
+            if search_in == 'all':
+                # 'all' માટે 4 ફિલ્ડ છે, એટલે 3 વખત '|' આવશે
+                search_domain = [
+                    '|', '|', '|',
+                    ('code', 'ilike', search),
+                    ('patient_id.name', 'ilike', search),
+                    ('doctor_id.name', 'ilike', search),
+                    ('specialization_id.name', 'ilike', search)
+                ]
+            else:
+                # ચોક્કસ ફિલ્ડ માટે કોઈ '|' ની જરૂર નથી, કારણ કે શરત એક જ છે
+                if search_in == 'code':
+                    search_domain = [('code', 'ilike', search)]
+                elif search_in == 'patient':
+                    search_domain = [('patient_id.name', 'ilike', search)]
+                elif search_in == 'doctor':
+                    search_domain = [('doctor_id.name', 'ilike', search)]
+                elif search_in == 'specialization':
+                    search_domain = [('specialization_id.name', 'ilike', search)]
+            
+            # ફિલ્ટર અને સર્ચ ડોમેનને ભેગા કરો
+            if search_domain:
+                domain = domain & Domain(search_domain)
+
+        # ૪. પેજીનેશન
+        appointment_count = request_obj.search_count(domain)
         pager = portal_pager(
             url="/my/appointments",
-            total=total,
+            url_args={
+                'sortby': sortby, 
+                'filterby': filterby, 
+                'search': search, 
+                'search_in': search_in, 
+                'groupby': groupby_value
+            },
+            total=appointment_count,
             page=page,
             step=10
         )
 
-        appointments_records = request_obj.search([], limit=10, offset=pager['offset'])
-        user_tz = timezone(request.env.user.tz or 'UTC')
+        # ૫. ડેટા ફેચ કરો
+        appointments_records = request_obj.search(domain, order=order, limit=10, offset=pager['offset'])
         
-        appointment_list = []
-        for app in appointments_records:
-            # Timezone conversion for Start and End time
-            st_local = UTC.localize(app.start_time).astimezone(user_tz) if app.start_time else False
-            et_local = UTC.localize(app.end_time).astimezone(user_tz) if app.end_time else False
-            
-            appointment_list.append({
-                'id': app.id,
-                'code': app.code,
-                'patient_name': app.patient_id.name,
-                'doctor_name': app.doctor_id.name,
-                'fees': app.fees,
-                'status': app.status,
-                'start_time_local': st_local,
-                'end_time_local': et_local,
-            })
+        # ૬. ગ્રુપિંગ લોજિક
+        grouped_appointments = []
+        if groupby_value != 'none':
+            if ':' in groupby_value:
+                field_name, interval = groupby_value.split(':')
+                
+                def groupby_key(record):
+                    val = record[field_name]
+                    if not val:
+                        return _("None")
+                    if interval == 'day':
+                        return val.strftime('%d %b %Y')
+                    if interval == 'week':
+                        return _("Week %s") % val.strftime('%U (%b %Y)')
+                    if interval == 'month':
+                        return val.strftime('%B %Y')
+                    if interval == 'year':
+                        return val.strftime('%Y')
+                    return val
+                
+                grouped_appointments = [request_obj.concat(*g) for k, g in group_by_func(appointments_records, groupby_key)]
+            else:
+                grouped_appointments = [request_obj.concat(*g) for k, g in group_by_func(appointments_records, lambda a: a[groupby_value])]
+        else:
+            grouped_appointments = [appointments_records]
 
-        return request.render("hospital_management.portal_my_appointments", {
-            'appointments': appointment_list,
+        # ૭. ફાઇનલ Values અપડેટ
+        user_tz = timezone(request.env.user.tz or 'UTC')
+        values.update({
+            'appointments': appointments_records,
+            'grouped_appointments': grouped_appointments,
             'page_name': 'appointments',
             'pager': pager,
+            'default_url': '/my/appointments',  # આ લાઈન ખાસ ચેક કરો, તે હોવી જ જોઈએ
+            'searchbar_sortings': searchbar_sortings,
+            'searchbar_filters': searchbar_filters, 
+            'searchbar_inputs': searchbar_inputs,
+            'searchbar_groupby': searchbar_groupby,
+            'sortby': sortby,
+            'filterby': filterby,
+            'search_in': search_in,
+            'search': search,
+            'groupby': groupby_value,
         })
+        return request.render("hospital_management.portal_my_appointments", values)
 
     @http.route(['/my/appointments/<int:appointment_id>'], type='http', auth="user", website=True)
     def portal_appointment_detail(self, appointment_id, **kw):
@@ -56,23 +235,21 @@ class HospitalPortal(CustomerPortal):
         if not appointment.exists():
             return request.render("website.404")
 
-        all_appointments = request.env['hospital.appointment'].search([], order='id asc')
-        ids = all_appointments.ids
-        current_index = ids.index(appointment_id)
-
-        prev_id = ids[current_index - 1] if current_index > 0 else False
-        next_id = ids[current_index + 1] if current_index < len(ids) - 1 else False
+        # Navigation: Prev/Next from session history
+        history_ids = request.session.get('my_appointments_history', [])
+        current_index = history_ids.index(appointment_id) if appointment_id in history_ids else None
+        
+        prev_id = history_ids[current_index - 1] if current_index is not None and current_index > 0 else False
+        next_id = history_ids[current_index + 1] if current_index is not None and current_index < len(history_ids) - 1 else False
         
         user_tz = timezone(request.env.user.tz or 'UTC')
         start_time_local = UTC.localize(appointment.start_time).astimezone(user_tz) if appointment.start_time else False
-        end_time_local = UTC.localize(appointment.end_time).astimezone(user_tz) if appointment.end_time else False
         
         return request.render(
             "hospital_management.portal_appointment_detail",
             {
                 'appointment': appointment,
                 'start_time_local': start_time_local,
-                'end_time_local': end_time_local,
                 'prev_id': prev_id,
                 'next_id': next_id,
                 'page_name': 'appointment_detail',
@@ -80,60 +257,14 @@ class HospitalPortal(CustomerPortal):
         )
     
     @http.route(['/my/appointments/pdf/<int:appointment_id>'], type='http', auth="user", website=True)
-    def portal_appointment_report_download(self, appointment_id, **kw):
-        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
-        if not appointment.exists():
-            return request.render('website.404')
-
-        # અહીં 'hospital_management.action_report_appointment' માં તમારા રિપોર્ટની સાચી ID લખવી
-        try:
-            report_sudo = request.env.ref('hospital_management.action_report_appointment').sudo()
-        except:
-            # જો એક્શન આઈડી ન મળે તો ભૂલ અટકાવવા
-            return request.render('website.404')
-
-        pdf_content, content_type = report_sudo._render_qweb_pdf(appointment.id)
-        
-        pdfhttpheaders = [
-            ('Content-Type', 'application/pdf'),
-            ('Content-Length', len(pdf_content)),
-            ('Content-Disposition', 'attachment; filename="Appointment_%s.pdf"' % appointment.code)
-        ]
-        return request.make_response(pdf_content, headers=pdfhttpheaders)
-    
-    @http.route(['/my/appointments/pdf/<int:appointment_id>'], type='http', auth="public", website=True)
-    def portal_appointment_report_pdf(self, appointment_id, **kw):
-        # એપોઇન્ટમેન્ટ રેકોર્ડ શોધો
-        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
-        
-        # PDF રિપોર્ટ જનરેટ કરો (રિપોર્ટની XML ID અહીં વાપરો)
-        pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
-            'your_module_name.action_report_appointment_details', [appointment.id]
-        )
-        
-        # PDF ડાઉનલોડ રિસ્પોન્સ
-        pdfhttpheaders = [
-            ('Content-Type', 'application/pdf'),
-            ('Content-Length', len(pdf)),
-            ('Content-Disposition', 'attachment; filename="Appointment_Details.pdf"')
-        ]
-        return request.make_response(pdf, headers=pdfhttpheaders)
-    
-    @http.route(['/my/appointments/pdf/<int:appointment_id>'], type='http', auth="user", website=True)
     def download_appointment_report(self, appointment_id, **kw):
-        # ૧. એપોઇન્ટમેન્ટનો રેકોર્ડ મેળવો
         appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
-        
         if not appointment.exists():
             return request.render('website.404')
 
-        # ૨. રિપોર્ટ એક્શનની XML ID નો ઉપયોગ કરીને PDF જનરેટ કરો
-        # અહીં 'your_module_name.action_report_appointment_details' માં તમારા મોડ્યુલનું નામ લખવું
         report_action_id = 'hospital_management.action_report_appointment_details'
-        
         pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf(report_action_id, [appointment.id])
 
-        # ૩. PDF ફાઇલ તરીકે રિસ્પોન્સ મોકલો
         pdfhttpheaders = [
             ('Content-Type', 'application/pdf'),
             ('Content-Length', len(pdf)),

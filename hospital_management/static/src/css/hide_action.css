@@ -92,3 +92,13 @@
     font-weight: bold;
     margin-top: 20px;
 }
+
+.o_portal_navbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.o_portal_searchbar {
+    margin-top: 0 !important;
+}

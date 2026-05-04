@@ -13,88 +13,131 @@
 
     <!-- Appointment List Page -->
     <template id="portal_my_appointments" name="My Appointments">
-        <t t-call="portal.portal_layout">
-            <div class="container mt-3">
-                
-                <!-- મેન્યુઅલ બ્રેડક્રમ્સ અહીંથી દૂર કર્યા છે -->
+    <t t-call="portal.portal_layout">
+        
+        <t t-set="default_url" t-value="'/my/appointments'"/>
 
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-0">
-                        <div class="p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0">All Appointments</h3>
-                        </div>
-
-                        <div t-if="not appointments" class="alert alert-info m-3" role="alert">
-                            There are currently no appointments for your account.
-                        </div>
-
-                        <table t-if="appointments" class="table table-hover mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Code</th>
-                                    <th>Patient</th>
-                                    <th>Doctor</th>
-                                    <th>Date &amp; Time</th>
-                                    <th class="text-end">Fees</th>
-                                    <th class="text-center pe-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="appointments" t-as="app">
-                                    <tr class="align-middle" 
-                                        t-attf-onclick="window.location.href='/my/appointments/#{app['id']}';" 
-                                        style="cursor: pointer;">
-                                        
-                                        <td class="ps-4">
-                                            <span class="fw-bold text-primary"><t t-esc="app['code']"/></span>
-                                        </td>
-                                        <td><span class="text-muted" t-esc="app['patient_name']"/></td>
-                                        <td>
-                                            <div class="fw-bold"><span t-esc="app['doctor_name']"/></div>
-                                        </td>
-                                        <td>
-                                            <div t-if="app.get('start_time_local')" class="small fw-bold text-dark">
-                                                <i class="fa fa-calendar me-1 text-primary"/>
-                                                <t t-esc="app['start_time_local'].strftime('%d-%m-%Y')"/>
-                                            </div>
-                                            <div class="small text-muted">
-                                                <i class="fa fa-clock-o me-1 text-primary"/>
-                                                <t t-if="app.get('start_time_local')">
-                                                    <t t-esc="app['start_time_local'].strftime('%I:%M %p')"/>
-                                                </t>
-                                                <t t-if="app.get('end_time_local')">
-                                                    <span class="mx-1">-</span>
-                                                    <t t-esc="app['end_time_local'].strftime('%I:%M %p')"/>
-                                                </t>
-                                            </div>
-                                        </td>
-                                        <td class="text-end fw-bold">
-                                            <span t-esc="app['fees']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
-                                        </td>
-                                        <td class="text-center pe-4">
-                                            <span t-attf-class="badge rounded-pill p-2 px-3 #{
-                                                'text-bg-success' if app['status'] in ['done', 'finished'] else 
-                                                'text-bg-primary' if app['status'] == 'confirmed' else 
-                                                'text-bg-warning' if app['status'] == 'pending' else 
-                                                'text-bg-danger' if app['status'] == 'cancel' else 
-                                                'text-bg-info'
-                                            }">
-                                                <t t-esc="app['status'].upper() if app['status'] else ''"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div t-if="pager" class="o_portal_pager d-flex justify-content-center mt-3">
-                    <t t-call="portal.pager"/>
-                </div>
-            </div>
+        <t t-call="portal.portal_searchbar">
+            <t t-set="title">Appointments</t>
+            <t t-set="searchbar_inputs" t-value="searchbar_inputs"/>
+            <t t-set="searchbar_sortings" t-value="searchbar_sortings"/>
+            <t t-set="searchbar_filters" t-value="searchbar_filters"/>
+            <t t-set="searchbar_groupby" t-value="searchbar_groupby"/>
+            <t t-set="search" t-value="search"/>
+            <t t-set="search_in" t-value="search_in"/>
         </t>
-    </template>
+
+        <t t-if="not appointments">
+            <p class="alert alert-info shadow-sm mt-2">There are currently no appointments for your account.</p>
+        </t>
+
+        <t t-if="appointments" t-call="portal.portal_table">
+            <thead>
+                <tr class="active">
+                    <th class="ps-4">Code</th>
+                    <!-- Groupby check: Jo patient thi group hoy to hide thashe -->
+                    <th t-if="groupby != 'patient_id'">Patient</th>
+                    <!-- Groupby check: Jo doctor thi group hoy to hide thashe -->
+                    <th t-if="groupby != 'doctor_id'">Doctor</th>
+                    <th>Date &amp; Time</th>
+                    <!-- Groupby check: Jo specialization thi group hoy to hide thashe -->
+                    <th t-if="groupby != 'specialization_id'">Specialization</th>
+                    <th class="text-end">Fees</th>
+                    <!-- Groupby check: Jo status thi group hoy to hide thashe -->
+                    <th t-if="groupby != 'status'" class="text-center pe-4">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Filter Label logic -->
+                <t t-if="filterby and filterby != 'all' and searchbar_filters">
+                    <tr class="table-info">
+                        <td colspan="7" class="ps-4 fw-bold text-uppercase text-info" style="background-color: #e7f3ff; border-left: 4px solid #0dcaf0;">
+                            <i class="fa fa-filter me-1"/> 
+                            Filtered By: <t t-esc="searchbar_filters.get(filterby, {}).get('label', filterby)"/>
+                        </td>
+                    </tr>
+                </t>
+
+                <t t-foreach="grouped_appointments" t-as="apps">
+                    <!-- Group Header logic -->
+                    <t t-if="groupby and groupby != 'none'">
+                        <tr class="table-light fw-bold">
+                            <td colspan="7" class="ps-4 text-primary" style="background-color: #f8f9fa; border-left: 4px solid #0056b3;">
+                                <t t-if="groupby == 'doctor_id'">
+                                    <i class="fa fa-user-md me-1"/> <span class="fw-bold">Doctor: </span> <span t-esc="apps[0].doctor_id.name"/>
+                                </t>
+                                <t t-elif="groupby == 'patient_id'">
+                                    <i class="fa fa-user me-1"/> <span class="fw-bold">Patient: </span> <span t-esc="apps[0].patient_id.name"/>
+                                </t>
+                                <t t-elif="groupby == 'specialization_id'">
+                                    <i class="fa fa-stethoscope me-1"/> <span class="fw-bold">Specialization: </span> <span t-esc="apps[0].specialization_id.name"/>
+                                </t>
+                                <t t-elif="groupby == 'status'">
+                                    <i class="fa fa-info-circle me-1"/> <span class="fw-bold">Status: </span> <span t-esc="apps[0].status.upper() if apps[0].status else ''"/>
+                                </t>
+                                <t t-elif="':' in groupby">
+                                    <t t-set="date_val" t-value="apps[0].start_time"/>
+                                    <i class="fa fa-calendar me-1"/> <span class="fw-bold">Date: </span>
+                                    <span t-if="'month' in groupby" t-esc="date_val.strftime('%B %Y')"/>
+                                    <span t-elif="'day' in groupby" t-esc="date_val.strftime('%d %b %Y')"/>
+                                    <span t-else="" t-esc="date_val.strftime('%d %b %Y')"/>
+                                </t>
+                            </td>
+                        </tr>
+                    </t>
+                    
+                    <t t-foreach="apps" t-as="app">
+                        <tr class="align-middle" t-attf-onclick="window.location.href='/my/appointments/#{app.id}';" style="cursor: pointer;">
+                            <td class="ps-4">
+                                <span class="fw-bold text-primary"><t t-esc="app.code"/></span>
+                            </td>
+                            
+                            <!-- Rows data with group-by condition -->
+                            <td t-if="groupby != 'patient_id'">
+                                <span class="text-muted" t-esc="app.patient_id.name"/>
+                            </td>
+                            <td t-if="groupby != 'doctor_id'">
+                                <div class="fw-bold"><span t-esc="app.doctor_id.name"/></div>
+                            </td>
+                            
+                            <td>
+                                <div class="small fw-bold text-dark">
+                                    <i class="fa fa-calendar me-1 text-primary"/>
+                                    <span t-field="app.start_time" t-options='{"widget": "datetime"}'/>
+                                </div>
+                            </td>
+                            
+                            <td t-if="groupby != 'specialization_id'">
+                                <span t-if="app.specialization_id" t-field="app.specialization_id.name"/>
+                                <span t-else="" class="text-muted">-</span>
+                            </td>
+                            
+                            <td class="text-end fw-bold">
+                                <span t-field="app.fees" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
+                            </td>
+                            
+                            <td t-if="groupby != 'status'" class="text-center pe-4">
+                                <span t-attf-class="badge rounded-pill p-2 px-3 #{
+                                    'text-bg-success' if app.status in ['done', 'finished'] else 
+                                    'text-bg-primary' if app.status == 'confirmed' else 
+                                    'text-bg-warning' if app.status == 'pending' else 
+                                    'text-bg-danger' if app.status == 'cancel' else 
+                                    'text-bg-info'
+                                }">
+                                    <t t-esc="app.status.upper() if app.status else ''"/>
+                                </span>
+                            </td>
+                        </tr>
+                    </t>
+                </t>
+            </tbody>
+        </t>
+
+        <div t-if="pager" class="o_portal_pager d-flex justify-content-center mt-3">
+            <t t-call="portal.pager"/>
+        </div>
+    </t>
+</template>
 
     <!-- Appointment Detail Page -->
     <template id="portal_appointment_detail" name="Appointment Detail">
