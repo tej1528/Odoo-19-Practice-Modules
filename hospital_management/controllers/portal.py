@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
+import pytz
 from pytz import timezone, UTC
 from odoo import http, fields, _
 from odoo.http import request
@@ -216,7 +217,7 @@ class HospitalPortal(CustomerPortal):
             'grouped_appointments': grouped_appointments,
             'page_name': 'appointments',
             'pager': pager,
-            'default_url': '/my/appointments',  # આ લાઈન ખાસ ચેક કરો, તે હોવી જ જોઈએ
+            'default_url': '/my/appointments',  
             'searchbar_sortings': searchbar_sortings,
             'searchbar_filters': searchbar_filters, 
             'searchbar_inputs': searchbar_inputs,
@@ -271,3 +272,127 @@ class HospitalPortal(CustomerPortal):
             ('Content-Disposition', 'attachment; filename="Appointment_%s.pdf"' % appointment.code)
         ]
         return request.make_response(pdf, headers=pdfhttpheaders)
+
+    #portal side appointment form
+    @http.route(
+        ['/my/appointments/create'],
+        type='http',
+        auth="user",
+        website=True
+    )
+    def portal_appointment_create(self, **kw):
+
+        patients = request.env['res.partner'].sudo().search([
+            ('is_patient', '=', True)
+        ])
+
+        doctors = request.env['res.partner'].sudo().search([
+            ('is_doctor', '=', True)
+        ])
+
+        values = {
+            'patients': patients,
+            'doctors': doctors,
+            'page_name': 'create_appointment',
+        }
+
+        return request.render(
+            "hospital_management.portal_create_appointment_template",
+            values
+        )
+
+    # =========================================================
+    # Get Doctor Details (AJAX)
+    # =========================================================
+    @http.route('/get_doctor_details', type='jsonrpc', auth="user", website=True)
+    def get_doctor_details(self, doctor_id):
+
+        doctor = request.env['res.partner'].sudo().browse(
+            int(doctor_id)
+        )
+
+        if doctor.exists():
+
+            duration = int(
+                request.env['ir.config_parameter']
+                .sudo()
+                .get_param(
+                    'hospital.appointment_duration',
+                    default=30
+                )
+            )
+
+            return {
+
+                'fees': doctor.fees or 0,
+
+                'specialization': (
+                    doctor.specialization_id.name
+                    if doctor.specialization_id
+                    else ''
+                ),
+
+                'duration': duration,
+            }
+
+        return {}
+
+    @http.route(['/my/appointment/save'], type='http', auth="user", website=True, methods=['POST'], csrf=True )
+    def portal_appointment_save(self, **post):
+
+        patient_id = int(post.get('patient_id'))
+
+        doctor_id = int(post.get('doctor_id'))
+
+        # =========================
+        # Datetime Fix
+        # =========================
+        user_tz = pytz.timezone(
+            request.env.user.tz or 'UTC'
+        )
+
+        # Parse local time
+        start_time = datetime.strptime(
+            post.get('start_time'),
+            '%Y-%m-%dT%H:%M'
+        )
+
+        end_time = datetime.strptime(
+            post.get('end_time'),
+            '%Y-%m-%dT%H:%M'
+        )
+
+        # Convert to UTC
+        start_time = user_tz.localize(start_time).astimezone(pytz.UTC).replace(tzinfo=None)
+        end_time = user_tz.localize(end_time).astimezone(pytz.UTC).replace(tzinfo=None)
+
+        notes = post.get('notes')
+
+        doctor = request.env['res.partner'].sudo().browse(
+            doctor_id
+        )
+
+        request.env['hospital.appointment'].sudo().create({
+
+            'patient_id': patient_id,
+
+            'doctor_id': doctor_id,
+
+            'specialization_id': (
+                doctor.specialization_id.id
+                if doctor.specialization_id
+                else False
+            ),
+
+            'fees': doctor.fees or 0,
+
+            'start_time': start_time,
+
+            'end_time': end_time,
+
+            'notes': notes,
+
+            'status': 'requested',
+        })
+
+        return request.redirect('/my/appointments')
