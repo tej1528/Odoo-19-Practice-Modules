@@ -3,10 +3,10 @@
     'version': '1.0',
     'category': 'Healthcare',
     'summary': 'Manage doctors and patients',
-    'author': 'Tejash Ardeshna',
+    'author': 'Tejash Ardeshna', #
     'license': 'LGPL-3',
 
-    'depends': ['base', 'mail', 'base_setup', 'web', 'portal'],
+    'depends': ['base', 'mail', 'base_setup', 'web', 'portal', 'website'], #
     'images': ['static/description/icon.png'],
 
     'data': [
@@ -30,14 +30,12 @@
     ],
 
     'assets': {
-        # Backend assets (ERP screen mate)
         'web.assets_backend': [
             'hospital_management/static/src/css/hide_action.css',
             'hospital_management/static/src/js/processing_timer.js',
             'hospital_management/static/src/js/calendar_reload.js',
             'hospital_management/static/src/xml/processing_timer.xml',
         ],
-        # Frontend assets (Website/Portal mate - Aa add karyu che)
         'web.assets_frontend': [
             'hospital_management/static/src/js/appointment_portal.js',
         ],

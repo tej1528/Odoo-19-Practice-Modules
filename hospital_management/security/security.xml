@@ -4,19 +4,58 @@
 
         <!-- Doctor Group -->
         <record id="group_doctor" model="res.groups">
-            <field name="name">Doctor</field>
-        </record>
+        <field name="name">
+            Doctor
+        </field>
 
-        <!-- Doctor can write only own appointments -->
-   <record id="rule_hospital_appointment_doctor" model="ir.rule">
-    <field name="name">Doctor: Own Appointments Only</field>
-    <field name="model_id" ref="model_hospital_appointment"/>
-    <field name="groups" eval="[(4, ref('hospital_management.group_doctor'))]"/>
-    <field name="domain_force"> [('doctor_id.user_id', '=', user.id)] </field>
-    <field name="perm_read" eval="1"/>
-    <field name="perm_write" eval="1"/>
-    <field name="perm_create" eval="0"/>
-    <field name="perm_unlink" eval="0"/>
-</record>
+        <!-- IMPORTANT -->
+        <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+
+    </record>
+
+    <!-- Doctor can write only own appointments -->
+    <record id="rule_hospital_appointment_doctor" model="ir.rule">
+        <field name="name">Doctor: Own Appointments Only</field>
+        <field name="model_id" ref="model_hospital_appointment"/>
+        <field name="groups" eval="[(4, ref('hospital_management.group_doctor'))]"/>
+
+        <field name="domain_force">
+                [(1, '=', 1)]
+        </field>
+
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="0"/>
+    </record>
+
+    <record id="rule_hospital_appointment_patient" model="ir.rule">
+        <field name="name">Patient: Own Appointments</field>
+        <field name="model_id" ref="model_hospital_appointment"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+
+        <!-- ✅ FIXED -->
+        <field name="domain_force">
+        [('patient_id.user_id', '=', user.id)]
+    </field>
+
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+    </record>
+
+    <record id="rule_hospital_appointment_admin" model="ir.rule">
+        <field name="name">Admin Full Access</field>
+        <field name="model_id" ref="model_hospital_appointment"/>
+        <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="group_portal_in_role" model="res.groups">
+        <field name="name">Portal</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+        
+    </record>
     </data>
 </odoo>

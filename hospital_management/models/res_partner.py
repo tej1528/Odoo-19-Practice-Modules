@@ -2,6 +2,7 @@ from odoo import models, fields, api, _
 from datetime import date
 from odoo.exceptions import UserError
 
+
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
@@ -38,12 +39,11 @@ class ResPartner(models.Model):
     doctor_code = fields.Char(string="Doctor Code", readonly=True, copy=False, default='New')
 
     specialization_id = fields.Many2one('hospital.specialization', string="Specialization")
-    
-    
+
     fees = fields.Monetary(
-    string="Consultation Fees",
-    currency_field='currency_id'
-)
+        string="Consultation Fees",
+        currency_field='currency_id'
+    )
 
     currency_id = fields.Many2one(
         'res.currency',
@@ -52,68 +52,78 @@ class ResPartner(models.Model):
         required=True
     )
 
-    #  COMBINED CODE FIELD
-    # =====================
-    display_code = fields.Char(string="Code", compute="_compute_display_code", store=True)
-
     # =====================
     # COMMON
     # =====================
+    display_code = fields.Char(string="Code", compute="_compute_display_code", store=True)
+
     appointment_count = fields.Integer(compute="_compute_appointment_count")
+    requested_appointment_count = fields.Integer(compute="_compute_requested_appointment_count")
+
+    user_id = fields.Many2one('res.users', string="Related User")
 
     # =====================
-    # COMPUTE DISPLAY CODE
+    # SQL CONSTRAINT (NO DUPLICATE)
     # =====================
-    @api.depends('code', 'doctor_code', 'is_patient', 'is_doctor')
-    def _compute_display_code(self):
-        for rec in self:
-            if rec.is_patient:
-                rec.display_code = rec.code
-            elif rec.is_doctor:
-                rec.display_code = rec.doctor_code
-            else:
-                rec.display_code = ''
+    # @api.constrains('code', 'doctor_code')
+    # def _check_unique_codes(self):
+    #     for rec in self:
+    #         if rec.code:
+    #             domain = [('code', '=', rec.code)]
+    #             if rec.id:
+    #                 domain.append(('id', '!=', rec.id))
+
+    #             if self.search_count(domain) > 1:
+    #                 raise ValidationError("Patient code must be unique!")
+
+    #         if rec.doctor_code:
+    #             domain = [('doctor_code', '=', rec.doctor_code)]
+    #             if rec.id:
+    #                 domain.append(('id', '!=', rec.id))
+
+    #             if self.search_count(domain) > 1:
+    #                 raise ValidationError("Doctor code must be unique!")
 
     # =====================
-    # AUTO PREVIEW (ONCHANGE )
-    # =====================zz
-    @api.onchange('is_patient', 'is_doctor')
-    def _onchange_preview_code(self):
-        pass
-    
-    # =====================
-    # CREATE (FINAL SAVE)
+    # CREATE (MAIN LOGIC)
     # =====================
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
 
-            # currency fix
+            # Default currency
             if not vals.get('currency_id'):
                 vals['currency_id'] = self.env.company.currency_id.id
 
-            # =====================
             # PATIENT CODE
-            # =====================
             if vals.get('is_patient') or self.env.context.get('default_is_patient'):
-                if not vals.get('code') or vals.get('code') == 'New':
-                    seq = self.env['ir.sequence'].next_by_code('hospital.patient')
-                    if not seq:
-                        raise UserError("Patient sequence not configured.")
-                    vals['code'] = seq
+                if vals.get('code', 'New') == 'New':
+                    vals['code'] = self.env['ir.sequence'].sudo().next_by_code('hospital.patient')
 
-            # =====================
             # DOCTOR CODE
-            # =====================
             if vals.get('is_doctor') or self.env.context.get('default_is_doctor'):
-                if not vals.get('doctor_code') or vals.get('doctor_code') == 'New':
-                    seq = self.env['ir.sequence'].next_by_code('hospital.doctor')
-                    if not seq:
-                        raise UserError("Doctor sequence not configured.")
-                    vals['doctor_code'] = seq
+                if vals.get('doctor_code', 'New') == 'New':
+                    vals['doctor_code'] = self.env['ir.sequence'].sudo().next_by_code('hospital.doctor')
 
         return super().create(vals_list)
-    
+
+    # =====================
+    # VALIDATION (ONLY ONE ROLE)
+    # =====================
+    @api.constrains('is_patient', 'is_doctor')
+    def _check_only_one_role(self):
+        for rec in self:
+            if rec.is_patient and rec.is_doctor:
+                raise UserError("A record cannot be both Patient and Doctor.")
+
+    # =====================
+    # DISPLAY CODE
+    # =====================
+    @api.depends('code', 'doctor_code', 'is_patient', 'is_doctor')
+    def _compute_display_code(self):
+        for rec in self:
+            rec.display_code = rec.code if rec.is_patient else rec.doctor_code if rec.is_doctor else ''
+
     # =====================
     # AGE COMPUTE
     # =====================
@@ -128,6 +138,7 @@ class ResPartner(models.Model):
             else:
                 rec.age = 0
 
+    # =====================
     # APPOINTMENT COUNT
     # =====================
     def _compute_appointment_count(self):
@@ -143,13 +154,8 @@ class ResPartner(models.Model):
             else:
                 rec.appointment_count = 0
 
-
-    requested_appointment_count = fields.Integer(
-    compute="_compute_requested_appointment_count")
-
-    user_id = fields.Many2one('res.users', string="Related User")
-    
-    # Doctor Request Button
+    # =====================
+    # REQUESTED APPOINTMENT
     # =====================
     def _compute_requested_appointment_count(self):
         for rec in self:
@@ -161,21 +167,8 @@ class ResPartner(models.Model):
             else:
                 rec.requested_appointment_count = 0
 
-    def action_view_requested_appointments(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Requested Appointments',
-            'res_model': 'hospital.appointment',
-            'view_mode': 'list,form',
-            'domain': [
-                ('doctor_id', '=', self.id),
-                ('status', '=', 'requested')
-            ],
-            'context': {'default_doctor_id': self.id}
-        }
-
-    # SMART BUTTON ACTION
+    # =====================
+    # ACTIONS
     # =====================
     def action_view_appointments(self):
         self.ensure_one()
@@ -195,41 +188,91 @@ class ResPartner(models.Model):
             'domain': domain,
             'context': context,
         }
-    
-    def action_create_doctor_user(self):
-        for rec in self:
 
-            if not rec.is_doctor:
-                raise UserError("This is not a doctor.")
+    def action_view_requested_appointments(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Requested Appointments',
+            'res_model': 'hospital.appointment',
+            'view_mode': 'list,form',
+            'domain': [
+                ('doctor_id', '=', self.id),
+                ('status', '=', 'requested')
+            ],
+            'context': {'default_doctor_id': self.id}
+        }
+
+    
+    def action_create_user(self):
+        for rec in self:
 
             if rec.user_id:
                 raise UserError("User already exists.")
 
             if not rec.email:
-                raise UserError("Doctor must have an email.")
+                raise UserError("Email is required.")
 
-            # ✅ create user
-            user = self.env['res.users'].create({
-                'name': rec.name,
-                'login': rec.email,
-                'email': rec.email,
-                'partner_id': rec.id,
-            })
+            Users = self.env['res.users'].sudo()
 
-            # 🔗 link doctor → user
+            # 🔍 search
+            user = Users.search([
+                ('login', '=', rec.email)
+            ], limit=1)
+
+            # ➕ create with group
+            if not user:
+
+                if rec.is_patient:
+
+                    user = Users.with_context(
+                        no_reset_password=True
+                    ).create({
+
+                        'name': rec.name,
+                        'login': rec.email,
+                        'email': rec.email,
+                        'partner_id': rec.id,
+
+                        'group_ids': [(6, 0, [
+                            self.env.ref(
+                                'base.group_portal'
+                            ).id
+                        ])]
+
+                    })
+
+                elif rec.is_doctor:
+
+                    user = Users.with_context(
+                        no_reset_password=True
+                    ).create({
+
+                        'name': rec.name,
+                        'login': rec.email,
+                        'email': rec.email,
+                        'partner_id': rec.id,
+
+                        'group_ids': [(6, 0, [
+                            self.env.ref(
+                                'hospital_management.group_doctor'
+                            ).id
+                        ])]
+
+                    })
+
+            # 🔗 link
             rec.user_id = user.id
 
-            # 📧 send invitation mail
+            # 🔐 send password mail
             user.with_context(create_user=True).action_reset_password()
 
-        # ✅ popup message
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('Success'),
-                'message': _('Doctor user created successfully & invitation sent!'),
+                'title': 'Success',
+                'message': 'User created & email sent!',
                 'type': 'success',
-                'sticky': False,
             }
         }

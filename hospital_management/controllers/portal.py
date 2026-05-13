@@ -13,8 +13,20 @@ class HospitalPortal(CustomerPortal):
 
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
+
         if 'appointment_count' in counters:
-            values['appointment_count'] = request.env['hospital.appointment'].search_count([])
+
+            partner = request.env.user.partner_id
+
+            if partner.is_patient:
+                count = request.env['hospital.appointment'].search_count([
+                    ('patient_id', '=', partner.id)
+                ])
+            else:
+                count = 0
+
+            values['appointment_count'] = count
+
         return values
 
     # -------------------------------------------------------------------------
@@ -112,7 +124,7 @@ class HospitalPortal(CustomerPortal):
 
     @http.route(['/my/appointments', '/my/appointments/page/<int:page>'], type='http', auth="user", website=True)
     def portal_my_appointments(self, page=1, sortby=None, filterby=None, search=None, search_in='all', groupby=None, **kw):
-        request_obj = request.env['hospital.appointment']
+        request_obj = request.env['hospital.appointment'].sudo()
         values = self._prepare_portal_layout_values()
 
         searchbar_sortings = self._get_appointment_searchbar_sortings()
@@ -123,7 +135,7 @@ class HospitalPortal(CustomerPortal):
         # Defaults
         sortby = sortby or 'code' 
         filterby = filterby or 'all'
-        search_in = search_in or 'all' # સુધારો
+        search_in = search_in or 'all'
         groupby_value = groupby or 'none'
 
         # ૧. સોર્ટિંગ ઓર્ડર
@@ -137,12 +149,32 @@ class HospitalPortal(CustomerPortal):
         raw_filter_domain = searchbar_filters.get(filterby, searchbar_filters.get('all'))['domain']
         domain = Domain(raw_filter_domain)
 
-        # ૩. સર્ચ લોજિક - Odoo 19 Standard
+        # ---------------------------------------------------------
+        # ✅ નવો ઉમેરેલો ભાગ: User Security Filtering
+        # ---------------------------------------------------------
+        user = request.env.user
+        partner = user.partner_id
+
+        if partner.is_patient:
+            domain = domain & Domain([('patient_id', '=', partner.id)])
+
+        elif partner.is_doctor:
+            domain = domain & Domain([('doctor_id', '=', partner.id)])
+
+        # ✅ ADD THIS
+        elif request.env.user.has_group('base.group_system'):
+            domain = domain  
+
+        else:
+            domain = domain & Domain([('id', '=', 0)])  # safety
+           
+            pass
+        # ---------------------------------------------------------
+
+        # ૩. સર્ચ લોજિક
         if search and search_in:
-            search_domain = [] # અહીં સાદું લિસ્ટ વાપરો
-            
+            search_domain = []
             if search_in == 'all':
-                # 'all' માટે 4 ફિલ્ડ છે, એટલે 3 વખત '|' આવશે
                 search_domain = [
                     '|', '|', '|',
                     ('code', 'ilike', search),
@@ -151,7 +183,6 @@ class HospitalPortal(CustomerPortal):
                     ('specialization_id.name', 'ilike', search)
                 ]
             else:
-                # ચોક્કસ ફિલ્ડ માટે કોઈ '|' ની જરૂર નથી, કારણ કે શરત એક જ છે
                 if search_in == 'code':
                     search_domain = [('code', 'ilike', search)]
                 elif search_in == 'patient':
@@ -161,7 +192,6 @@ class HospitalPortal(CustomerPortal):
                 elif search_in == 'specialization':
                     search_domain = [('specialization_id.name', 'ilike', search)]
             
-            # ફિલ્ટર અને સર્ચ ડોમેનને ભેગા કરો
             if search_domain:
                 domain = domain & Domain(search_domain)
 
@@ -189,21 +219,14 @@ class HospitalPortal(CustomerPortal):
         if groupby_value != 'none':
             if ':' in groupby_value:
                 field_name, interval = groupby_value.split(':')
-                
                 def groupby_key(record):
                     val = record[field_name]
-                    if not val:
-                        return _("None")
-                    if interval == 'day':
-                        return val.strftime('%d %b %Y')
-                    if interval == 'week':
-                        return _("Week %s") % val.strftime('%U (%b %Y)')
-                    if interval == 'month':
-                        return val.strftime('%B %Y')
-                    if interval == 'year':
-                        return val.strftime('%Y')
+                    if not val: return _("None")
+                    if interval == 'day': return val.strftime('%d %b %Y')
+                    if interval == 'week': return _("Week %s") % val.strftime('%U (%b %Y)')
+                    if interval == 'month': return val.strftime('%B %Y')
+                    if interval == 'year': return val.strftime('%Y')
                     return val
-                
                 grouped_appointments = [request_obj.concat(*g) for k, g in group_by_func(appointments_records, groupby_key)]
             else:
                 grouped_appointments = [request_obj.concat(*g) for k, g in group_by_func(appointments_records, lambda a: a[groupby_value])]
@@ -232,20 +255,42 @@ class HospitalPortal(CustomerPortal):
 
     @http.route(['/my/appointments/<int:appointment_id>'], type='http', auth="user", website=True)
     def portal_appointment_detail(self, appointment_id, **kw):
-        appointment = request.env['hospital.appointment'].browse(appointment_id)
-        if not appointment.exists():
+        user_partner = request.env.user.partner_id
+        
+        # ૧. ડોમેન સેટ કરો
+        domain = [('id', '=', appointment_id)]
+        
+        # જો પેશન્ટ હોય તો એની જ દેખાવી જોઈએ, જો ડોક્ટર હોય તો એને મળેલ એપોઇન્ટમેન્ટ
+        if user_partner.is_patient:
+            domain.append(('patient_id', '=', user_partner.id))
+        elif user_partner.is_doctor:
+            domain.append(('doctor_id', '=', user_partner.id))
+        
+        # ૨. રેકોર્ડ સર્ચ (sudo() નો ઉપયોગ કરીને એક્સેસ રાઈટ્સની ચિંતા વગર ડેટા ફેચ થશે)
+        appointment = request.env['hospital.appointment'].sudo().search(domain, limit=1)
+
+        if not appointment:
+            # લોગમાં ચેક કરવા માટે કે કયા ડોમેનથી સર્ચ કર્યું હતું
+            print(f"--- Appointment Not Found for ID: {appointment_id} with Domain: {domain} ---")
             return request.render("website.404")
 
-        # Navigation: Prev/Next from session history
+        # ૩. નેવિગેશન લોજિક
         history_ids = request.session.get('my_appointments_history', [])
-        current_index = history_ids.index(appointment_id) if appointment_id in history_ids else None
-        
+        try:
+            current_index = history_ids.index(appointment_id) if appointment_id in history_ids else None
+        except ValueError:
+            current_index = None
+
         prev_id = history_ids[current_index - 1] if current_index is not None and current_index > 0 else False
         next_id = history_ids[current_index + 1] if current_index is not None and current_index < len(history_ids) - 1 else False
-        
+
+        # ૪. ટાઈમઝોન કન્વર્ઝન
         user_tz = timezone(request.env.user.tz or 'UTC')
-        start_time_local = UTC.localize(appointment.start_time).astimezone(user_tz) if appointment.start_time else False
-        
+        start_time_local = False
+        if appointment.start_time:
+            # Odoo Datetime હંમેશા UTC માં હોય છે
+            start_time_local = pytz.utc.localize(appointment.start_time).astimezone(user_tz)
+
         return request.render(
             "hospital_management.portal_appointment_detail",
             {
@@ -274,125 +319,298 @@ class HospitalPortal(CustomerPortal):
         return request.make_response(pdf, headers=pdfhttpheaders)
 
     #portal side appointment form
-    @http.route(
-        ['/my/appointments/create'],
-        type='http',
-        auth="user",
-        website=True
-    )
+    from odoo import http
+from odoo.http import request
+
+
+class PortalAppointment(http.Controller):
+
+    @http.route(['/my/appointments/create'], type='http', auth="user", website=True)
     def portal_appointment_create(self, **kw):
 
-        patients = request.env['res.partner'].sudo().search([
-            ('is_patient', '=', True)
-        ])
+        user_partner = request.env.user.partner_id
+        is_doctor = user_partner.is_doctor
+        doctor = user_partner if is_doctor else False
+        patient = user_partner if user_partner.is_patient else False
 
         doctors = request.env['res.partner'].sudo().search([
             ('is_doctor', '=', True)
         ])
 
-        values = {
-            'patients': patients,
-            'doctors': doctors,
-            'page_name': 'create_appointment',
+        patients = request.env['res.partner'].sudo().search([
+            ('is_patient', '=', True)
+        ])
+
+        specializations = request.env['hospital.specialization'].sudo().search([])
+
+        # ✅ PREFILL VALUES (IMPORTANT)
+        prefill = {
+            'appointment_id': kw.get('appointment_id'),  # ✅ ADD THIS
+            'patient_id': kw.get('patient_id'),
+            'doctor_id': kw.get('doctor_id'),
+            'specialization_id': kw.get('specialization_id'),
+            'start_time': kw.get('start_time'),
+            'end_time': kw.get('end_time'),
+            'fees': kw.get('fees'),
         }
 
-        return request.render(
-            "hospital_management.portal_create_appointment_template",
-            values
-        )
+        # ✅ MAIN VALUES
+        values = {
+            'page_name': 'create_appointment',
+            'is_doctor': is_doctor,
+            'doctor': doctor,
+            'patient': patient,            
+            'doctors': doctors,
+            'patients': patients,
+            'specializations': specializations,
+            'specialization': doctor.specialization_id if doctor else False,
+            'fees': doctor.fees if doctor else 0.0,
+
+            # ✅ ADD THIS
+            'prefill': prefill,
+        }
+
+        return request.render("hospital_management.portal_create_appointment_template", values)
 
     # =========================================================
     # Get Doctor Details (AJAX)
     # =========================================================
+    # controllers/portal.py
+
+    # ૧. સ્પેશિયલાઈઝેશન મુજબ ડોક્ટરોનું લિસ્ટ ફિલ્ટર કરવા માટે
+    @http.route('/get_doctors_by_specialization', type='jsonrpc', auth="user", website=True)
+    def get_doctors_by_specialization(self, specialization_id=None):
+
+        domain = [('is_doctor', '=', True)]
+
+        if specialization_id:
+            try:
+                specialization_id = int(specialization_id)
+                domain.append(('specialization_id', '=', specialization_id))
+            except:
+                pass  # safe fallback
+
+        doctors = request.env['res.partner'].sudo().search(domain)
+
+        return [
+    {
+        'id': d.id,
+        'name': d.name,
+        'fees': d.fees,
+        'specialization_id': d.specialization_id.id,
+        'specialization_name': d.specialization_id.name,
+    }
+    for d in doctors
+]
+
+    # =========================================================
+    # DOCTOR → DETAILS
+    # =========================================================
+
     @http.route('/get_doctor_details', type='jsonrpc', auth="user", website=True)
-    def get_doctor_details(self, doctor_id):
+    def get_doctor_details(self, doctor_id=None):
 
-        doctor = request.env['res.partner'].sudo().browse(
-            int(doctor_id)
-        )
+        if not doctor_id:
+            return {}
 
-        if doctor.exists():
+        try:
+            doctor_id = int(doctor_id)
+        except:
+            return {}
 
-            duration = int(
-                request.env['ir.config_parameter']
-                .sudo()
-                .get_param(
-                    'hospital.appointment_duration',
-                    default=30
-                )
-            )
+        doctor = request.env['res.partner'].sudo().browse(doctor_id)
 
-            return {
+        if not doctor.exists():
+            return {}
 
-                'fees': doctor.fees or 0,
+        return {
+            'fees': doctor.fees or 0.0,
+            'specialization_id': doctor.specialization_id.id if doctor.specialization_id else False,
+            'specialization_name': doctor.specialization_id.name if doctor.specialization_id else '',
+        }
 
-                'specialization': (
-                    doctor.specialization_id.name
-                    if doctor.specialization_id
-                    else ''
-                ),
-
-                'duration': duration,
-            }
-
-        return {}
-
-    @http.route(['/my/appointment/save'], type='http', auth="user", website=True, methods=['POST'], csrf=True )
+    @http.route(['/my/appointment/save'], type='http', auth="user", website=True, methods=['POST'], csrf=True)
     def portal_appointment_save(self, **post):
+        patient = request.env.user.partner_id
 
-        patient_id = int(post.get('patient_id'))
+        if request.env.user.partner_id.is_doctor:
+            doctor_id = request.env.user.partner_id.id
+        else:
+            doctor_id = post.get('doctor_id')
 
-        doctor_id = int(post.get('doctor_id'))
-
-        # =========================
-        # Datetime Fix
-        # =========================
-        user_tz = pytz.timezone(
-            request.env.user.tz or 'UTC'
-        )
-
-        # Parse local time
-        start_time = datetime.strptime(
-            post.get('start_time'),
-            '%Y-%m-%dT%H:%M'
-        )
-
-        end_time = datetime.strptime(
-            post.get('end_time'),
-            '%Y-%m-%dT%H:%M'
-        )
-
-        # Convert to UTC
-        start_time = user_tz.localize(start_time).astimezone(pytz.UTC).replace(tzinfo=None)
-        end_time = user_tz.localize(end_time).astimezone(pytz.UTC).replace(tzinfo=None)
-
+        spec_id = post.get('specialization_id')
+        start_time_raw = post.get('start_time')
+        end_time_raw = post.get('end_time')
         notes = post.get('notes')
 
-        doctor = request.env['res.partner'].sudo().browse(
-            doctor_id
-        )
+        if not doctor_id:
+            return request.redirect('/my/appointments/create?error=no_doctor')
 
-        request.env['hospital.appointment'].sudo().create({
+        doctor = request.env['res.partner'].sudo().browse(int(doctor_id))
 
-            'patient_id': patient_id,
+        # --- Timezone Logic ---
+        user_tz = pytz.timezone(request.env.user.tz or 'UTC')
+        try:
+            start_dt = datetime.strptime(start_time_raw, '%Y-%m-%dT%H:%M')
+            end_dt = datetime.strptime(end_time_raw, '%Y-%m-%dT%H:%M') if end_time_raw else start_dt + timedelta(minutes=30)
 
-            'doctor_id': doctor_id,
+            start_utc = user_tz.localize(start_dt).astimezone(pytz.UTC).replace(tzinfo=None)
+            end_utc = user_tz.localize(end_dt).astimezone(pytz.UTC).replace(tzinfo=None)
+        except Exception:
+            return request.redirect('/my/appointments/create?error=date_format')
 
-            'specialization_id': (
-                doctor.specialization_id.id
-                if doctor.specialization_id
-                else False
-            ),
+        # --- COMMON VALUES ---
+        appointment_id = post.get('appointment_id')
 
-            'fees': doctor.fees or 0,
-
-            'start_time': start_time,
-
-            'end_time': end_time,
-
+        vals = {
+            'patient_id': int(post.get('patient_id')) if post.get('patient_id') else patient.id,
+            'doctor_id': doctor.id,
+            'specialization_id': int(spec_id) if spec_id else False,
+            'fees': float(post.get('fees') or doctor.fees or 0.0),
+            'start_time': start_utc,
+            'end_time': end_utc,
             'notes': notes,
+        }
 
-            'status': 'requested',
-        })
+        # =========================================================
+        # ✅ UPDATE EXISTING APPOINTMENT
+        # =========================================================
+        if appointment_id:
+            appointment = request.env['hospital.appointment'].sudo().browse(int(appointment_id))
+
+            if appointment.exists():
+
+                # 🔥 FIX: cancel → draft → requested
+                if appointment.status == 'cancel':
+                    appointment.write({'status': 'draft'})
+
+                # update data
+                appointment.write(vals)
+
+                # final state
+                appointment.write({'status': 'requested'})
+
+        # =========================================================
+        # ✅ CREATE NEW APPOINTMENT
+        # =========================================================
+        else:
+            request.env['hospital.appointment'].sudo().create({
+                **vals,
+                'status': 'requested',
+            })
 
         return request.redirect('/my/appointments')
+    
+    @http.route('/my/appointment/accept/<int:appointment_id>', type='http', auth="user", website=True)
+    def accept_appointment(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+            appointment.write({'status': 'confirmed'})
+
+        return request.redirect('/my/appointments')
+
+
+    @http.route(type='http', auth="user", website=True)
+    def reject_appointment(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+            appointment.write({'status': 'cancel'})
+
+        return request.redirect('/my/appointments')
+    
+
+    @http.route('/my/appointment/start/<int:appointment_id>', type='http', auth="user", website=True)
+    def start_processing(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+            appointment.action_processing()
+
+        return request.redirect('/my/appointments/%s' % appointment_id)
+    
+    @http.route('', type='http', auth="user", website=True)
+    def mark_done(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+            appointment.action_done()
+
+        return request.redirect('/my/appointments/%s' % appointment_id)
+    
+    @http.route('/my/appointment/done', type='http', auth="user", website=True, methods=['POST'])
+    def portal_done_with_note(self, **post):
+
+        appointment_id = int(post.get('appointment_id'))
+        note = post.get('doctor_note')
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+
+            if not note:
+                return request.redirect('/my/appointments?error=no_note')
+
+            appointment.write({
+                'doctor_description': note
+            })
+
+            appointment.action_done()
+
+        return request.redirect('/my/appointments')
+    
+    @http.route('/my/appointment/reject', type='http', auth="user", website=True, methods=['POST'], csrf=True)
+    def reject_appointment(self, **post):
+
+        appointment_id = int(post.get('appointment_id'))
+        reason = post.get('cancel_reason')
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        if request.env.user.partner_id.id == appointment.doctor_id.id:
+            appointment.write({
+                'status': 'cancel',
+                'cancel_reason': reason
+            })
+
+        return request.redirect('/my/appointments/%s' % appointment_id)
+    
+    @http.route('/my/appointment/reset/<int:appointment_id>', type='http', auth="user", website=True)
+    def reset_appointment(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        # security check
+        if request.env.user.partner_id.id not in [
+            appointment.patient_id.id,
+            appointment.doctor_id.id
+        ]:
+            return request.redirect('/my/appointments')
+
+        user_tz = pytz.timezone(request.env.user.tz or 'UTC')
+
+        start_time = ''
+        end_time = ''
+
+        if appointment.start_time:
+            start_time = pytz.utc.localize(appointment.start_time).astimezone(user_tz).strftime('%Y-%m-%dT%H:%M')
+
+        if appointment.end_time:
+            end_time = pytz.utc.localize(appointment.end_time).astimezone(user_tz).strftime('%Y-%m-%dT%H:%M')
+
+        # 👉 Redirect with prefilled values
+        return request.redirect(
+            f"/my/appointments/create?"
+            f"appointment_id={appointment.id}&"
+            f"patient_id={appointment.patient_id.id}&"
+            f"doctor_id={appointment.doctor_id.id}&"
+            f"specialization_id={appointment.specialization_id.id if appointment.specialization_id else ''}&"
+            f"start_time={start_time}&"
+            f"end_time={end_time}&"
+            f"fees={appointment.fees}"
+        )

@@ -369,7 +369,7 @@
 
                 <!-- Notes Section: Widget textarea ઉમેર્યું છે -->
                 <group string="Notes">
-                    <field name="notes" readonly="1"  colspan="2" nolabel="1" widget="textarea" style="word-break: break-word; min-height: 100px;"/>
+                    <field name="notes" colspan="2" nolabel="1" widget="textarea" style="word-break: break-word; min-height: 100px;"/>
                 </group>
 
                 <!-- Doctor Notes Section -->

@@ -1,158 +1,192 @@
 /** @odoo-module **/
 
-console.log("JS FILE LOADED");
-
 import publicWidget from "@web/legacy/js/public/public_widget";
 
-publicWidget.registry.AppointmentCreate = publicWidget.Widget.extend({
+console.log("Appointment Portal JS Loaded");
 
-    selector: '.js_website_submit_form',
+publicWidget.registry.AppointmentPortal =
+    publicWidget.Widget.extend({
 
-    events: {
-        'change #doctor_id': '_onDoctorChange',
-        'change #start_time': '_onStartTimeChange',
-    },
+        selector: '.o_portal_appointment_form',
 
-    //------------------------------------------------------------------
-    // START
-    //------------------------------------------------------------------
-    start() {
+        events: {
+            'change #doctor_id': '_onDoctorChange',
+            'change #specialization_id': '_onSpecializationChange',
+            'change #start_time': '_onStartTimeChange',
+        },
 
-        console.log("Appointment Widget Started");
+        init() {
 
-        this.last_duration = 30;
+            this._super(...arguments);
 
-        return this._super(...arguments);
-    },
+            // default duration
+            this.last_duration = 30;
+        },
 
-    //------------------------------------------------------------------
-    // Doctor Change
-    //------------------------------------------------------------------
-    _onDoctorChange: function (ev) {
+        start() {
 
-        const self = this;
+            console.log("Widget Started");
 
-        const doctorId = parseInt(ev.currentTarget.value);
+            // store all doctor options
+            this.allDoctors =
+                this.el.querySelector("#doctor_id").innerHTML;
 
-        console.log("Doctor Changed:", doctorId);
+            return this._super(...arguments);
+        },
 
-        // Empty
-        if (!doctorId) {
+        // =====================================================
+        // DOCTOR CHANGE
+        // =====================================================
 
-            self.$('#fees').val('0.00');
+        _onDoctorChange(ev) {
 
-            self.$('#specialization').val('');
+            const doctor =
+                ev.currentTarget.selectedOptions[0];
 
-            return;
-        }
-
-        // OLD STYLE AJAX RPC
-        $.ajax({
-
-            url: '/get_doctor_details',
-
-            type: 'POST',
-
-            contentType: 'application/json',
-
-            data: JSON.stringify({
-                jsonrpc: "2.0",
-                method: "call",
-                params: {
-                    doctor_id: doctorId
-                },
-                id: 1,
-            }),
-
-            success: function (response) {
-
-                console.log("Doctor Data:", response);
-
-                if (response.result) {
-
-                    // Fees
-                    self.$('#fees').val(
-                        response.result.fees || 0
-                    );
-
-                    // Specialization
-                    self.$('#specialization').val(
-                        response.result.specialization || ''
-                    );
-
-                    // Duration
-                    self.last_duration =
-                        response.result.duration || 30;
-
-                    // Update end time
-                    self._updateEndTime();
-                }
-            },
-
-            error: function (error) {
-
-                console.error(
-                    "Doctor fetch error:",
-                    error
-                );
+            if (!doctor) {
+                return;
             }
 
-        });
-    },
+            // specialization id from option
+            const specId =
+                doctor.dataset.specialization;
 
-    //------------------------------------------------------------------
-    // Start Time Change
-    //------------------------------------------------------------------
-    _onStartTimeChange: function () {
+            const specSelect =
+                this.el.querySelector("#specialization_id");
 
-        this._updateEndTime();
-    },
+            const feesInput =
+                this.el.querySelector("#fees");
 
-    //------------------------------------------------------------------
-    // End Time Update
-    //------------------------------------------------------------------
-    _updateEndTime: function () {
+            // AUTO SELECT SPECIALIZATION
+            if (specId && specSelect) {
 
-        const startInput =
-            this.$('#start_time').val();
+                specSelect.value = specId;
+            }
 
-        if (!startInput) {
-            return;
-        }
+            // FEES
+            const fees =
+                doctor.dataset.fees;
 
-        let startDate = new Date(startInput);
+            if (feesInput && fees) {
 
-        startDate.setMinutes(
-            startDate.getMinutes() +
-            this.last_duration
-        );
+                feesInput.value =
+                    parseFloat(fees).toFixed(2);
+            }
+        },
 
-        const year = startDate.getFullYear();
+        // =====================================================
+        // SPECIALIZATION CHANGE
+        // =====================================================
 
-        const month = String(
-            startDate.getMonth() + 1
-        ).padStart(2, '0');
+        _onSpecializationChange(ev) {
 
-        const day = String(
-            startDate.getDate()
-        ).padStart(2, '0');
+            const specId =
+                ev.currentTarget.value;
 
-        const hours = String(
-            startDate.getHours()
-        ).padStart(2, '0');
+            const doctorSelect =
+                this.el.querySelector("#doctor_id");
 
-        const minutes = String(
-            startDate.getMinutes()
-        ).padStart(2, '0');
+            if (!doctorSelect) {
+                return;
+            }
 
-        const endVal =
-            `${year}-${month}-${day}T${hours}:${minutes}`;
+            // restore all doctors
+            doctorSelect.innerHTML =
+                this.allDoctors;
 
-        self = this;
+            // filter doctors
+            const options =
+                doctorSelect.querySelectorAll("option");
 
-        self.$('#end_time').val(endVal);
+            options.forEach(option => {
 
-        console.log("End Time:", endVal);
-    },
+                // skip empty option
+                if (!option.value) {
+                    return;
+                }
 
-});
+                const doctorSpec =
+                    option.dataset.specialization;
+
+                // remove unmatched doctors
+                if (
+                    specId &&
+                    doctorSpec !== specId
+                ) {
+
+                    option.remove();
+                }
+            });
+
+            // auto select first doctor
+            const remainingDoctors =
+                doctorSelect.querySelectorAll("option[value]");
+
+            if (
+                remainingDoctors.length > 0 &&
+                remainingDoctors[0].value
+            ) {
+
+                doctorSelect.value =
+                    remainingDoctors[0].value;
+
+                doctorSelect.dispatchEvent(
+                    new Event('change')
+                );
+            }
+        },
+
+        // =====================================================
+        // START TIME CHANGE
+        // =====================================================
+
+        _onStartTimeChange() {
+
+            this._updateEndTime();
+        },
+
+        // =====================================================
+        // AUTO END TIME
+        // =====================================================
+
+        _updateEndTime() {
+
+            const start =
+                this.el.querySelector("#start_time")?.value;
+
+            const endInput =
+                this.el.querySelector("#end_time");
+
+            if (!start || !endInput) {
+                return;
+            }
+
+            let date = new Date(start);
+
+            date.setMinutes(
+                date.getMinutes() + this.last_duration
+            );
+
+            const year = date.getFullYear();
+
+            const month = String(
+                date.getMonth() + 1
+            ).padStart(2, '0');
+
+            const day = String(
+                date.getDate()
+            ).padStart(2, '0');
+
+            const hour = String(
+                date.getHours()
+            ).padStart(2, '0');
+
+            const minute = String(
+                date.getMinutes()
+            ).padStart(2, '0');
+
+            endInput.value =
+                `${year}-${month}-${day}T${hour}:${minute}`;
+        },
+
+    });

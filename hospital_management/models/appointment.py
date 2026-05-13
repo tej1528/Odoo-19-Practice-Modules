@@ -186,22 +186,21 @@ class HospitalAppointment(models.Model):
     
     def action_confirm(self):
         for rec in self:
-            
-            if rec.doctor_id.user_id.id != self.env.user.id:
-                raise UserError("You can only confirm your own appointment.")
-        
+
+            # ✅ Only restrict for doctor (NOT admin)
+            if self.env.user.has_group('hospital_management.group_doctor'):
+                if rec.doctor_id.user_id.id != self.env.user.id:
+                    raise UserError("You can only confirm your own appointment.")
+
             if not rec.patient_id.email:
                 raise ValidationError("Patient email missing!")
 
             rec.status = 'confirmed'
 
-            template = self.env.ref('hospital_management.email_template_confirm')
-            
             rec.message_post(
-            body=f" Appointment Confirmed & mail send successfully"
+                body="Appointment Confirmed & mail send successfully"
             )
 
-            # patient ne mail
             rec._send_email(
                 'hospital_management.email_template_confirm',
                 rec.patient_id.email
@@ -257,6 +256,10 @@ class HospitalAppointment(models.Model):
     def check_access_rule(self, operation):
         super().check_access_rule(operation)
 
+        # ✅ Skip for admin
+        if self.env.user.has_group('base.group_system'):
+            return
+
         if self.env.user.has_group('hospital_management.group_doctor'):
             for rec in self:
                 if rec.doctor_id.user_id != self.env.user:
@@ -303,29 +306,32 @@ class HospitalAppointment(models.Model):
     @api.constrains('patient_id', 'doctor_id', 'start_time', 'end_time')
     def _check_time_overlap(self):
         for rec in self:
-            if not rec.start_time or not rec.end_time:
+            # ✅ ADD THIS SAFETY
+            if not rec.patient_id or not rec.doctor_id or not rec.start_time or not rec.end_time:
                 continue
 
-            doctor_conflict = self.search([
+            domain = [
                 ('id', '!=', rec.id),
                 ('doctor_id', '=', rec.doctor_id.id),
+                ('status', 'not in', ['cancel']),
                 ('start_time', '<', rec.end_time),
                 ('end_time', '>', rec.start_time),
-            ])
+            ]
 
-            if doctor_conflict:
+            if self.search(domain, limit=1):
                 raise ValidationError("Doctor already has an appointment in this time slot!")
 
-            patient_conflict = self.search([
+            patient_domain = [
                 ('id', '!=', rec.id),
                 ('patient_id', '=', rec.patient_id.id),
+                ('status', 'not in', ['cancel']),
                 ('start_time', '<', rec.end_time),
                 ('end_time', '>', rec.start_time),
-            ])
+            ]
 
-            if patient_conflict:
+            if self.search(patient_domain, limit=1):
                 raise ValidationError("Patient already has an appointment in this time slot!")
-    
+            
 
 
     #----------------------- ONCHANGE-----------------------

@@ -11,8 +11,28 @@
         <field name="binding_type">report</field>
     </record>
 
+<template id="portal_my_home_inherit_appointments"
+          inherit_id="portal.portal_my_home"
+          name="Add Appointments Card to Portal Home">
+
+    <xpath expr="//div[hasclass('o_portal_my_home')]" position="inside">
+
+        <div class="col-md-4 mb-3">
+            <a href="/my/appointments" class="card text-decoration-none shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="mb-1">Appointments</h5>
+                    <p class="text-muted mb-0">
+                        You have <t t-esc="appointment_count"/> appointments
+                    </p>
+                </div>
+            </a>
+        </div>
+
+    </xpath>
+</template>
+
     <!-- Appointment List Page -->
-    <template id="portal_my_appointments" name="My Appointments">
+<template id="portal_my_appointments" name="My Appointments">
     <!-- noportal="1" અથવા no_breadcrumbs="1" થી portal_layout ના ડિફોલ્ટ બ્રેડક્રમ્સ બંધ થશે -->
     <t t-call="portal.portal_layout">
         <t t-set="no_breadcrumbs" t-value="True"/>
@@ -64,8 +84,10 @@
                                 </tr>
                             </thead>
                             <tbody>
+
+
                                 <t t-foreach="grouped_appointments" t-as="apps">
-                                    <!-- Group Header Logic -->
+                                    <!-- Group Header Logic  -->
                                     <t t-if="groupby and groupby != 'none'">
                                         <tr class="table-light fw-bold">
                                             <td colspan="7" class="ps-4 text-primary" style="border-left: 4px solid #0056b3;">
@@ -81,16 +103,16 @@
                                                 <t t-elif="groupby == 'status'">
                                                     <i class="fa fa-info-circle me-1"/> <t t-esc="apps[0].status.upper() if apps[0].status else ''"/>
                                                 </t>
-                                                <t t-elif="':' in groupby">
+                                                <t t-elif="groupby and ':' in groupby">
                                                     <i class="fa fa-calendar me-1"/> <span t-field="apps[0].start_time" t-options='{"widget": "date"}'/>
                                                 </t>
                                             </td>
                                         </tr>
                                     </t>
                                     
-                                    <!-- Rows -->
+                                     <!-- Rows  -->
                                     <t t-foreach="apps" t-as="app">
-                                        <tr class="align-middle" t-attf-onclick="window.location.href='/my/appointments/#{app.id}';" style="cursor: pointer;">
+                                        <tr class="align-middle" t-att-onclick="'window.location.href=\'/my/appointments/%s\'' % app.id" style="cursor: pointer;">
                                             <td class="ps-4">
                                                 <span class="fw-bold text-primary"><t t-esc="app.code"/></span>
                                             </td>
@@ -118,7 +140,7 @@
                                                     'text-bg-primary' if app.status == 'confirmed' else 
                                                     'text-bg-warning' if app.status == 'pending' else 
                                                     'text-bg-danger' if app.status == 'cancel' else 'text-bg-info'}">
-                                                    <t t-esc="app.status.upper() if app.status else ''"/>
+                                                    <t t-if="app.status"> <t t-esc="app.status.upper()"/> </t>
                                                 </span>
                                             </td>
                                         </tr>
@@ -137,8 +159,8 @@
     </t>
 </template>
 
-    <!-- Appointment Detail Page -->
-    <template id="portal_appointment_detail" name="Appointment Detail">
+<!-- Appointment Detail form Page -->
+<template id="portal_appointment_detail" name="Appointment Detail">
     <t t-call="portal.portal_layout">
         <t t-set="wrapwrap_classes" t-value="'o_portal_bg_dark'"/>
 
@@ -180,25 +202,160 @@
                     </div>
                 </div>
 
-                <!-- જમણી બાજુનું મેઈન કાર્ડ -->
+                <!-- right side main cart -->
                 <div class="col-12 col-lg-9">
                     <div class="card shadow-sm border-0 mb-5 rounded-3">
                         <div class="card-body p-4 p-md-5">
-                            <!-- હેડર અને સ્ટેટસ -->
+                            <!-- header and status -->
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h3 class="mb-0 fw-bold">Appointment - <t t-esc="appointment.code"/></h3>
+
+                        <!-- LEFT: TITLE -->
+                        <h3 class="mb-0 fw-bold">
+                            Appointment - <t t-esc="appointment.code"/>
+                        </h3>
+
+                        <!-- RIGHT: STATUS + BUTTONS -->
+                        <div class="d-flex align-items-center gap-2">
+
+                                <!-- STATUS BADGE -->
                                 <span t-attf-class="badge rounded-pill px-3 py-2 #{
-                                    'text-bg-success' if appointment.status in ['done', 'finished'] else 
+                                    'text-bg-success' if appointment.status == 'done' else 
                                     'text-bg-primary' if appointment.status == 'confirmed' else 
-                                    'text-bg-warning' if appointment.status == 'pending' else 
+                                    'text-bg-warning' if appointment.status == 'requested' else 
                                     'text-bg-danger' if appointment.status == 'cancel' else 
                                     'text-bg-info'
-                                }" style="font-size: 0.8rem;">
-                                    <t t-esc="appointment.status.upper() if appointment.status else ''"/>
+                                }">
+                                    <t t-esc="appointment.status.upper()"/>
                                 </span>
+
+                                <!-- ===================== -->
+                                <!-- DOCTOR BUTTONS -->
+                                <!-- ===================== -->
+
+                                <t t-if="appointment.doctor_id.user_id.id == request.env.user.id">
+
+                                    <!-- REQUESTED -->
+                                        <t t-if="appointment.status == 'requested'">
+
+                                            <a t-attf-href="/my/appointment/accept/#{appointment.id}"
+                                            class="btn btn-success btn-sm">
+                                                Accept
+                                            </a>
+
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#cancelModal">
+                                            Cancel
+                                        </button>
+
+                                        </t>
+
+                                    <!-- CONFIRMED -->
+                                        <t t-if="appointment.status == 'confirmed'">
+
+                                            <a t-attf-href="/my/appointment/start/#{appointment.id}"
+                                            class="btn btn-primary btn-sm">
+                                                Start
+                                            </a>
+
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cancelModal">
+                                                Cancel
+                                            </button>
+
+                                        </t>
+
+                                    <!-- PROCESSING -->
+                                        <t t-if="appointment.status == 'processing'">
+
+                                            <button type="button"
+                                                    class="btn btn-success btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#doneModal">
+                                                Done
+                                            </button>
+                                        </t>
+                                    </t>
+                                    <!-- ✅ RESET BUTTON (PATIENT + DOCTOR) -->
+                                    <t t-if="appointment.status == 'cancel' and (
+                                        request.env.user.partner_id.id == appointment.patient_id.id or
+                                        request.env.user.partner_id.id == appointment.doctor_id.id
+                                    )">
+
+                                        <a t-attf-href="/my/appointment/reset/#{appointment.id}"
+                                        class="btn btn-warning btn-sm">
+                                            Reset to Draft
+                                        </a>
+
+                                    </t>
+
+                            </div>
+                                <!-- DONE MODAL -->
+                            <div class="modal fade" id="doneModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form action="/my/appointment/done" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input type="hidden" name="appointment_id" t-att-value="appointment.id"/>
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                    <h5 class="modal-title">Doctor Notes</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"/>
+                                    </div>
+
+                                    <div class="modal-body">
+                                    <textarea name="doctor_note"
+                                                class="form-control"
+                                                placeholder="Enter doctor notes..."
+                                                required="1"/>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                    <button type="submit" class="btn btn-success">Confirm</button>
+                                    </div>
+
+                                </div>
+                                </form>
+                            </div>
                             </div>
 
-                            <!-- પેશન્ટ અને સેન્ટરની માહિતી -->
+                            <!-- CANCEL MODAL -->
+                            <div class="modal fade" id="cancelModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form action="/my/appointment/reject" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input type="hidden" name="appointment_id" t-att-value="appointment.id"/>
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                    <h5 class="modal-title text-danger">Cancel Appointment</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"/>
+                                    </div>
+
+                                    <div class="modal-body">
+                                    <textarea name="cancel_reason"
+                                                class="form-control"
+                                                placeholder="Enter cancel reason..."
+                                                required="1"/>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                                    </div>
+
+                                </div>
+                                </form>
+                            </div>
+                            </div>
+
+                            </div>
+
+                            <!-- form details -->
                             <div class="row mb-4">
                                 <div class="col-md-7">
                                     <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3">Patient Information</h6>
@@ -206,7 +363,7 @@
                                     <p class="mb-1"><strong>Doctor:</strong> <t t-esc="appointment.doctor_id.name"/></p>
                                     <p class="mb-1"><strong>Specialization:</strong> <t t-esc="appointment.doctor_id.specialization_id.name or 'General'"/></p>
                                     <p class="mb-1">
-                                        <!-- Time બતાવવા માટે આ ફોર્મેટ વાપરો -->
+                                        <!-- time -->
                                         <strong>Time: </strong>
                                         <span t-field="appointment.start_time" t-options='{"widget": "datetime", "hide_seconds": True}'/> 
                                         - 
@@ -221,7 +378,7 @@
                                 </div>
                             </div>
 
-                            <!-- સર્વિસ ટેબલ -->
+                            <!-- service table -->
                             <div class="table-responsive border-top pt-3">
                                 <table class="table">
                                     <thead class="bg-light">
@@ -277,9 +434,14 @@
                         </div>
 
                         <div class="card-footer bg-light border-top p-3 text-end">
-                            <a href="/my/appointments" class="btn btn-sm btn-outline-info bg-white py-2 px-3 fw-bold" style="color: #008ca1; border-color: #008ca1;">
+
+                            <!-- Back Button -->
+                            <a href="/my/appointments"
+                            class="btn btn-sm btn-outline-info bg-white py-2 px-3 fw-bold"
+                            style="color: #008ca1; border-color: #008ca1;">
                                 <i class="fa fa-arrow-left me-1"/> Back to My Appointments
                             </a>
+
                         </div>
                     </div>
                 </div>
@@ -288,6 +450,8 @@
     </t>
 </template>
 
+
+<!-- pdf report -->
 <template id="report_appointment_template">
     <t t-call="web.html_container">
     <t t-foreach="docs" t-as="doc">
@@ -417,279 +581,287 @@
 </t>
 </template>
 
+<!-- create appointment om portal side-->
 <template id="portal_create_appointment_template" name="Create Appointment Portal">
-
     <t t-call="portal.portal_layout">
         <t t-set="no_breadcrumbs" t-value="True"/>
 
         <div id="wrap" class="container mt-4 mb-5">
-
-            <!-- Breadcrumb -->
+            <!-- Breadcrumb Navigation -->
             <div class="row mb-3">
                 <div class="col-12">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb bg-transparent p-0">
-                            <li class="breadcrumb-item">
-                                <a href="/my/home">
-                                    <i class="fa fa-home"/>
-                                </a>
-                            </li>
-
-                            <li class="breadcrumb-item">
-                                <a href="/my/appointments">
-                                    Appointments
-                                </a>
-                            </li>
-
-                            <li class="breadcrumb-item active">
-                                New Appointment
-                            </li>
+                            <li class="breadcrumb-item"><a href="/my/home"><i class="fa fa-home"/></a></li>
+                            <li class="breadcrumb-item"><a href="/my/appointments">Appointments</a></li>
+                            <li class="breadcrumb-item active">New Appointment</li>
                         </ol>
                     </nav>
                 </div>
             </div>
 
             <div class="row justify-content-center">
-
                 <div class="col-12 col-lg-10">
-
                     <div class="card shadow-sm border-0 rounded-3">
-
-                        <!-- Header -->
                         <div class="card-header bg-white py-3 border-bottom">
-
                             <h3 class="mb-0 fw-bold text-dark">
-
-                                <i style="color:#008ca1;"/>
+                                <i class="fa fa-calendar-plus-o me-2" style="color:#008ca1;"/>
                                 Book New Appointment
                             </h3>
-
                         </div>
 
-                        <!-- Body -->
                         <div class="card-body p-4 p-md-5">
-
-                            <!-- IMPORTANT -->
-                            <form action="/my/appointment/save"
-                                  method="post"
-                                  class="js_website_submit_form">
+                            <form action="/my/appointment/save" method="post" class="o_portal_appointment_form">
+                                <input type="hidden"
+                                    name="csrf_token"
+                                    t-att-value="request.csrf_token()"/>
 
                                 <input type="hidden"
-                                       name="csrf_token"
-                                       t-att-value="request.csrf_token()"/>
+                                    name="appointment_id"
+                                    t-att-value="prefill.get('appointment_id')"/>
 
                                 <div class="row">
-
-                                    <!-- LEFT -->
+                                    <!-- Left Section: Selection -->
                                     <div class="col-md-6 pe-md-4">
 
                                         <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3 fw-bold">
-                                            Patient &amp; Doctor
+                                            Patient &amp; Doctor Info
                                         </h6>
+                                        
+                                        <!-- ================================================= -->
+                                        <!-- PATIENT -->
+                                        <!-- ================================================= -->
 
-                                        <!-- Patient -->
-                                        <div class="form-group mb-3">
+                                        <!-- PATIENT LOGIN -->
+                                        <t t-if="request.env.user.partner_id.is_patient">
 
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="patient_id">
+                                            <div class="form-group mb-3">
 
-                                                Patient Name
-                                            </label>
+                                                <label class="form-label fw-bold small text-secondary">
+                                                    Patient
+                                                </label>
 
-                                            <select id="patient_id"
+                                                <input type="hidden"
                                                     name="patient_id"
-                                                    class="form-select"
-                                                    required="1">
-
-                                                <option value="">
-                                                    Select Patient
-                                                </option>
-
-                                                <t t-foreach="patients" t-as="p">
-
-                                                    <option t-att-value="p.id">
-
-                                                        <t t-esc="p.name"/>
-
-                                                    </option>
-
-                                                </t>
-
-                                            </select>
-
-                                        </div>
-
-                                        <!-- Doctor -->
-                                        <div class="form-group mb-3">
-
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="doctor_id">
-
-                                                Doctor Name
-                                            </label>
-
-                                            <select id="doctor_id"
-                                                    name="doctor_id"
-                                                    class="form-select"
-                                                    required="1">
-
-                                                <option value="">
-                                                    Select Doctor
-                                                </option>
-
-                                                <t t-foreach="doctors" t-as="d">
-
-                                                    <option t-att-value="d.id">
-
-                                                        <t t-esc="d.name"/>
-
-                                                    </option>
-
-                                                </t>
-
-                                            </select>
-
-                                        </div>
-
-                                        <!-- Specialization -->
-                                        <div class="form-group mb-3">
-
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="specialization">
-
-                                                Specialization
-                                            </label>
-
-                                            <input type="text"
-                                                   id="specialization"
-                                                   name="specialization"
-                                                   class="form-control bg-light"
-                                                   placeholder="Doctor Specialization"
-                                                   readonly="readonly"/>
-
-                                        </div>
-
-                                        <!-- Fees -->
-                                        <div class="form-group mb-3">
-
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="fees">
-
-                                                Doctor Fees
-                                            </label>
-
-                                            <div class="input-group">
-
-                                                <span class="input-group-text bg-light">
-                                                    ₹
-                                                </span>
+                                                    t-att-value="request.env.user.partner_id.id"/>
 
                                                 <input type="text"
-                                                       id="fees"
-                                                       name="fees"
-                                                       class="form-control bg-light"
-                                                       placeholder="0.00"
-                                                       readonly="readonly"/>
+                                                    class="form-control bg-light"
+                                                    t-att-value="request.env.user.partner_id.name"
+                                                    readonly="1"/>
 
                                             </div>
 
-                                        </div>
+                                        </t>
+                                        <!-- ================================================= -->
+                                        <!-- DOCTOR LOGIN -->
+                                        <!-- ================================================= -->
+
+                                        <t t-if="is_doctor">
+
+                                            <!-- hidden doctor id -->
+                                            <input type="hidden"
+                                                name="doctor_id"
+                                                t-att-value="request.env.user.partner_id.id"/>
+
+                                            <!-- readonly doctor -->
+                                            <div class="form-group mb-3">
+
+                                                <label class="form-label fw-bold small text-secondary">
+                                                    Doctor
+                                                </label>
+
+                                                <input type="text"
+                                                    class="form-control bg-light"
+                                                    t-att-value="request.env.user.partner_id.name"
+                                                    readonly="1"/>
+
+                                            </div>
+
+                                        </t>
+                                        <!-- DOCTOR LOGIN -->
+                                        <t t-if="request.env.user.partner_id.is_doctor">
+
+                                            <div class="form-group mb-3">
+
+                                                <label class="form-label fw-bold small text-secondary">
+                                                    Patient
+                                                </label>
+
+                                                <select name="patient_id"
+                                                        id="patient_id"
+                                                        class="form-select"
+                                                        required="1">
+
+                                                    <option value="">
+                                                        Select Patient
+                                                    </option>
+
+                                                    <t t-foreach="patients" t-as="p">
+
+                                                        <option t-att-value="p.id" t-att-selected="str(prefill.get('patient_id')) == str(p.id)">
+                                                            <t t-esc="p.name"/> </option>
+
+                                                    </t>
+
+                                                </select>
+
+                                            </div>
+
+                                        </t>
+
+                                        <!-- ================================================= -->
+                                        <!-- PATIENT LOGIN -->
+                                        <!-- ================================================= -->
+
+                                        <t t-if="request.env.user.partner_id.is_patient">
+
+                                            <!-- Doctor Selection -->
+                                            <div class="form-group mb-3">
+
+                                                <label class="form-label fw-bold small text-secondary">
+                                                    Doctor
+                                                </label>
+
+                                                <select name="doctor_id"
+                                                        id="doctor_id"
+                                                        class="form-select">
+
+                                                    <option value="">
+                                                        Select Doctor
+                                                    </option>
+
+                                                    <t t-foreach="doctors" t-as="d">
+                                                        <option t-att-value="d.id"
+                                                                t-att-selected="str(prefill.get('doctor_id')) == str(d.id)"
+                                                                t-att-data-specialization="d.specialization_id.id"
+                                                                t-att-data-fees="d.fees">
+
+                                                            <t t-esc="d.name"/>
+
+                                                        </option>
+                                                    </t>
+
+                                                </select>
+
+                                            </div>
+
+                                        </t>
+
+                                        <!-- ================================================= -->
+                                        <!-- SPECIALIZATION -->
+                                        <!-- ================================================= -->
+
+                                             <div class="form-group mb-3">
+
+                                                 <label class="form-label fw-bold small text-secondary">
+                                                    Specialization
+                                                </label>
+
+                                                 <!-- DOCTOR LOGIN  -->
+                                                <t t-if="is_doctor">
+
+                                                    <input type="hidden"
+                                                        name="specialization_id"
+                                                        t-att-value="doctor.specialization_id.id"/>
+
+                                                    <input type="text"
+                                                        class="form-control bg-light"
+                                                        t-att-value="doctor.specialization_id.name"
+                                                        readonly="1"/>
+
+                                                </t>
+
+                                                <!-- PATIENT LOGIN -->
+                                                <t t-elif="not is_doctor">
+
+                                                    <select name="specialization_id"
+                                                            id="specialization_id"
+                                                            class="form-select">
+
+                                                        <option value="">Select Specialization</option>
+
+                                                        <t t-foreach="specializations" t-as="spec">
+                                                            <option t-att-value="spec.id"
+                                                                    t-att-selected="str(prefill.get('specialization_id')) == str(spec.id)">
+                                                                <t t-esc="spec.name"/>
+                                                            </option>
+                                                        </t>
+
+                                                    </select>
+
+                                                </t> 
+
+                                            </div> 
+
+                                            <!-- ================================================= -->
+                                            <!-- FEES (AUTO FIX) -->
+                                            <!-- ================================================= -->
+
+                                            <div class="form-group mb-3">
+
+                                                <label class="form-label fw-bold small text-secondary">
+                                                    Fees
+                                                </label>
+
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₹</span>
+
+                                                    <input type="text"
+                                                        name="fees"
+                                                        id="fees"
+                                                        class="form-control"
+                                                        t-att-value="prefill.get('fees') or (fees if is_doctor else 0.00)"
+                                                        readonly="readonly"/>
+
+                                                </div>
+
+                                            </div>
 
                                     </div>
 
-                                    <!-- RIGHT -->
+                                    <!-- Right Section: Time & Notes -->
                                     <div class="col-md-6 ps-md-4 border-start">
-
-                                        <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3 fw-bold">
-                                            Schedule Time
-                                        </h6>
-
-                                        <!-- Start Time -->
+                                        <h6 class="text-muted text-uppercase small border-bottom pb-2 mb-3 fw-bold">Schedule</h6>
                                         <div class="form-group mb-3">
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="start_time">
-                                                Start Date &amp; Time
-                                            </label>
-
-                                            <input type="datetime-local"
-                                                   name="start_time"
-                                                   id="start_time"
-                                                   class="form-control shadow-none"
-                                                   required="1"/>
+                                            <label class="form-label fw-bold small text-secondary">Start Time</label>
+                                            <input type="datetime-local" name="start_time" id="start_time" t-att-value="prefill.get('start_time')" class="form-control" required="1"/>
                                         </div>
-
-                                        <!-- End Time -->
                                         <div class="form-group mb-4">
-
-                                            <label class="form-label fw-bold small text-secondary"
-                                                   for="end_time">
-
-                                                End Time
-                                            </label>
-
-                                            <input type="datetime-local"
-                                                   name="end_time"
-                                                   id="end_time"
-                                                   class="form-control bg-light"
-                                                   readonly="readonly"/>
-
+                                            <label class="form-label fw-bold small text-secondary">End Time (Auto)</label>
+                                            <input type="datetime-local" name="end_time" id="end_time" t-att-value="prefill.get('end_time')" class="form-control bg-light" required="1"/>
                                         </div>
-
-                                        <!-- Notes -->
                                         <div class="form-group">
-
-                                            <label class="form-label fw-bold small"
-                                                   style="color:#d9534f;"
-                                                   for="notes"> Notes
-                                            </label>
-
-                                            <textarea name="notes"
-                                                      id="notes"
-                                                      class="form-control shadow-none"
-                                                      rows="4"
-                                                      placeholder="Write Your Note...."/>
-
+                                            <label class="form-label fw-bold small text-danger">Notes</label>
+                                            <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Reason..."/>
                                         </div>
-
                                     </div>
-
                                 </div>
 
-                                <!-- Buttons -->
                                 <div class="d-flex justify-content-end gap-3 mt-5 pt-3 border-top">
+                                    <a href="/my/appointments" class="btn btn-outline-secondary rounded-pill">Cancel</a>
+                                    <t t-if="prefill.get('appointment_id')">
+                                        <button type="submit"
+                                                class="btn text-white rounded-pill px-5"
+                                                style="background-color:#f39c12;">
+                                            Update
+                                        </button>
+                                    </t>
 
-                                    <a href="/my/appointments"
-                                       class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold small">
-
-                                        <i class="fa fa-times me-1"/>
-
-                                        Cancel
-                                    </a>
-
-                                    <button type="submit"
-                                            class="btn text-white px-5 py-2 rounded-pill fw-bold shadow-sm border-0"
-                                            style="background-color:#008ca1;">
-
-                                        <i class="fa fa-check me-1"/>
-
-                                        Create Appointment
-                                    </button>
-
+                                    <t t-else="">
+                                        <button type="submit"
+                                                class="btn text-white rounded-pill px-5"
+                                                style="background-color:#008ca1;">
+                                            Confirm
+                                        </button>
+                                    </t>
                                 </div>
-
                             </form>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     </t>
-
 </template>
 </odoo>
