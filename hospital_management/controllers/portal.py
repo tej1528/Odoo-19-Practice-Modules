@@ -345,7 +345,7 @@ class PortalAppointment(http.Controller):
 
         # ✅ PREFILL VALUES (IMPORTANT)
         prefill = {
-            'appointment_id': kw.get('appointment_id'),  # ✅ ADD THIS
+            'appointment_id': kw.get('appointment_id'),
             'patient_id': kw.get('patient_id'),
             'doctor_id': kw.get('doctor_id'),
             'specialization_id': kw.get('specialization_id'),
@@ -431,6 +431,7 @@ class PortalAppointment(http.Controller):
 
     @http.route(['/my/appointment/save'], type='http', auth="user", website=True, methods=['POST'], csrf=True)
     def portal_appointment_save(self, **post):
+
         patient = request.env.user.partner_id
 
         if request.env.user.partner_id.is_doctor:
@@ -448,7 +449,7 @@ class PortalAppointment(http.Controller):
 
         doctor = request.env['res.partner'].sudo().browse(int(doctor_id))
 
-        # --- Timezone Logic ---
+        # --- Timezone ---
         user_tz = pytz.timezone(request.env.user.tz or 'UTC')
         try:
             start_dt = datetime.strptime(start_time_raw, '%Y-%m-%dT%H:%M')
@@ -459,7 +460,6 @@ class PortalAppointment(http.Controller):
         except Exception:
             return request.redirect('/my/appointments/create?error=date_format')
 
-        # --- COMMON VALUES ---
         appointment_id = post.get('appointment_id')
 
         vals = {
@@ -472,27 +472,24 @@ class PortalAppointment(http.Controller):
             'notes': notes,
         }
 
-        # =========================================================
-        # ✅ UPDATE EXISTING APPOINTMENT
-        # =========================================================
+        # =========================
+        # ✅ UPDATE EXISTING
+        # =========================
         if appointment_id:
             appointment = request.env['hospital.appointment'].sudo().browse(int(appointment_id))
 
             if appointment.exists():
 
-                # 🔥 FIX: cancel → draft → requested
-                if appointment.status == 'cancel':
-                    appointment.write({'status': 'draft'})
-
-                # update data
+                # WRITE DATA
                 appointment.write(vals)
 
-                # final state
-                appointment.write({'status': 'requested'})
+                # ✅ ONLY DRAFT → REQUESTED
+                if appointment.status == 'draft':
+                    appointment.write({'status': 'requested'})
 
-        # =========================================================
-        # ✅ CREATE NEW APPOINTMENT
-        # =========================================================
+        # =========================
+        # ✅ CREATE NEW
+        # =========================
         else:
             request.env['hospital.appointment'].sudo().create({
                 **vals,
@@ -533,7 +530,7 @@ class PortalAppointment(http.Controller):
 
         return request.redirect('/my/appointments/%s' % appointment_id)
     
-    @http.route('', type='http', auth="user", website=True)
+    @http.route('/my/appointment/mark_done/<int:appointment_id>', type='http', auth="user", website=True)
     def mark_done(self, appointment_id, **kw):
 
         appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
@@ -585,11 +582,23 @@ class PortalAppointment(http.Controller):
 
         appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
 
-        # security check
-        if request.env.user.partner_id.id not in [
-            appointment.patient_id.id,
-            appointment.doctor_id.id
-        ]:
+        # ✅ ONLY PATIENT ALLOWED
+        if request.env.user.partner_id.id != appointment.patient_id.id:
+            return request.redirect('/my/appointments')
+
+        # ✅ CHANGE STATE: cancel → draft
+        appointment.write({'status': 'draft'})
+
+        # ✅ SAME PAGE RELOAD (NO FORM OPEN)
+        return request.redirect(f'/my/appointments/{appointment_id}')
+    
+    @http.route('/my/appointment/edit/<int:appointment_id>', type='http', auth="user", website=True)
+    def edit_appointment(self, appointment_id, **kw):
+
+        appointment = request.env['hospital.appointment'].sudo().browse(appointment_id)
+
+        # security
+        if request.env.user.partner_id.id != appointment.patient_id.id:
             return request.redirect('/my/appointments')
 
         user_tz = pytz.timezone(request.env.user.tz or 'UTC')
@@ -603,7 +612,6 @@ class PortalAppointment(http.Controller):
         if appointment.end_time:
             end_time = pytz.utc.localize(appointment.end_time).astimezone(user_tz).strftime('%Y-%m-%dT%H:%M')
 
-        # 👉 Redirect with prefilled values
         return request.redirect(
             f"/my/appointments/create?"
             f"appointment_id={appointment.id}&"

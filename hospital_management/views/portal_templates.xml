@@ -279,11 +279,19 @@
                                             </button>
                                         </t>
                                     </t>
+
+                                    <t t-if="appointment.status == 'draft' and request.env.user.partner_id.id == appointment.patient_id.id">
+                                        <a t-attf-href="/my/appointment/edit/#{appointment.id}"
+                                        class="btn btn-primary btn-sm">
+                                            Edit
+                                        </a>
+
+                                    </t>
+
                                     <!-- ✅ RESET BUTTON (PATIENT + DOCTOR) -->
-                                    <t t-if="appointment.status == 'cancel' and (
-                                        request.env.user.partner_id.id == appointment.patient_id.id or
-                                        request.env.user.partner_id.id == appointment.doctor_id.id
-                                    )">
+                                    <t t-if="appointment.status == 'cancel' 
+                                        and request.env.user.partner_id.id == appointment.patient_id.id
+                                        and not request.env.user.partner_id.is_doctor">
 
                                         <a t-attf-href="/my/appointment/reset/#{appointment.id}"
                                         class="btn btn-warning btn-sm">
@@ -450,7 +458,6 @@
     </t>
 </template>
 
-
 <!-- pdf report -->
 <template id="report_appointment_template">
     <t t-call="web.html_container">
@@ -616,8 +623,7 @@
                                     name="csrf_token"
                                     t-att-value="request.csrf_token()"/>
 
-                                <input type="hidden"
-                                    name="appointment_id"
+                                <input type="hidden" name="appointment_id"
                                     t-att-value="prefill.get('appointment_id')"/>
 
                                 <div class="row">
@@ -841,19 +847,22 @@
                                 <div class="d-flex justify-content-end gap-3 mt-5 pt-3 border-top">
                                     <a href="/my/appointments" class="btn btn-outline-secondary rounded-pill">Cancel</a>
                                     <t t-if="prefill.get('appointment_id')">
+
                                         <button type="submit"
-                                                class="btn text-white rounded-pill px-5"
-                                                style="background-color:#f39c12;">
+                                                class="btn btn-primary rounded-pill px-5">
                                             Update
                                         </button>
+
                                     </t>
 
                                     <t t-else="">
+
                                         <button type="submit"
                                                 class="btn text-white rounded-pill px-5"
                                                 style="background-color:#008ca1;">
                                             Confirm
                                         </button>
+
                                     </t>
                                 </div>
                             </form>

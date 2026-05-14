@@ -38,39 +38,57 @@ publicWidget.registry.AppointmentPortal =
         // DOCTOR CHANGE
         // =====================================================
 
+        // =====================================================
+        // DOCTOR CHANGE
+        // =====================================================
+
         _onDoctorChange(ev) {
 
-            const doctor =
-                ev.currentTarget.selectedOptions[0];
+            const doctor = ev.currentTarget.selectedOptions[0];
+            if (!doctor) return;
 
-            if (!doctor) {
-                return;
-            }
+            const specSelect = this.el.querySelector("#specialization_id");
+            const doctorSelect = this.el.querySelector("#doctor_id");
+            const feesInput = this.el.querySelector("#fees");
 
-            // specialization id from option
-            const specId =
-                doctor.dataset.specialization;
+            const specId = doctor.dataset.specialization;
+            const fees = doctor.dataset.fees;
 
-            const specSelect =
-                this.el.querySelector("#specialization_id");
-
-            const feesInput =
-                this.el.querySelector("#fees");
-
-            // AUTO SELECT SPECIALIZATION
+            // ✅ SET SPECIALIZATION
             if (specId && specSelect) {
-
                 specSelect.value = specId;
             }
 
-            // FEES
-            const fees =
-                doctor.dataset.fees;
-
+            // ✅ SET FEES
             if (feesInput && fees) {
+                feesInput.value = parseFloat(fees).toFixed(2);
+            }
 
-                feesInput.value =
-                    parseFloat(fees).toFixed(2);
+            // 🔥🔥 MAIN FIX: FILTER DOCTORS BASED ON THIS SPECIALIZATION
+
+            if (doctorSelect && specId) {
+
+                // store selected doctor
+                const selectedDoctorId = doctor.value;
+
+                // reset all doctors
+                doctorSelect.innerHTML = this.allDoctors;
+
+                const options = doctorSelect.querySelectorAll("option");
+
+                options.forEach(option => {
+
+                    if (!option.value) return;
+
+                    const doctorSpec = option.dataset.specialization;
+
+                    if (doctorSpec !== specId) {
+                        option.remove();
+                    }
+                });
+
+                // reselect same doctor
+                doctorSelect.value = selectedDoctorId;
             }
         },
 
@@ -80,60 +98,51 @@ publicWidget.registry.AppointmentPortal =
 
         _onSpecializationChange(ev) {
 
-            const specId =
-                ev.currentTarget.value;
+            const specId = ev.currentTarget.value;
+            const doctorSelect = this.el.querySelector("#doctor_id");
 
-            const doctorSelect =
-                this.el.querySelector("#doctor_id");
+            if (!doctorSelect) return;
 
-            if (!doctorSelect) {
-                return;
-            }
+            // ✅ STORE CURRENT SELECTED DOCTOR
+            const currentDoctorId = doctorSelect.value;
 
-            // restore all doctors
-            doctorSelect.innerHTML =
-                this.allDoctors;
+            // ✅ RESET ALL DOCTORS
+            doctorSelect.innerHTML = this.allDoctors;
 
-            // filter doctors
-            const options =
-                doctorSelect.querySelectorAll("option");
+            const options = doctorSelect.querySelectorAll("option");
 
             options.forEach(option => {
 
-                // skip empty option
-                if (!option.value) {
-                    return;
-                }
+                if (!option.value) return;
 
-                const doctorSpec =
-                    option.dataset.specialization;
+                const doctorSpec = option.dataset.specialization;
 
-                // remove unmatched doctors
-                if (
-                    specId &&
-                    doctorSpec !== specId
-                ) {
-
+                // ❌ REMOVE NON-MATCH
+                if (specId && doctorSpec !== specId) {
                     option.remove();
                 }
             });
 
-            // auto select first doctor
             const remainingDoctors =
                 doctorSelect.querySelectorAll("option[value]");
 
-            if (
-                remainingDoctors.length > 0 &&
-                remainingDoctors[0].value
-            ) {
-
-                doctorSelect.value =
-                    remainingDoctors[0].value;
-
-                doctorSelect.dispatchEvent(
-                    new Event('change')
+            // ✅ TRY TO KEEP SAME DOCTOR SELECTED
+            if (currentDoctorId) {
+                const exists = doctorSelect.querySelector(
+                    `option[value="${currentDoctorId}"]`
                 );
+
+                if (exists) {
+                    doctorSelect.value = currentDoctorId;
+                } else if (remainingDoctors.length > 0) {
+                    doctorSelect.value = remainingDoctors[0].value;
+                }
+            } else if (remainingDoctors.length > 0) {
+                doctorSelect.value = remainingDoctors[0].value;
             }
+
+            // 🔥 IMPORTANT → TRIGGER DOCTOR CHANGE AGAIN
+            doctorSelect.dispatchEvent(new Event('change'));
         },
 
         // =====================================================
