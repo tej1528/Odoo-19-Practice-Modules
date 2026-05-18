@@ -25,27 +25,35 @@
             <!-- ✅ Odoo 19 correct target -->
            <xpath expr="//form" position="inside">
 
-    <app name="hospital_management" string="Hospital">
+                <app name="hospital_management" string="Hospital">
 
-        <block title="Hospital Settings">
+                    <block title="Hospital Settings">
 
-            <setting id="appointment_duration_setting">
+                        <setting id="appointment_duration_setting">
 
-                <label for="appointment_duration"/>
+                            <label for="appointment_duration"/>
 
-                <div class="text-muted">
-                    Set appointment duration (1 to 60 minutes)
-                </div>
+                            <div class="text-muted">
+                                Set appointment duration (1 to 60 minutes)
+                            </div>
 
-                <field name="appointment_duration"/>
+                            <field name="appointment_duration"/>
 
-            </setting>
+                        </setting>
 
-        </block>
+                        <setting id="otp_expiry_setting">
+                            <label for="otp_expiry"/>
+                            <div class="text-muted">
+                                Set OTP expiry time (in minutes)
+                            </div>
+                            <field name="otp_expiry"/>
+                        </setting>
 
-    </app>
+                    </block>
 
-</xpath>
+                </app>
+
+            </xpath>
     
         </field>
     </record>

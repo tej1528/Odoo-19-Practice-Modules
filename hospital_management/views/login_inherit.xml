@@ -1,0 +1,11 @@
+<odoo>
+    <template id="login_inherit_mobile" inherit_id="web.login">
+        <xpath expr="//button[@type='submit']" position="after">
+            <div class="text-center mt-3">
+                <a href="/web/login/mobile" class="btn btn-outline-primary w-100">
+                    Login with OTP
+                </a>
+            </div>
+        </xpath>
+    </template>
+</odoo>

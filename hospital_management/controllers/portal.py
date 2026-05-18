@@ -562,7 +562,7 @@ class PortalAppointment(http.Controller):
         return request.redirect('/my/appointments')
     
     @http.route('/my/appointment/reject', type='http', auth="user", website=True, methods=['POST'], csrf=True)
-    def reject_appointment(self, **post):
+    def reject_appointment_post(self, **post):
 
         appointment_id = int(post.get('appointment_id'))
         reason = post.get('cancel_reason')

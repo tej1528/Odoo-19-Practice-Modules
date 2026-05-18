@@ -15,20 +15,6 @@
           inherit_id="portal.portal_my_home"
           name="Add Appointments Card to Portal Home">
 
-    <xpath expr="//div[hasclass('o_portal_my_home')]" position="inside">
-
-        <div class="col-md-4 mb-3">
-            <a href="/my/appointments" class="card text-decoration-none shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="mb-1">Appointments</h5>
-                    <p class="text-muted mb-0">
-                        You have <t t-esc="appointment_count"/> appointments
-                    </p>
-                </div>
-            </a>
-        </div>
-
-    </xpath>
 </template>
 
     <!-- Appointment List Page -->

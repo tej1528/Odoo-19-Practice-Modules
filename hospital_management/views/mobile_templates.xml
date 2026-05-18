@@ -1,0 +1,105 @@
+<odoo>
+
+    <!-- LOGIN BUTTON -->
+    <template id="login_inherit_mobile" inherit_id="web.login">
+        <xpath expr="//button[@type='submit']" position="after">
+            <div class="text-center mt-3">
+                <a href="/web/login/mobile" class="btn btn-outline-primary w-100">
+                    Login with OTP
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- OTP PAGES -->
+    <template id="mobile_login_template" name="Mobile Login">
+    <t t-call="website.layout">
+        <div class="container mt-5">
+
+            <!-- ✅ ERROR POPUPS -->
+            <t t-if="request.params.get('error') == 'not_found'">
+                <div class="alert alert-danger text-center">
+                    User not found! Please enter valid Email or Mobile.
+                </div>
+            </t>
+
+            <t t-if="request.params.get('error') == 'no_email'">
+                <div class="alert alert-warning text-center">
+                    Email not available for this user.
+                </div>
+            </t>
+
+            <t t-if="request.params.get('error') == 'no_input'">
+                <div class="alert alert-warning text-center">
+                    Please enter Mobile or Email.
+                </div>
+            </t>
+
+            <h3>Login with OTP</h3>
+
+            <form action="/web/login/send_otp" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                <input type="text" name="login" placeholder="Enter Mobile or Email" class="form-control mb-3"/>
+
+                <button type="submit" class="btn btn-primary">
+                    Send OTP
+                </button>
+            </form>
+        </div>
+    </t>
+</template>
+
+    <template id="otp_verify_template">
+    <t t-call="website.layout">
+        <div class="container mt-5">
+
+            <!-- ✅ ERROR MESSAGES -->
+            <t t-if="request.params.get('error') == 'expired'">
+                <div class="alert alert-danger text-center">
+                    OTP Expired! Please resend OTP.
+                </div>
+            </t>
+
+            <t t-if="request.params.get('error') == 'invalid'">
+                <div class="alert alert-danger text-center">
+                    Invalid OTP!
+                </div>
+            </t>
+
+            <!-- TIMER VALUE -->
+            <t t-set="otp_seconds" t-value="otp_seconds or 120"/>
+            <input type="hidden" id="otp_seconds" t-att-value="otp_seconds"/>
+
+            <!-- FORM -->
+            <form class="otp_form" action="/web/login/verify_otp_post" method="post">
+
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                <div class="mb-3">
+                    <label>Enter OTP</label>
+                    <input type="text" name="otp" class="form-control" required="1"/>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Verify &amp; Login
+                </button>
+
+                <!-- TIMER -->
+                <div class="text-center mt-2 text-primary">
+                    Resend OTP in <span id="timer_value">00:00</span>
+                </div>
+
+                <!-- RESEND -->
+                <div id="resend_section" style="display:none;" class="mt-2">
+                    <button type="button" id="resend_btn" class="btn btn-warning w-100">
+                        Resend OTP
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </t>
+</template>
+
+</odoo>

@@ -2,7 +2,7 @@
     <!-- હોમ પેજ પર દેખાતું એપોઇન્ટમેન્ટ કાર્ડ -->
     <template id="portal_my_home_appointments" inherit_id="portal.portal_my_home" name="Add Appointments Card">
         <xpath expr="//div[@id='portal_common_category']" position="inside">
-            <t t-if="request.env.user.has_group('hospital_management.group_hospital_doctor') or request.env.user.has_group('hospital_management.group_hospital_patient') or request.env.user.has_group('base.group_system')">
+            <!-- <t t-if="request.env.user.has_group('hospital_management.group_hospital_doctor') or request.env.user.has_group('hospital_management.group_hospital_patient') or request.env.user.has_group('base.group_system')"> -->
                 <t t-call="portal.portal_docs_entry">
                     <t t-set="icon" t-value="'/portal/static/src/img/portal-connection.svg'"/>
                     <t t-set="title">Appointments</t>
@@ -11,7 +11,7 @@
                     <t t-set="count" t-value="appointment_count"/>
                     <t t-set="config_card" t-value="True"/>
                 </t>
-            </t>
+            <!-- </t> -->
         </xpath>
     </template>
 

@@ -103,10 +103,8 @@ publicWidget.registry.AppointmentPortal =
 
             if (!doctorSelect) return;
 
-            // ✅ STORE CURRENT SELECTED DOCTOR
             const currentDoctorId = doctorSelect.value;
 
-            // ✅ RESET ALL DOCTORS
             doctorSelect.innerHTML = this.allDoctors;
 
             const options = doctorSelect.querySelectorAll("option");
@@ -117,7 +115,6 @@ publicWidget.registry.AppointmentPortal =
 
                 const doctorSpec = option.dataset.specialization;
 
-                // ❌ REMOVE NON-MATCH
                 if (specId && doctorSpec !== specId) {
                     option.remove();
                 }
@@ -126,7 +123,6 @@ publicWidget.registry.AppointmentPortal =
             const remainingDoctors =
                 doctorSelect.querySelectorAll("option[value]");
 
-            // ✅ TRY TO KEEP SAME DOCTOR SELECTED
             if (currentDoctorId) {
                 const exists = doctorSelect.querySelector(
                     `option[value="${currentDoctorId}"]`
@@ -141,8 +137,8 @@ publicWidget.registry.AppointmentPortal =
                 doctorSelect.value = remainingDoctors[0].value;
             }
 
-            // 🔥 IMPORTANT → TRIGGER DOCTOR CHANGE AGAIN
-            doctorSelect.dispatchEvent(new Event('change'));
+            // ❌ REMOVE THIS (IMPORTANT)
+            // doctorSelect.dispatchEvent(new Event('change'));
         },
 
         // =====================================================

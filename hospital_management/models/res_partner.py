@@ -25,6 +25,7 @@ class ResPartner(models.Model):
 
     date_of_birth = fields.Date()
     age = fields.Integer(compute="_compute_age", store=True)
+    # mobile = fields.Char(string="Mobile Number")
 
     blood_group = fields.Selection([
         ('a+', 'A+'), ('a-', 'A-'),

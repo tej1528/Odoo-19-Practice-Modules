@@ -6,7 +6,7 @@
     'author': 'Tejash Ardeshna', #
     'license': 'LGPL-3',
 
-    'depends': ['base', 'mail', 'base_setup', 'web', 'portal', 'website'], #
+    'depends': ['base', 'mail', 'base_setup', 'web', 'portal', 'website'], 
     'images': ['static/description/icon.png'],
 
     'data': [
@@ -19,6 +19,8 @@
         'reports/appointment_report.xml',
         'reports/appointment_report_Filtering_template.xml',
         'wizard/appointment_report_wizard.xml',
+        'views/login_inherit.xml',
+        'views/mobile_templates.xml',
         'views/res_partner_views.xml',
         'views/appointment_views.xml',
         'views/appointment_action.xml',
@@ -38,6 +40,7 @@
         ],
         'web.assets_frontend': [
             'hospital_management/static/src/js/appointment_portal.js',
+            'hospital_management/static/src/js/otp_login.js',
         ],
     },
 
