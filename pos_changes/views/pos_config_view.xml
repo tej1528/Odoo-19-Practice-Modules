@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_pos_config_form_inherit_default_cashier" model="ir.ui.view">
+            <field name="name">pos.config.form.inherit.default.cashier</field>
+            <field name="model">pos.config</field>
+            <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='name']" position="after">
+
+                    <label for="default_user_id" string="Default Cashier"/>
+
+                    <field name="default_user_id"/>
+
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>
