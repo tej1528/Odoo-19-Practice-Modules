@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_changes.CustomDiscountNumberPopup" t-inherit="point_of_sale.NumberPopup">
+        <xpath expr="//div[contains(@class, 'popup-number') or contains(@class, 'numberinput') or contains(@class, 'popup-total') or contains(@class, 'popup-input')]" position="before">
+            <div class="discount-mode-radios d-flex justify-content-around p-2 mb-2 bg-100 border rounded" style="font-size: 1.1rem; width: 100%;">
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input" type="radio" name="discount_mode_toggle" id="mode_percent" value="percent" checked="checked"/>
+                    <label class="form-check-label fw-bold ms-1 text-dark" for="mode_percent">Percentage (%)</label>
+                </div>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input" type="radio" name="discount_mode_toggle" id="mode_amount" value="amount"/>
+                    <label class="form-check-label fw-bold ms-1 text-dark" for="mode_amount">Fixed Amount</label>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>
