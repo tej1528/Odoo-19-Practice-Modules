@@ -1,32 +1,64 @@
 /** @odoo-module **/
 
 import { patch } from "@web/core/utils/patch";
-import { PosOrder } from "@point_of_sale/app/models/pos_order";
+import { PosOrderAccounting } from "@point_of_sale/app/models/accounting/pos_order_accounting";
 
-patch(PosOrder.prototype, {
+patch(PosOrderAccounting.prototype, {
+
     setup() {
+
         super.setup(...arguments);
-        this.global_discount_percentage = 0;
-        this.global_discount_amount = 0;
+
+        this.global_discount_amount =
+            this.global_discount_amount || 0;
+
+        this.global_discount_percentage =
+            this.global_discount_percentage || 0;
     },
-    setGlobalDiscount(percent, amount) {
-        this.global_discount_percentage = percent || 0;
-        this.global_discount_amount = amount || 0;
-        this.trigger("change");
+
+    setGlobalDiscount(mode, value) {
+
+        const originalTotal =
+            this.prices.taxDetails.total_amount_no_rounding;
+
+        if (mode === "amount") {
+
+            this.global_discount_amount = value;
+            this.global_discount_percentage = 0;
+
+        } else {
+
+            this.global_discount_percentage = value;
+
+            this.global_discount_amount =
+                (originalTotal * value) / 100;
+        }
+
+        console.log(
+            "FINAL DISCOUNT:",
+            this.global_discount_amount
+        );
     },
-    get_total_with_tax() {
-        const total = super.get_total_with_tax();
-        return total - (this.global_discount_amount || 0);
+
+    // MAIN TOTAL
+    get priceIncl() {
+
+        const originalTotal =
+            this.prices.taxDetails.total_amount_no_rounding;
+
+        return Math.max(
+            0,
+            originalTotal -
+            (this.global_discount_amount || 0)
+        );
     },
-    export_as_JSON() {
-        const json = super.export_as_JSON(...arguments);
-        json.global_discount_percentage = this.global_discount_percentage;
-        json.global_discount_amount = this.global_discount_amount;
-        return json;
+
+    // PAYMENT SCREEN
+    get totalDue() {
+
+        return this.currency.round(
+            this.priceIncl
+        );
     },
-    init_from_JSON(json) {
-        super.init_from_JSON(...arguments);
-        this.global_discount_percentage = json.global_discount_percentage || 0;
-        this.global_discount_amount = json.global_discount_amount || 0;
-    },
+
 });

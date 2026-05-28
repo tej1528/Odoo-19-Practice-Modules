@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-inherit="point_of_sale.OrderDisplay"
+       t-inherit-mode="extension">
+
+        <!-- TOTAL block પહેલાં -->
+        <xpath expr="//div[hasclass('subentry')][last()]"
+               position="after">
+
+            <t t-if="order.global_discount_amount > 0">
+
+                <div class="subentry d-flex justify-content-between w-100">
+
+                    <span>Discount</span>
+
+                    <span class="text-danger">
+                        -
+                        <t t-esc="env.utils.formatCurrency(order.global_discount_amount)"/>
+                    </span>
+
+                </div>
+
+            </t>
+
+        </xpath>
+
+    </t>
+
+</templates>

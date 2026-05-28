@@ -12,6 +12,8 @@
             'pos_changes/static/src/xml/custom_discount_number_popup.xml',
             'pos_changes/static/src/xml/control_buttons.xml',
             'pos_changes/static/src/xml/receipt_template.xml',
+            'pos_changes/static/src/xml/order_summary.xml',
+            # 'pos_changes/static/src/xml/receipt_discount.xml',
             'pos_changes/static/src/js/custom_discount_number_popup.js',
             'pos_changes/static/src/js/discount_buttons.js',
             'pos_changes/static/src/js/order_discount.js',
