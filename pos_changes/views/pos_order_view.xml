@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pos_order_form_discount_inherit"
+            model="ir.ui.view">
+
+        <field name="name">pos.order.form.discount.inherit</field>
+
+        <field name="model">pos.order</field>
+
+        <field name="inherit_id"
+               ref="point_of_sale.view_pos_pos_form"/>
+
+        <field name="arch"
+               type="xml">
+
+            <xpath expr="//group[@name='order_total']/field[@name='amount_total']"
+                   position="before">
+
+                <field name="global_discount_percentage"
+                       string="Discount (%)"
+                       readonly="1"/>
+
+                <field name="global_discount_amount"
+                       string="Discount Amount"
+                       readonly="1"
+                       widget="monetary"/>
+
+            </xpath>
+
+        </field>
+
+    </record>
+
+</odoo>

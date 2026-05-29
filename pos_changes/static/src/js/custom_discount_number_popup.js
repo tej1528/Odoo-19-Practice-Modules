@@ -11,6 +11,11 @@ export class CustomDiscountNumberPopup extends NumberPopup {
         this.pos = useService("pos");
     }
 
+    getPayload() {
+        return {};
+    }
+
+
     async confirm() {
 
         const selectedMode =

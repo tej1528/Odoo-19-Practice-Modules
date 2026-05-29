@@ -1,19 +1,22 @@
 /** @odoo-module **/
 
 import { patch } from "@web/core/utils/patch";
-import { PosOrderAccounting } from "@point_of_sale/app/models/accounting/pos_order_accounting";
-
-patch(PosOrderAccounting.prototype, {
+import { PosOrder } from "@point_of_sale/app/models/pos_order";
+console.log("ORDER DISCOUNT JS LOADED");
+patch(PosOrder.prototype, {
 
     setup() {
-
         super.setup(...arguments);
 
-        this.global_discount_amount =
-            this.global_discount_amount || 0;
+        console.log(
+            "HAS SERIALIZE:",
+            typeof this.serializeForORM
+        );
 
-        this.global_discount_percentage =
-            this.global_discount_percentage || 0;
+        console.log(
+            "HAS EXPORT:",
+            typeof this.export_as_JSON
+        );
     },
 
     setGlobalDiscount(mode, value) {
@@ -40,7 +43,54 @@ patch(PosOrderAccounting.prototype, {
         );
     },
 
-    // MAIN TOTAL
+    // SAVE IN JSON
+    export_as_JSON() {
+
+        const json =
+            super.export_as_JSON(...arguments);
+
+        json.global_discount_amount =
+            this.global_discount_amount || 0;
+
+        json.global_discount_percentage =
+            this.global_discount_percentage || 0;
+
+        return json;
+    },
+
+    // RESTORE AFTER REFRESH
+    init_from_JSON(json) {
+
+        super.init_from_JSON(...arguments);
+
+        console.log(
+            "IMPORT",
+            json.global_discount_amount
+        );
+
+        this.global_discount_amount =
+            json.global_discount_amount || 0;
+
+        this.global_discount_percentage =
+            json.global_discount_percentage || 0;
+    },
+
+    // RECEIPT DATA
+    export_for_printing() {
+
+    const result =
+        super.export_for_printing(...arguments);
+
+    result.global_discount_amount =
+        this.global_discount_amount || 0;
+
+    result.global_discount_percentage =
+        this.global_discount_percentage || 0;
+
+    return result;
+},
+
+    // TOTAL AFTER DISCOUNT
     get priceIncl() {
 
         const originalTotal =
@@ -53,7 +103,7 @@ patch(PosOrderAccounting.prototype, {
         );
     },
 
-    // PAYMENT SCREEN
+    // PAYMENT TOTAL
     get totalDue() {
 
         return this.currency.round(

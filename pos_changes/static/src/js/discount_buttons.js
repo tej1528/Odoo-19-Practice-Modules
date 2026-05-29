@@ -17,6 +17,10 @@ patch(ControlButtons.prototype, {
         this.dialog.add(CustomDiscountNumberPopup, {
             title: _t("Global Discount"),
             startingValue: this.pos.config?.discount_pc || 0,
+
+            getPayload: () => {
+                return {};
+            },
         });
     },
 });
