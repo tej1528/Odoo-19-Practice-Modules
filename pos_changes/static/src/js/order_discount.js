@@ -1,22 +1,22 @@
 /** @odoo-module **/
 
+console.log("✅ ORDER_DISCOUNT JS LOADED");
+
 import { patch } from "@web/core/utils/patch";
 import { PosOrder } from "@point_of_sale/app/models/pos_order";
-console.log("ORDER DISCOUNT JS LOADED");
+
 patch(PosOrder.prototype, {
 
-    setup() {
-        super.setup(...arguments);
+    getCashierName() {
 
-        console.log(
-            "HAS SERIALIZE:",
-            typeof this.serializeForORM
-        );
+        console.log("🔥 getCashierName CALLED");
 
-        console.log(
-            "HAS EXPORT:",
-            typeof this.export_as_JSON
-        );
+        console.log("POS =", this.pos);
+        console.log("CONFIG =", this.pos?.config);
+        console.log("DEFAULT USER =", this.pos?.config?.default_user_id);
+        console.log("USER =", this.user_id);
+
+        return super.getCashierName(...arguments);
     },
 
     setGlobalDiscount(mode, value) {
@@ -36,14 +36,8 @@ patch(PosOrder.prototype, {
             this.global_discount_amount =
                 (originalTotal * value) / 100;
         }
-
-        console.log(
-            "FINAL DISCOUNT:",
-            this.global_discount_amount
-        );
     },
 
-    // SAVE IN JSON
     export_as_JSON() {
 
         const json =
@@ -58,15 +52,9 @@ patch(PosOrder.prototype, {
         return json;
     },
 
-    // RESTORE AFTER REFRESH
     init_from_JSON(json) {
 
         super.init_from_JSON(...arguments);
-
-        console.log(
-            "IMPORT",
-            json.global_discount_amount
-        );
 
         this.global_discount_amount =
             json.global_discount_amount || 0;
@@ -75,22 +63,24 @@ patch(PosOrder.prototype, {
             json.global_discount_percentage || 0;
     },
 
-    // RECEIPT DATA
     export_for_printing() {
 
-    const result =
-        super.export_for_printing(...arguments);
+        console.log("🔥 EXPORT FOR PRINTING CALLED");
 
-    result.global_discount_amount =
-        this.global_discount_amount || 0;
+        const result =
+            super.export_for_printing(...arguments);
 
-    result.global_discount_percentage =
-        this.global_discount_percentage || 0;
+        console.log("🔥 RECEIPT RESULT =", result);
 
-    return result;
-},
+        result.global_discount_amount =
+            this.global_discount_amount || 0;
 
-    // TOTAL AFTER DISCOUNT
+        result.global_discount_percentage =
+            this.global_discount_percentage || 0;
+
+        return result;
+    },
+
     get priceIncl() {
 
         const originalTotal =
@@ -103,7 +93,6 @@ patch(PosOrder.prototype, {
         );
     },
 
-    // PAYMENT TOTAL
     get totalDue() {
 
         return this.currency.round(

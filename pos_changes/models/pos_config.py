@@ -1,9 +1,10 @@
 from odoo import models, fields
 
+
 class PosConfig(models.Model):
-    _inherit = 'pos.config'
-    
+    _inherit = "pos.config"
+
     default_user_id = fields.Many2one(
-        'res.users',
+        "res.users",
         string="Default Cashier"
     )

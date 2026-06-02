@@ -6,21 +6,17 @@ import { CustomDiscountNumberPopup } from "@pos_changes/js/custom_discount_numbe
 import { patch } from "@web/core/utils/patch";
 
 patch(ControlButtons.prototype, {
-    async clickDiscount() {
-        console.log("Opening Custom Discount Popup...");
+
+    async clickCustomDiscount() {
 
         if (!this.pos) {
-            console.error("POS service not found on this component context.");
             return;
         }
 
         this.dialog.add(CustomDiscountNumberPopup, {
             title: _t("Global Discount"),
-            startingValue: this.pos.config?.discount_pc || 0,
-
-            getPayload: () => {
-                return {};
-            },
+            startingValue: 0,
         });
     },
+
 });

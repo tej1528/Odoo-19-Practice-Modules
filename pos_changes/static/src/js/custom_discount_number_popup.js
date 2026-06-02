@@ -15,7 +15,6 @@ export class CustomDiscountNumberPopup extends NumberPopup {
         return {};
     }
 
-
     async confirm() {
 
         const selectedMode =
@@ -40,11 +39,9 @@ export class CustomDiscountNumberPopup extends NumberPopup {
                 value
             );
 
-            
             this.pos.selectedOrderUuid =
                 this.pos.selectedOrderUuid;
         }
-
         this.props.close();
     }
 }
