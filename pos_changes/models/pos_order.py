@@ -19,23 +19,41 @@ class PosOrder(models.Model):
         compute="_compute_discount_display",
     )
 
+    amount_untaxed = fields.Monetary(
+        string="Untaxed Amount",
+        compute="_compute_amount_untaxed",
+        currency_field="currency_id",
+        store=True,
+    )
+
     @api.depends(
         "global_discount_amount",
         "global_discount_percentage"
     )
     def _compute_discount_display(self):
-
         for order in self:
 
             if order.global_discount_amount:
 
-                order.discount_display = (
-                    f"Discount ({order.global_discount_percentage:.0f}%) : "
-                    f"{order.global_discount_amount:.2f}"
-                )
+                amount = f"${order.global_discount_amount:,.2f}"
+
+                if order.global_discount_percentage > 0:
+                    order.discount_display = (
+                        f"{amount} ({order.global_discount_percentage:.0f}%)"
+                    )
+                else:
+                    order.discount_display = amount
 
             else:
-                order.discount_display = "No Discount"
+                order.discount_display = ""
+
+    @api.depends('lines.price_subtotal')
+    def _compute_amount_untaxed(self):
+        for order in self:
+            order.amount_untaxed = sum(
+                line.price_subtotal
+                for line in order.lines
+            )
 
     @classmethod
     def _order_fields(cls, ui_order):
@@ -48,7 +66,6 @@ class PosOrder(models.Model):
 
             from odoo import api, SUPERUSER_ID
 
-            registry = cls.pool
             env = api.Environment(
                 cls._cr,
                 SUPERUSER_ID,
@@ -58,7 +75,6 @@ class PosOrder(models.Model):
             session = env["pos.session"].browse(session_id)
 
             if session.config_id.default_user_id:
-
                 vals["user_id"] = (
                     session.config_id.default_user_id.id
                 )
@@ -81,22 +97,15 @@ class PosOrder(models.Model):
 
     @api.model
     def create(self, vals):
-
         order = super().create(vals)
 
         default_cashier = (
             order.session_id.config_id.default_user_id
         )
 
-        print("CONFIG CASHIER =", default_cashier.name)
-
-        print("BEFORE USER =", order.user_id.name)
-
         if default_cashier:
             order.write({
                 "user_id": default_cashier.id,
             })
-
-        print("AFTER USER =", order.user_id.name)
 
         return order

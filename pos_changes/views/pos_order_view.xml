@@ -14,17 +14,26 @@
         <field name="arch"
                type="xml">
 
+            <!-- Untaxed Amount -->
+
+            <xpath expr="//group[@name='order_total']/field[@name='amount_tax']"
+                   position="before">
+
+                <field name="amount_untaxed"
+                       string="Untaxed Amount"
+                       widget="monetary"
+                       readonly="1"/>
+
+            </xpath>
+
+            <!-- Discount -->
+
             <xpath expr="//group[@name='order_total']/field[@name='amount_total']"
                    position="before">
 
-                <field name="global_discount_percentage"
-                       string="Discount (%)"
+                <field name="discount_display"
+                       string="Discount"
                        readonly="1"/>
-
-                <field name="global_discount_amount"
-                       string="Discount Amount"
-                       readonly="1"
-                       widget="monetary"/>
 
             </xpath>
 

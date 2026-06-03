@@ -11,15 +11,23 @@
 
                 <div class="pos-receipt-amount d-flex justify-content-between">
 
-    <span class="fw-bold">
-        Discount
-    </span>
+                    <span class="fw-bold">
 
-    <span class="font-monospace fw-bolder">
-        -<t t-esc="env.utils.formatCurrency(props.order.global_discount_amount)"/>
-    </span>
+                        <t t-if="props.order.global_discount_percentage > 0">
+                            Discount (<t t-esc="props.order.global_discount_percentage"/>%)
+                        </t>
 
-</div>
+                        <t t-else="">
+                            Discount
+                        </t>
+
+                    </span>
+
+                    <span class="font-monospace fw-bolder">
+                        -<t t-esc="env.utils.formatCurrency(props.order.global_discount_amount)"/>
+                    </span>
+
+                </div>
 
             </t>
 
