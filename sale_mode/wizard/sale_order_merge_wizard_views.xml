@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_sale_order_merge_wizard_form" model="ir.ui.view">
+
+        <field name="name">sale.order.merge.wizard.form</field>
+        <field name="model">sale.order.merge.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Merge Orders">
+            
+                <group>
+
+                    <field name="source_order_ids"
+                           widget="many2many_tags"
+                           readonly="1"/>
+
+                    <field name="merge_type" widget="radio"/>
+
+                    <field name="target_order_id"
+                        invisible="merge_type == 'new'"
+                        required="merge_type == 'existing'"/>
+
+                    <field name="delete_source"/>
+
+                </group>
+
+                    <div class="text-danger">
+                            If enabled, source quotations will be deleted after merge.
+                            If disabled, quotations will remain and only order lines will be copied.
+                    </div>
+                <footer>
+                
+
+                    <button name="action_merge"
+                            type="object"
+                            string="Merge"
+                            class="btn-primary"/>
+
+                    <button string="Cancel"
+                            special="cancel"/>
+
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
