@@ -7,18 +7,20 @@
         <field name="model">sale.order.merge.wizard</field>
         <field name="arch" type="xml">
             <form string="Merge Orders">
-            
+
                 <group>
 
                     <field name="order_ids"
-                           widget="many2many_tags"
-                           readonly="1"/>
-                           
+                        widget="many2many_tags"
+                        readonly="1"/>
+
+                </group>
+
                 <group col="2">
 
                     <group>
                         <field name="merge_type" widget="radio"/>
-                        <field name="delete_source"/>
+                        <field name="delete_order"/>
                     </group>
 
                     <group>
@@ -29,15 +31,12 @@
 
                 </group>
 
-                </group>
+                <div class="text-danger">
+                    If enabled, source quotations will be deleted after merge.
+                    If disabled, quotations will remain and only order lines will be copied.
+                </div>
 
-                    <div class="text-danger">
-                            If enabled, source quotations will be deleted after merge.
-                            If disabled, quotations will remain and only order lines will be copied.
-                    </div>
                 <footer>
-                
-
                     <button name="action_merge"
                             type="object"
                             string="Merge"
@@ -45,8 +44,8 @@
 
                     <button string="Cancel"
                             special="cancel"/>
-
                 </footer>
+
             </form>
         </field>
     </record>
