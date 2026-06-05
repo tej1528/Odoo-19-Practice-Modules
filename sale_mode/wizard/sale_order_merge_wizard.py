@@ -7,7 +7,7 @@ class SaleOrderMergeWizard(models.TransientModel):
     _name = "sale.order.merge.wizard"
     _description = "Sale Order Merge Wizard"
 
-    source_order_ids = fields.Many2many(
+    order_ids = fields.Many2many(
         "sale.order",
         string="Orders"
     )
@@ -25,12 +25,11 @@ class SaleOrderMergeWizard(models.TransientModel):
     target_order_id = fields.Many2one(
         "sale.order",
         string="Merge Into",
-        domain="[('id', 'in', source_order_ids)]",
+        domain="[('id', 'in', order_ids)]",
     )
 
-    delete_source = fields.Boolean(
-        string="Delete Source Orders",
-        default=True,
+    delete_order = fields.Boolean(
+        string="Delete Orders",
     )
 
     def _get_target_order(self, orders):
@@ -49,29 +48,18 @@ class SaleOrderMergeWizard(models.TransientModel):
     def action_merge(self):
         self.ensure_one()
 
-        orders = self.source_order_ids
-
-        if len(orders) < 2:
-            raise ValidationError("Please select at least two quotations.")
-
-        if orders.filtered(
-            lambda o: o.state not in ("draft", "sent")
-        ):
-            raise ValidationError("Only Draft and Quotation Sent orders can be merged.")
-
-        if len(orders.mapped("partner_id")) > 1:
-            raise ValidationError("Customer must be same for all quotations.")
+        orders = self.order_ids
 
         target_order = self._get_target_order(orders)
 
-        source_orders = orders.filtered(
+        orders_to_merge = orders.filtered(
             lambda o: o.id != target_order.id
         )
 
         # Store names before delete
-        merged_names = source_orders.mapped("name")
+        merged_names = orders_to_merge.mapped("name")
 
-        for order in source_orders:
+        for order in orders_to_merge:
 
             for line in order.order_line.filtered(
                 lambda l: not l.display_type
@@ -81,20 +69,20 @@ class SaleOrderMergeWizard(models.TransientModel):
                     lambda l:
                     not l.display_type
                     and l.product_id == line.product_id
+                    and l.name == line.name
                     and l.price_unit == line.price_unit
                     and l.discount == line.discount
                     and set(l.tax_ids.ids) == set(line.tax_ids.ids)
-                )
+                )[:1]
 
                 if existing_line:
-
                     existing_line.product_uom_qty += (
                         line.product_uom_qty
                     )
 
                 else:
 
-                    target_order.write({
+                     target_order.write({
                         "order_line": [
                             Command.create({
                                 "product_id": line.product_id.id,
@@ -110,9 +98,9 @@ class SaleOrderMergeWizard(models.TransientModel):
                     })
 
         # Delete after merge completed
-        if self.delete_source:
+        if self.delete_order:
 
-            for order in source_orders:
+            for order in orders_to_merge:
 
                 if order.state == "sent":
                     order.action_cancel()

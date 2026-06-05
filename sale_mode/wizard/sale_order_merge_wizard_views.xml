@@ -10,17 +10,24 @@
             
                 <group>
 
-                    <field name="source_order_ids"
+                    <field name="order_ids"
                            widget="many2many_tags"
                            readonly="1"/>
+                           
+                <group col="2">
 
-                    <field name="merge_type" widget="radio"/>
+                    <group>
+                        <field name="merge_type" widget="radio"/>
+                        <field name="delete_source"/>
+                    </group>
 
-                    <field name="target_order_id"
-                        invisible="merge_type == 'new'"
-                        required="merge_type == 'existing'"/>
+                    <group>
+                        <field name="target_order_id"
+                            invisible="merge_type == 'new'"
+                            required="merge_type == 'existing'"/>
+                    </group>
 
-                    <field name="delete_source"/>
+                </group>
 
                 </group>
 

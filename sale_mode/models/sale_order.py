@@ -22,7 +22,7 @@ class SaleOrder(models.Model):
             "view_mode": "form",
             "target": "new",
             "context": {
-                "default_source_order_ids": [(6, 0, self.ids)],
+                "default_order_ids": [(6, 0, self.ids)],
                 "default_target_order_id": self[0].id,
             },
         }
