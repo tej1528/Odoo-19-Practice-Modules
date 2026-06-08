@@ -7,9 +7,10 @@
     "author": "Tejash Ardeshna",
     "website": "",
     "license": "LGPL-3",
-    "depends": ["sale"],
+    "depends": ["sale","product"],
     "data": [
         "security/ir.model.access.csv",
+        # 'views/product_search_view.xml',
         "wizard/sale_order_merge_wizard_views.xml",
         "data/server_action.xml",
     ],
