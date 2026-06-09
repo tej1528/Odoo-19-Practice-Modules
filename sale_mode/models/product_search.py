@@ -72,15 +72,7 @@ class ProductSearchMixin(models.AbstractModel):
         return new_domain
 
     @api.model
-    def web_search_read(
-        self,
-        domain=None,
-        specification=None,
-        offset=0,
-        limit=None,
-        order=None,
-        count_limit=None,
-    ):
+    def web_search_read(self, domain=None, specification=None, offset=0, limit=None, order=None, count_limit=None,):
         return super().web_search_read(
             domain=self._process_search_domain(domain),
             specification=specification,
