@@ -1,22 +1,19 @@
-from odoo import http, fields, _
+from odoo import http, _
 from odoo.http import request
 from odoo.addons.web.controllers.home import Home
+from odoo.addons.web.controllers.home import (ensure_db, SIGN_UP_REQUEST_PARAMS, CREDENTIAL_PARAMS,)
 import odoo
+import uuid
 import logging
-from datetime import timedelta
-from odoo.fields import Datetime
 
 _logger = logging.getLogger(__name__)
+
+_logger.warning("===== RESTRICT LOGIN CONTROLLER LOADED =====")
+
 class RestrictLoginHome(Home):
 
     @http.route('/web/login', type='http', auth='none', sitemap=False)
     def web_login(self, redirect=None, **kw):
-
-        from odoo.addons.web.controllers.home import (
-            ensure_db,
-            SIGN_UP_REQUEST_PARAMS,
-            CREDENTIAL_PARAMS,
-        )
 
         ensure_db()
 
@@ -52,38 +49,12 @@ class RestrictLoginHome(Home):
 
             credential.setdefault('type', 'password')
 
-            
             login = credential.get('login')
 
             user = request.env['res.users'].sudo().search(
                 [('login', '=', login)],
                 limit=1
             )
-
-            if user and user.session_updated_on:
-
-                diff = Datetime.now() - user.session_updated_on
-
-                if diff > timedelta(hours=8):
-
-                    user.write({
-                        'active_session_sid': False,
-                        'session_updated_on': False,
-                    })
-
-                    user.invalidate_recordset()
-
-                    user = request.env['res.users'].sudo().browse(user.id)
-
-                    _logger.warning(
-                        "OLD SESSION CLEARED FOR USER %s",
-                        user.login
-                    )
-                
-                _logger.warning(
-                    "OLD SESSION CLEARED FOR USER %s",
-                    user.login
-                )
 
             icp = request.env['ir.config_parameter'].sudo()
 
@@ -101,33 +72,43 @@ class RestrictLoginHome(Home):
                 ) == 'True'
             )
 
+            force_login_checked = (
+                request.params.get('force_login')
+            )    
+
             _logger.warning(
-                "LOGIN CHECK | user=%s | stored_sid=%s | restrict=%s | force=%s",
-                user.login if user else '',
-                user.active_session_sid if user else '',
+                "LOGIN BLOCK CHECK | token=%s | restrict=%s | force=%s",
+                user.active_session_token if user else False,
                 restrict_multiple_login,
                 force_new_login,
             )
             
-            # ==========================
-            # BLOCK SECOND LOGIN
-            # ==========================
+            _logger.warning(
+                "USER=%s TOKEN=%s",
+                user.login if user else False,
+                user.active_session_token if user else False,
+            )
+            
+            # Restrict Multiple Login
             if (
                 user
                 and restrict_multiple_login
-                and user.active_session_sid
+                and user.active_session_token
                 and not force_new_login
             ):
+                
+                _logger.warning(
+                    "LOGIN BLOCKED FOR USER %s",
+                    user.login,
+                )
                 values['error'] = _(
                     "You are already logged in on another device/browser."
                 )
 
-                response = request.render(
+                return request.render(
                     'web.login',
                     values
                 )
-                response.headers['Cache-Control'] = 'no-cache'
-                return response
 
             try:
 
@@ -138,14 +119,35 @@ class RestrictLoginHome(Home):
 
                 request.params['login_success'] = True
 
+                _logger.warning("LOGIN SUCCESS")
+
                 current_user = request.env[
                     'res.users'
                 ].sudo().browse(auth_info['uid'])
 
-                current_user.write({
-                    'active_session_sid': request.session.sid,
-                    'session_updated_on': fields.Datetime.now(),
-                })
+                if (
+                    not current_user.active_session_token
+                    or (
+                        force_new_login
+                        and force_login_checked
+                    )
+                ):
+                    token = str(uuid.uuid4())
+
+                    current_user.write({
+                        'active_session_token': token,
+                    })
+
+                    request.session[
+                        'restrict_login_token'
+                    ] = token
+
+                _logger.warning(
+                    "SESSION TOKEN = %s",
+                    request.session.get(
+                        'restrict_login_token'
+                    )
+                )
 
                 return request.redirect(
                     self._login_redirect(
@@ -173,7 +175,7 @@ class RestrictLoginHome(Home):
         response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
 
         return response
-    
+
     @http.route('/web/session/logout', type='http', auth='none')
     def session_logout(self, redirect='/web/login'):
 
@@ -182,8 +184,7 @@ class RestrictLoginHome(Home):
             request.env['res.users'].sudo().browse(
                 request.session.uid
             ).write({
-                'active_session_sid': False,
-                'session_updated_on': False,
+                'active_session_token': False,
             })
 
         request.session.logout(

@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models
 from odoo.http import request
 
 
@@ -22,20 +22,36 @@ class IrHttp(models.AbstractModel):
             )
         )
 
-        if restrict_login != 'True':
+        force_new_login = (
+            request.env['ir.config_parameter']
+            .sudo()
+            .get_param(
+                'restrict_login.force_new_login',
+                'False'
+            )
+        )
+
+        if (
+            restrict_login != 'True'
+            or force_new_login != 'True'
+        ):
             return result
 
-        user = (request.env['res.users'].sudo().browse(request.session.uid))
+        user = request.env['res.users'].sudo().browse(
+            request.session.uid
+        )
 
-        user.write({'session_updated_on': fields.Datetime.now(),})
-        
+        session_token = request.session.get(
+            'restrict_login_token'
+        )
+
         if (
-            user.active_session_sid
-            and user.active_session_sid != request.session.sid
+            user.active_session_token
+            and session_token
+            and user.active_session_token != session_token
         ):
-
             request.session.logout(
                 keep_db=True
             )
 
-            return result
+        return result

@@ -1,0 +1,23 @@
+<odoo>
+    <template id="restrict_login_checkbox"
+              inherit_id="web.login">
+
+        <xpath expr="//button[@type='submit']"
+               position="before">
+
+            <div class="form-check mb-3">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="force_login"
+                       name="force_login"/>
+
+                <label class="form-check-label"
+                       for="force_login">
+                    Logout other active Session
+                </label>
+            </div>
+
+        </xpath>
+
+    </template>
+</odoo>
