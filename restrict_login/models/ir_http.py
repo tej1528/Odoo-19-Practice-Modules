@@ -1,9 +1,13 @@
 from odoo import models
 from odoo.http import request
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class IrHttp(models.AbstractModel):
-    _inherit = "ir.http"
+    _inherit = 'ir.http'
 
     @classmethod
     def _authenticate(cls, endpoint):
@@ -13,45 +17,34 @@ class IrHttp(models.AbstractModel):
         if not request.session.uid:
             return result
 
-        restrict_login = (
-            request.env['ir.config_parameter']
-            .sudo()
-            .get_param(
-                'restrict_login.restrict_multiple_login',
-                'False'
-            )
+        company = request.env.company
+
+        restrict_multiple_login = (
+            company.restrict_multiple_login
         )
 
         force_new_login = (
-            request.env['ir.config_parameter']
-            .sudo()
-            .get_param(
-                'restrict_login.force_new_login',
-                'False'
-            )
+            company.force_new_login
         )
 
-        if (
-            restrict_login != 'True'
-            or force_new_login != 'True'
-        ):
+        if not ( restrict_multiple_login and force_new_login ):
             return result
 
-        user = request.env['res.users'].sudo().browse(
-            request.session.uid
+        user = ( request.env['res.users'] .sudo() .browse(request.session.uid))
+
+        session_token = request.session.get( 'restrict_login_token' )
+
+        _logger.info(
+            "AUTH CHECK | user=%s | db_token=%s | session_token=%s",
+            user.login,
+            user.active_session_token,
+            session_token,
         )
 
-        session_token = request.session.get(
-            'restrict_login_token'
-        )
+        if not session_token:
+            return result
 
-        if (
-            user.active_session_token
-            and session_token
-            and user.active_session_token != session_token
-        ):
-            request.session.logout(
-                keep_db=True
-            )
-
+        if (user.active_session_token and user.active_session_token != session_token ):
+            _logger.warning("FORCE LOGOUT | user=%s",user.login,)
+            request.session.logout( keep_db=True )
         return result

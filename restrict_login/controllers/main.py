@@ -1,25 +1,38 @@
 from odoo import http, _
 from odoo.http import request
-from odoo.addons.web.controllers.home import Home
-from odoo.addons.web.controllers.home import (ensure_db, SIGN_UP_REQUEST_PARAMS, CREDENTIAL_PARAMS,)
+from odoo.addons.web.controllers.home import (
+    Home,
+    ensure_db,
+    SIGN_UP_REQUEST_PARAMS,
+    CREDENTIAL_PARAMS,
+)
 import odoo
 import uuid
 import logging
 
 _logger = logging.getLogger(__name__)
 
-_logger.warning("===== RESTRICT LOGIN CONTROLLER LOADED =====")
 
 class RestrictLoginHome(Home):
+
+    def _get_login_settings(self):
+
+        company = request.env.company
+        return {
+            'restrict_multiple_login': company.restrict_multiple_login,
+            'force_new_login': company.force_new_login,
+        }
+    
+    @staticmethod
+    def _generate_token():
+        return str(uuid.uuid4())
 
     @http.route('/web/login', type='http', auth='none', sitemap=False)
     def web_login(self, redirect=None, **kw):
 
         ensure_db()
-
         request.params['login_success'] = False
-
-        if request.httprequest.method == 'GET' and redirect and request.session.uid:
+        if (request.httprequest.method == 'GET' and redirect and request.session.uid ):
             return request.redirect(redirect)
 
         if request.env.uid is None:
@@ -39,6 +52,18 @@ class RestrictLoginHome(Home):
         except odoo.exceptions.AccessDenied:
             values['databases'] = None
 
+        settings = self._get_login_settings()
+        _logger.warning(
+            "SETTINGS => restrict=%s force=%s company=%s",
+            settings['restrict_multiple_login'],
+            settings['force_new_login'],
+            request.env.company.name,
+        )
+        values['show_force_login_checkbox'] = (
+            settings['restrict_multiple_login']
+            and settings['force_new_login']
+        )
+
         if request.httprequest.method == 'POST':
 
             credential = {
@@ -48,113 +73,65 @@ class RestrictLoginHome(Home):
             }
 
             credential.setdefault('type', 'password')
-
             login = credential.get('login')
+            user = request.env['res.users'].sudo().search([('login', '=', login)], limit=1 )
+            force_login_checked = bool(request.params.get('force_login'))
 
-            user = request.env['res.users'].sudo().search(
-                [('login', '=', login)],
-                limit=1
-            )
-
-            icp = request.env['ir.config_parameter'].sudo()
-
-            restrict_multiple_login = (
-                icp.get_param(
-                    'restrict_login.restrict_multiple_login',
-                    'False'
-                ) == 'True'
-            )
-
-            force_new_login = (
-                icp.get_param(
-                    'restrict_login.force_new_login',
-                    'False'
-                ) == 'True'
-            )
-
-            force_login_checked = (
-                request.params.get('force_login')
-            )    
-
-            _logger.warning(
-                "LOGIN BLOCK CHECK | token=%s | restrict=%s | force=%s",
-                user.active_session_token if user else False,
-                restrict_multiple_login,
-                force_new_login,
-            )
-            
-            _logger.warning(
-                "USER=%s TOKEN=%s",
+            _logger.info(
+                "LOGIN CHECK | user=%s | token=%s | restrict=%s | force=%s | checkbox=%s",
                 user.login if user else False,
                 user.active_session_token if user else False,
+                settings['restrict_multiple_login'],
+                settings['force_new_login'],
+                force_login_checked,
             )
-            
+
             # Restrict Multiple Login
             if (
                 user
-                and restrict_multiple_login
+                and settings['restrict_multiple_login']
                 and user.active_session_token
-                and not force_new_login
+                and not settings['force_new_login']
             ):
-                
-                _logger.warning(
-                    "LOGIN BLOCKED FOR USER %s",
-                    user.login,
-                )
-                values['error'] = _(
-                    "You are already logged in on another device/browser."
-                )
+                values['error'] = _("You are already logged in on another device/browser." )
 
-                return request.render(
-                    'web.login',
-                    values
-                )
+                return request.render( 'web.login', values )
 
             try:
-
-                auth_info = request.session.authenticate(
-                    request.env,
-                    credential
-                )
-
+                auth_info = request.session.authenticate( request.env, credential )
                 request.params['login_success'] = True
-
-                _logger.warning("LOGIN SUCCESS")
-
                 current_user = request.env[
                     'res.users'
                 ].sudo().browse(auth_info['uid'])
 
+                # Force Login + Checkbox Checked
                 if (
-                    not current_user.active_session_token
-                    or (
-                        force_new_login
-                        and force_login_checked
-                    )
+                    settings['restrict_multiple_login']
+                    and settings['force_new_login']
+                    and force_login_checked
                 ):
-                    token = str(uuid.uuid4())
 
-                    current_user.write({
-                        'active_session_token': token,
-                    })
+                    token = self._generate_token()
+                    current_user.write({ 'active_session_token': token, })
+                    request.session[ 'restrict_login_token' ] = token
+                    _logger.info( "FORCE LOGIN TOKEN = %s", token, )
 
-                    request.session[
-                        'restrict_login_token'
-                    ] = token
+                # First Login
+                elif not current_user.active_session_token:
+                    token = self._generate_token()
+                    current_user.write({'active_session_token': token,})
+                    _logger.warning("TOKEN SAVED=%s DB=%s", token,current_user.active_session_token,)
+                    request.session['restrict_login_token'] = token
+                    _logger.warning("FIRST LOGIN TOKEN=%s",token,)
 
-                _logger.warning(
-                    "SESSION TOKEN = %s",
-                    request.session.get(
-                        'restrict_login_token'
-                    )
-                )
+                # Reuse Existing Token
+                else:
+                    request.session[ 'restrict_login_token' ] = current_user.active_session_token
+
+                    _logger.info( "USING EXISTING TOKEN = %s", current_user.active_session_token, )
 
                 return request.redirect(
-                    self._login_redirect(
-                        auth_info['uid'],
-                        redirect=redirect
-                    )
-                )
+                    self._login_redirect( auth_info['uid'], redirect=redirect,))
 
             except odoo.exceptions.AccessDenied as e:
 
@@ -163,16 +140,19 @@ class RestrictLoginHome(Home):
                 else:
                     values['error'] = e.args[0]
 
-        if 'login' not in values and request.session.get('auth_login'):
-            values['login'] = request.session.get('auth_login')
+        if ( 'login' not in values and request.session.get('auth_login')):
+            values['login'] = request.session.get( 'auth_login' )
 
         if not odoo.tools.config['list_db']:
             values['disable_database_manager'] = True
 
-        response = request.render('web.login', values)
+        response = request.render( 'web.login', values )
+
         response.headers['Cache-Control'] = 'no-cache'
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
+        response.headers[
+            'Content-Security-Policy'
+        ] = "frame-ancestors 'self'"
 
         return response
 
@@ -180,18 +160,7 @@ class RestrictLoginHome(Home):
     def session_logout(self, redirect='/web/login'):
 
         if request.session.uid:
-
-            request.env['res.users'].sudo().browse(
-                request.session.uid
-            ).write({
-                'active_session_token': False,
-            })
-
-        request.session.logout(
-            keep_db=True
-        )
-
-        return request.redirect(
-            redirect,
-            303
-        )
+            request.env['res.users'].sudo().browse( request.session.uid ).write({'active_session_token': False,})
+        request.session.logout(keep_db=True)
+        return request.redirect(redirect,303,)
+    

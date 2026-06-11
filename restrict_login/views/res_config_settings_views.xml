@@ -19,7 +19,7 @@
                         <field name="restrict_multiple_login"/>
                     </setting>
 
-                    <setting string="Force New Login">
+                    <setting string="Force New Login" invisible="not restrict_multiple_login">
                         <field name="force_new_login"/>
                     </setting>
 

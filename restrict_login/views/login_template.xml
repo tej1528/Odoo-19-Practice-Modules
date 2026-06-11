@@ -5,17 +5,21 @@
         <xpath expr="//button[@type='submit']"
                position="before">
 
-            <div class="form-check mb-3">
-                <input type="checkbox"
-                       class="form-check-input"
-                       id="force_login"
-                       name="force_login"/>
+            <t t-if="show_force_login_checkbox">
 
-                <label class="form-check-label"
-                       for="force_login">
-                    Logout other active Session
-                </label>
-            </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="force_login"
+                           name="force_login"/>
+
+                    <label class="form-check-label"
+                           for="force_login">
+                        Logout other active Session
+                    </label>
+                </div>
+
+            </t>
 
         </xpath>
 
