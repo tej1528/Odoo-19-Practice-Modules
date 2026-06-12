@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_over_receipt_wizard_form"
+            model="ir.ui.view">
+        <field name="name">over.receipt.wizard.form</field>
+        <field name="model">over.receipt.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Over Receipt Warning">
+                <group>
+                    <field name="message" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_continue"
+                            string="Continue"
+                            type="object"
+                            class="btn-primary"/>
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

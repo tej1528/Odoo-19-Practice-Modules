@@ -1,17 +1,14 @@
 {
-    "name": "Sale Merge order",
+    "name": "Stock Control",
     "version": "19.0.1.0.0",
-    "category": "Sales",
+    "category": "Product Category",
     "summary": "Merge multiple order into one order",
-    "description": "",
     "author": "Tejash Ardeshna",
-    "website": "",
     "license": "LGPL-3",
-    "depends": ["sale","product"],
+    "depends": [ "sale_management", "stock", "purchase", ],
     "data": [
         "security/ir.model.access.csv",
-        "wizard/sale_order_merge_wizard_views.xml",
-        "data/server_action.xml",
+        "wizard/over_receipt_wizard.xml"
     ],
 
     "installable": True,
