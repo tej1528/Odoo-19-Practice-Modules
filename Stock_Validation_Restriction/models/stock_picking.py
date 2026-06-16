@@ -1,32 +1,86 @@
-from odoo import models, _
+from odoo import _, models
 from odoo.exceptions import UserError
-
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     def button_validate(self):
 
-        # Delivery Orders
+        # Purchase Receipt Logic
+        if not self.env.context.get("skip_over_receipt_popup"):
+
+            for picking in self.filtered(
+                lambda p: p.picking_type_id.code == "incoming"):
+                lines = []
+                for move in picking.move_ids:
+                    if move.quantity > move.product_uom_qty:
+                        lines.append(
+                            _(
+                                "%s\nOrdered: %s\nReceived: %s"
+                            )
+                            % (
+                                move.product_id.display_name,
+                                move.product_uom_qty,
+                                move.quantity,
+                            )
+                        )
+
+                if lines:
+                    return {
+                        "type": "ir.actions.act_window",
+                        "name": _("Over Receipt Warning"),
+                        "res_model": "over.receipt.wizard",
+                        "view_mode": "form",
+                        "target": "new",
+                        "context": {
+                            "default_picking_id": picking.id,
+                            "default_message": "\n\n".join(lines),
+                        },
+                    }
+
+        # Delivery Order Logic
         for picking in self.filtered(
             lambda p: p.picking_type_id.code == "outgoing"
         ):
 
+            product_totals = {}
+
             for move in picking.move_ids:
 
-                if move.quantity > move.product_id.qty_available:
+                product = move.product_id
+
+                if product.id not in product_totals:
+                    product_totals[product.id] = {
+                        "product": product,
+                        "qty": 0.0,
+                    }
+
+                product_totals[product.id]["qty"] += move.quantity
+
+            for data in product_totals.values():
+
+                product = data["product"]
+                entered_qty = data["qty"]
+                available_qty = product.qty_available
+
+                if entered_qty > available_qty:
                     raise UserError(
                         _(
                             "Not enough stock available.\n\n"
                             "Product: %s\n"
-                            "Available Quantity: %s\n"
-                            "Delivery Quantity: %s"
+                            "On Hand Quantity: %s\n"
+                            "Entered Quantity: %s"
                         )
                         % (
-                            move.product_id.display_name,
-                            move.product_id.qty_available,
-                            move.quantity,
+                            product.display_name,
+                            available_qty,
+                            entered_qty,
                         )
                     )
 
-        return super().button_validate()
+        return super().button_validate()  
+
+# product.qty_available      # On Hand
+# product.incoming_qty       # Incoming
+# product.outgoing_qty       # Outgoing
+# product.virtual_available  # Forecasted
