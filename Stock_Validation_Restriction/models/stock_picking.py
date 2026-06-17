@@ -1,14 +1,46 @@
-from odoo import _, models
+from odoo import models, _
 from odoo.exceptions import UserError
+import logging
 
+_logger = logging.getLogger(__name__)
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    def button_validate(self):
+    def process_barcode_scan(self, barcode):
+        _logger.warning("METHOD CALLED => %s", barcode)
+        self.ensure_one()
 
+        product = self.env["product.product"].search(
+            [("barcode", "=", barcode)],
+            limit=1,
+        )
+
+        if not product:
+            raise UserError(_("Barcode not found."))
+
+        move = self.move_ids.filtered(
+            lambda m: m.product_id == product
+        )
+
+        if not move:
+            raise UserError(
+                _("Product not found in Delivery Order.")
+            )
+
+        move = move[0]
+
+        move.write({
+            "quantity": move.quantity + 1,
+        })
+
+        return {
+            "success": True,
+            "quantity": move.quantity,
+        }
+
+    def button_validate(self):
         # Purchase Receipt Logic
         if not self.env.context.get("skip_over_receipt_popup"):
-
             for picking in self.filtered(
                 lambda p: p.picking_type_id.code == "incoming"):
                 lines = []
@@ -42,13 +74,9 @@ class StockPicking(models.Model):
         for picking in self.filtered(
             lambda p: p.picking_type_id.code == "outgoing"
         ):
-
             product_totals = {}
-
             for move in picking.move_ids:
-
                 product = move.product_id
-
                 if product.id not in product_totals:
                     product_totals[product.id] = {
                         "product": product,
@@ -56,13 +84,10 @@ class StockPicking(models.Model):
                     }
 
                 product_totals[product.id]["qty"] += move.quantity
-
             for data in product_totals.values():
-
                 product = data["product"]
                 entered_qty = data["qty"]
                 available_qty = product.qty_available
-
                 if entered_qty > available_qty:
                     raise UserError(
                         _(
@@ -78,9 +103,4 @@ class StockPicking(models.Model):
                         )
                     )
 
-        return super().button_validate()  
-
-# product.qty_available      # On Hand
-# product.incoming_qty       # Incoming
-# product.outgoing_qty       # Outgoing
-# product.virtual_available  # Forecasted
+        return super().button_validate() 

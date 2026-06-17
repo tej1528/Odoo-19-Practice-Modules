@@ -5,12 +5,18 @@
     "summary": "Merge multiple order into one order",
     "author": "Tejash Ardeshna",
     "license": "LGPL-3",
-    "depends": [ "sale_management", "stock", "purchase", ],
+    "depends": [ "sale_management", "stock", "purchase",],
     "data": [
         "security/ir.model.access.csv",
-        "wizard/over_receipt_wizard.xml"
+        "wizard/over_receipt_wizard.xml",
+        
     ],
 
+    "assets": {
+        "web.assets_backend": [
+            "Stock_Validation_Restriction/static/src/js/barcode_scan.js",
+        ],
+    },
     "installable": True,
     "application": False,
     "auto_install": False,
