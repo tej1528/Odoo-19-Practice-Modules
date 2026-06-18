@@ -7,7 +7,6 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     def process_barcode_scan(self, barcode):
-        _logger.warning("METHOD CALLED => %s", barcode)
         self.ensure_one()
 
         product = self.env["product.product"].search(
@@ -28,9 +27,28 @@ class StockPicking(models.Model):
             )
 
         move = move[0]
+        new_qty = move.quantity + 1
+        
+        # Demand validation only for Delivery Orders
+        if self.picking_type_id.code == "outgoing":
+            available_qty = product.available_sale_qty
+            if new_qty > available_qty:
+                raise UserError(
+                    _(
+                        "Not enough stock available.\n\n"
+                        "Product: %s\n"
+                        "Available Quantity: %s\n"
+                        "Scanned Quantity: %s"
+                    )
+                    % (
+                        product.display_name,
+                        available_qty,
+                        new_qty,
+                    )
+                )
 
         move.write({
-            "quantity": move.quantity + 1,
+            "quantity": new_qty,
         })
 
         return {
@@ -87,7 +105,7 @@ class StockPicking(models.Model):
             for data in product_totals.values():
                 product = data["product"]
                 entered_qty = data["qty"]
-                available_qty = product.qty_available
+                available_qty = product.available_sale_qty
                 if entered_qty > available_qty:
                     raise UserError(
                         _(
