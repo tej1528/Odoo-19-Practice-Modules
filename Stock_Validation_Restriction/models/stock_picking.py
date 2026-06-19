@@ -1,51 +1,72 @@
-from odoo import models, _
+from odoo import _, models
 from odoo.exceptions import UserError
-import logging
 
-_logger = logging.getLogger(__name__)
+
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    def process_barcode_scan(self, barcode):
+    def _get_move_from_barcode(self, barcode):
         self.ensure_one()
-
         product = self.env["product.product"].search(
             [("barcode", "=", barcode)],
             limit=1,
         )
-
         if not product:
             raise UserError(_("Barcode not found."))
-
         move = self.move_ids.filtered(
             lambda m: m.product_id == product
-        )
-
+        )[:1]
         if not move:
             raise UserError(
-                _("Product not found in Delivery Order.")
+                _("Product not found in this Picking.")
             )
+        return product, move
 
-        move = move[0]
+    def process_barcode_scan(self, barcode):
+        self.ensure_one()
+
+        product, move = self._get_move_from_barcode(barcode)
+
         new_qty = move.quantity + 1
-        
-        # Demand validation only for Delivery Orders
+
+        # =====================================
+        # Delivery Order
+        # =====================================
         if self.picking_type_id.code == "outgoing":
-            available_qty = product.available_sale_qty
-            if new_qty > available_qty:
-                raise UserError(
-                    _(
-                        "Not enough stock available.\n\n"
-                        "Product: %s\n"
-                        "Available Quantity: %s\n"
-                        "Scanned Quantity: %s"
-                    )
-                    % (
-                        product.display_name,
-                        available_qty,
-                        new_qty,
-                    )
-                )
+
+            move.validate_outgoing_qty(new_qty)
+
+            move.write({
+                "quantity": new_qty,
+            })
+
+            return {
+                "success": True,
+                "quantity": move.quantity,
+            }
+
+        # =====================================
+        # Purchase Receipt
+        # =====================================
+        if self.picking_type_id.code == "incoming":
+
+            if new_qty > move.product_uom_qty:
+                return {
+                    "warning": True,
+                    "product": product.display_name,
+                    "ordered_qty": move.product_uom_qty,
+                    "current_qty": move.quantity,
+                    "new_qty": new_qty,
+                }
+
+            move.write({
+                "quantity": new_qty,
+            })
+
+            return {
+                "success": True,
+                "quantity": move.quantity,
+            }
 
         move.write({
             "quantity": new_qty,
@@ -56,17 +77,32 @@ class StockPicking(models.Model):
             "quantity": move.quantity,
         }
 
+    def force_barcode_scan(self, barcode):
+        self.ensure_one()
+        _, move = self._get_move_from_barcode(barcode)
+        move.write({
+            "quantity": move.quantity + 1,
+        })
+        return {
+            "success": True,
+            "quantity": move.quantity,
+        }
+
     def button_validate(self):
-        # Purchase Receipt Logic
+    # Purchase Receipt Validation
         if not self.env.context.get("skip_over_receipt_popup"):
             for picking in self.filtered(
-                lambda p: p.picking_type_id.code == "incoming"):
+                lambda p: p.picking_type_id.code == "incoming"
+            ):
+
                 lines = []
                 for move in picking.move_ids:
                     if move.quantity > move.product_uom_qty:
                         lines.append(
-                            _(
-                                "%s\nOrdered: %s\nReceived: %s"
+                            (
+                                "%s\n"
+                                "Ordered: %s\n"
+                                "Received: %s"
                             )
                             % (
                                 move.product_id.display_name,
@@ -88,37 +124,12 @@ class StockPicking(models.Model):
                         },
                     }
 
-        # Delivery Order Logic
+        # Delivery Validation
         for picking in self.filtered(
             lambda p: p.picking_type_id.code == "outgoing"
         ):
-            product_totals = {}
             for move in picking.move_ids:
-                product = move.product_id
-                if product.id not in product_totals:
-                    product_totals[product.id] = {
-                        "product": product,
-                        "qty": 0.0,
-                    }
-
-                product_totals[product.id]["qty"] += move.quantity
-            for data in product_totals.values():
-                product = data["product"]
-                entered_qty = data["qty"]
-                available_qty = product.available_sale_qty
-                if entered_qty > available_qty:
-                    raise UserError(
-                        _(
-                            "Not enough stock available.\n\n"
-                            "Product: %s\n"
-                            "On Hand Quantity: %s\n"
-                            "Entered Quantity: %s"
-                        )
-                        % (
-                            product.display_name,
-                            available_qty,
-                            entered_qty,
-                        )
-                    )
-
-        return super().button_validate() 
+                move.validate_outgoing_qty(
+                    move.quantity
+                )
+        return super().button_validate()

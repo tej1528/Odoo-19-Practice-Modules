@@ -11,10 +11,12 @@ patch(FormController.prototype, {
     setup() {
         super.setup(...arguments);
         this.orm = useService("orm");
+        this.notification = useService("notification");
         activeController = this;
         if (window.barcodeScannerInitialized) {
             return;
         }
+
         window.barcodeScannerInitialized = true;
         document.addEventListener(
             "keydown",
@@ -52,21 +54,57 @@ patch(FormController.prototype, {
                                 barcode,
                             ]
                         );
-                        console.log("RPC RESULT =>", result);
+                        // Purchase over receipt confirmation
+                        if (result.warning) {
+                            const confirmQty = confirm(
+                                `Ordered Qty: ${result.ordered_qty}
+Current Qty: ${result.current_qty}
+Entered Quantity: ${result.new_qty}
+Do you want to continue?`
+                            );
+                            if (confirmQty) {
+                                await controller.orm.call(
+                                    "stock.picking",
+                                    "force_barcode_scan",
+                                    [
+                                        [controller.props.resId],
+                                        barcode,
+                                    ]
+                                );
+                                if (
+                                    controller.model &&
+                                    controller.model.root
+                                ) {
+                                    await controller.model.root.load();
+                                }
+                            }
+                            return;
+                        }
                         if (
                             controller.model &&
                             controller.model.root
                         ) {
                             await controller.model.root.load();
                         }
-
                     } catch (error) {
-                        console.error("SCAN ERROR =>", error);
-                        const message =
+
+                        const rawMessage =
                             error?.data?.message ||
                             error?.message ||
                             "Barcode Scan Error";
-                        alert(message);
+
+                        const formattedMessage = rawMessage
+                            .replace(/\n/g, "<br/>");
+
+                        controller.notification.add(
+                            formattedMessage,
+                            {
+                                title: "Validation Error",
+                                type: "danger",
+                                sticky: true,
+                            }
+                        );
+
                     }
                     return;
                 }
@@ -81,6 +119,7 @@ patch(FormController.prototype, {
         if (activeController === this) {
             activeController = null;
         }
+
         super.destroy(...arguments);
     },
 });

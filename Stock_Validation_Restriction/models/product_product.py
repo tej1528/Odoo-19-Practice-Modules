@@ -10,21 +10,15 @@ class ProductProduct(models.Model):
     )
 
     def _compute_available_sale_qty(self):
+        StockMove = self.env["stock.move"]
 
         for product in self:
-
-            outgoing_moves = self.env["stock.move"].search([
-                ("product_id", "=", product.id),
-                ("state", "in", [
-                    "confirmed",
-                    "assigned",
-                    "waiting",
-                ]),
-                ("picking_type_id.code", "=", "outgoing"),
-            ])
-
             outgoing_qty = sum(
-                outgoing_moves.mapped("product_uom_qty")
+                StockMove.search([
+                    ("product_id", "=", product.id),
+                    ("state", "in", ["confirmed", "assigned", "waiting"]),
+                    ("picking_type_id.code", "=", "outgoing"),
+                ]).mapped("product_uom_qty")
             )
 
             product.available_sale_qty = (
