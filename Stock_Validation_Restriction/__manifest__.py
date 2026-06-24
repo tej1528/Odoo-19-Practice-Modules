@@ -15,6 +15,7 @@
     "assets": {
         "web.assets_backend": [
             "Stock_Validation_Restriction/static/src/js/barcode_scan.js",
+            "Stock_Validation_Restriction/static/src/scss/notification.scss",
         ],
     },
     "installable": True,

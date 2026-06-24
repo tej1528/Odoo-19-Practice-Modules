@@ -1,6 +1,8 @@
 from odoo import _, models
 from odoo.exceptions import UserError
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
@@ -27,29 +29,30 @@ class StockPicking(models.Model):
 
         product, move = self._get_move_from_barcode(barcode)
 
+        _logger.info(
+            "PICKING TYPE=%s",
+            self.picking_type_id.code,
+        )
+        
+        _logger.info(
+            "MOVE DATA=%s",
+            move.read([
+                "id",
+                "quantity",
+                "product_uom_qty",
+                "origin_returned_move_id",
+            ])
+        )
         new_qty = move.quantity + 1
 
         # =====================================
-        # Delivery Order
-        # =====================================
-        if self.picking_type_id.code == "outgoing":
-
-            move.validate_outgoing_qty(new_qty)
-
-            move.write({
-                "quantity": new_qty,
-            })
-
-            return {
-                "success": True,
-                "quantity": move.quantity,
-            }
-
-        # =====================================
-        # Purchase Receipt
+        # Purchase Receipt / Return
         # =====================================
         if self.picking_type_id.code == "incoming":
 
+            
+            
+            # Purchase Receipt Validation
             if new_qty > move.product_uom_qty:
                 return {
                     "warning": True,
@@ -123,13 +126,26 @@ class StockPicking(models.Model):
                             "default_message": "\n\n".join(lines),
                         },
                     }
-
-        # Delivery Validation
-        for picking in self.filtered(
-            lambda p: p.picking_type_id.code == "outgoing"
-        ):
-            for move in picking.move_ids:
-                move.validate_outgoing_qty(
-                    move.quantity
-                )
         return super().button_validate()
+
+    def process_return_barcode(self, barcode):
+        self.ensure_one()
+
+        _logger.info(
+            "RETURN BARCODE SCANNED => %s",
+            barcode,
+        )
+
+        product = self.env["product.product"].search(
+            [("barcode", "=", barcode)],
+            limit=1,
+        )
+
+        _logger.info(
+            "PRODUCT FOUND => %s",
+            product.display_name if product else "NOT FOUND"
+        )
+
+        return {
+            "success": True,
+        }
