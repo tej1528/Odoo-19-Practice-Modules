@@ -1,8 +1,8 @@
 {
     "name": "Stock Control",
     "version": "19.0.1.0.0",
-    "category": "Product Category",
-    "summary": "Merge multiple order into one order",
+    "category": "Inventory",
+    "summary": "Stock validation with barcode support",
     "author": "Tejash Ardeshna",
     "license": "LGPL-3",
     "depends": [ "sale_management", "stock", "purchase",],
