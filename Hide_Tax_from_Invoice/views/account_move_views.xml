@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ====================================================== -->
+    <!-- Invoice / Bill Form View                               -->
+    <!-- ====================================================== -->
+
+    <record id="view_move_form_hide_tax" model="ir.ui.view">
+        <field name="name">account.move.form.hide.tax</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+
+        <field name="arch" type="xml">
+
+            <!-- Make hide_tax available -->
+            <xpath expr="//sheet" position="inside">
+                <field name="hide_tax" invisible="1"/>
+            </xpath>
+
+            <!-- ====================================================== -->
+            <!-- Invoice Lines                                          -->
+            <!-- ====================================================== -->
+
+            <!-- Hide Taxes column -->
+            <xpath expr="//field[@name='invoice_line_ids']//field[@name='tax_ids']"
+                   position="attributes">
+                <attribute name="column_invisible">parent.hide_tax</attribute>
+            </xpath>
+
+            <!-- ====================================================== -->
+            <!-- Tax Totals                                             -->
+            <!-- ====================================================== -->
+
+            <!-- Hide Tax Totals Widget -->
+            <xpath expr="//field[@name='tax_totals']"
+                   position="attributes">
+                <attribute name="invisible">hide_tax</attribute>
+            </xpath>
+
+            <!-- ====================================================== -->
+            <!-- Journal Items                                          -->
+            <!-- ====================================================== -->
+
+            <!-- Hide Taxes column in Journal Items -->
+            <xpath expr="//field[@name='line_ids']//field[@name='tax_ids']"
+                   position="attributes">
+                <attribute name="column_invisible">parent.hide_tax</attribute>
+            </xpath>
+
+            <!-- Hide Tax Tags column in Journal Items -->
+            <xpath expr="//field[@name='line_ids']//field[@name='tax_tag_ids']"
+                   position="attributes">
+                <attribute name="column_invisible">parent.hide_tax</attribute>
+            </xpath>
+
+        </field>
+
+    </record>
+
+
+    <!-- ====================================================== -->
+    <!-- Customer Invoice List View                             -->
+    <!-- ====================================================== -->
+
+    <!-- <record id="view_invoice_tree_hide_tax" model="ir.ui.view">
+        <field name="name">account.invoice.tree.hide.tax</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+
+        <field name="arch" type="xml">
+
+             Hide Tax column 
+            <xpath expr="//field[@name='amount_tax_signed']"
+                position="attributes">
+                <attribute name="column_invisible">1</attribute>
+            </xpath>
+
+        </field>
+    </record> -->
+
+</odoo>
