@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_invoice_document_hide_tax"
+              inherit_id="account.report_invoice_document">
+
+        <!-- ===================================================== -->
+        <!-- Hide Tax Header                                       -->
+        <!-- ===================================================== -->
+
+        <xpath expr="//th[@name='th_taxes']"
+               position="attributes">
+            <attribute name="t-if">
+                display_taxes and not o.company_id.hide_tax
+            </attribute>
+        </xpath>
+
+        <!-- ===================================================== -->
+        <!-- Hide Tax Cell                                         -->
+        <!-- ===================================================== -->
+
+        <xpath expr="//td[@name='td_taxes']"
+               position="attributes">
+            <attribute name="t-if">
+                display_taxes and not o.company_id.hide_tax
+            </attribute>
+        </xpath>
+
+        <!-- ===================================================== -->
+        <!-- Hide Grouped Tax Cell                                 -->
+        <!-- ===================================================== -->
+
+        <xpath expr="//td[@name='td_taxes_grouped']"
+               position="attributes">
+            <attribute name="t-if">
+                display_taxes and not o.company_id.hide_tax
+            </attribute>
+        </xpath>
+
+    </template>
+
+    <template id="document_tax_totals_hide_tax"
+              inherit_id="account.document_tax_totals">
+
+        <xpath expr="//tr[contains(@class,'o_taxes')]"
+               position="attributes">
+            <attribute name="t-if">not o.company_id.hide_tax</attribute>
+        </xpath>
+
+    </template>
+
+</odoo>

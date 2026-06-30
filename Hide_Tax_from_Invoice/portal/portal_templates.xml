@@ -1,0 +1,24 @@
+<!-- <?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ====================================================== -->
+    <!-- Portal Invoice                                         -->
+
+    <template id="portal_invoice_hide_tax"
+              inherit_id="account.portal_invoice_page">
+
+        <!-- Hide Taxes column -->
+        <xpath expr="//th[contains(., 'Taxes')]"
+               position="attributes">
+            <attribute name="t-if">not o.company_id.hide_tax</attribute>
+        </xpath>
+
+        <!-- Hide Tax cells -->
+        <xpath expr="//td[contains(@class, 'text-end')]//span[@id='line_tax_ids']/.."
+               position="attributes">
+            <attribute name="t-if">not o.company_id.hide_tax</attribute>
+        </xpath>
+
+    </template>
+
+</odoo> -->

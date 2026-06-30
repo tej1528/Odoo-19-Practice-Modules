@@ -1,8 +1,5 @@
-from copy import deepcopy
 from lxml import etree
-
 from odoo import api, fields, models
-
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -24,7 +21,7 @@ class AccountMove(models.Model):
         if not self.env.company.hide_tax:
             return result
 
-        form_view = result["views"].get("form")
+        form_view = result.get("views", {}).get("form")
         if form_view:
             arch = etree.fromstring(form_view["arch"])
 
@@ -49,7 +46,7 @@ class AccountMove(models.Model):
                 encoding="unicode",
             )
 
-        list_view = result["views"].get("list")
+        list_view = result.get("views", {}).get("list")
         if list_view:
             arch = etree.fromstring(list_view["arch"])
 

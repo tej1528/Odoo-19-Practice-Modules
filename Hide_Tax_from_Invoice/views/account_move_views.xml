@@ -57,25 +57,4 @@
 
     </record>
 
-
-    <!-- ====================================================== -->
-    <!-- Customer Invoice List View                             -->
-    <!-- ====================================================== -->
-
-    <!-- <record id="view_invoice_tree_hide_tax" model="ir.ui.view">
-        <field name="name">account.invoice.tree.hide.tax</field>
-        <field name="model">account.move</field>
-        <field name="inherit_id" ref="account.view_invoice_tree"/>
-
-        <field name="arch" type="xml">
-
-             Hide Tax column 
-            <xpath expr="//field[@name='amount_tax_signed']"
-                position="attributes">
-                <attribute name="column_invisible">1</attribute>
-            </xpath>
-
-        </field>
-    </record> -->
-
 </odoo>
