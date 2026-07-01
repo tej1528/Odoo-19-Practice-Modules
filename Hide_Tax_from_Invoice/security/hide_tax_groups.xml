@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_hide_tax" model="res.groups">
+        <field name="name">Hide Taxes</field>
+    </record>
+</odoo>
