@@ -23,9 +23,9 @@
     ],
     "assets": {
         "web.assets_backend": [
-            "Hide_Tax_from_Invoice/static/src/js/tax_totals_patch.js",
-            "Hide_Tax_from_Invoice/static/src/js/account_move_list_renderer_patch.js",
-        ],
+        # 'Hide_Tax_from_Invoice/static/src/xml/tax_totals.xml',
+        'Hide_Tax_from_Invoice/static/src/js/tax_totals_patch.js',  
+                    ],
     },
     "installable": True,
     "application": False,

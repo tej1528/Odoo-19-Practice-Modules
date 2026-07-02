@@ -4,66 +4,26 @@
     <template id="report_invoice_hide_tax"
               inherit_id="account.report_invoice_document">
 
-        <!-- Hide Taxes column -->
+        <!-- Hide Taxes column header -->
         <xpath expr="//th[@name='th_taxes']" position="attributes">
-            <attribute name="t-if">display_taxes and not o.hide_tax</attribute>
-        </xpath>
-
-         <!-- Hide Taxes value  -->
-        <xpath expr="//td[@name='td_taxes']" position="attributes">
-            <attribute name="t-if">display_taxes and not o.hide_tax</attribute>
-        </xpath> 
-
-        <!-- Hide Grouped Taxes -->
-        <!-- <xpath expr="//td[@name='td_taxes_grouped']" position="attributes">
             <attribute name="t-if">
-                display_taxes and not o.hide_tax and
-                (grouped_line['display_type'] == 'product' or grouped_line.get('taxes'))
+                display_taxes and not request.env.user.has_group('Hide_Tax_from_Invoice.group_hide_tax')
             </attribute>
-        </xpath> -->
-
-        <!-- Remove tax rows from totals -->
-        <!-- <xpath expr="//t[@t-call='account.document_tax_totals']"
-               position="before">
-            <t t-if="o.hide_tax">
-                <t t-set="tax_totals"
-                   t-value="dict(o.tax_totals, subtotals=[])"/>
-            </t>
-        </xpath> -->
-
-       
-<xpath expr="//table[@name='invoice_line_table']/thead//th[last()-1]" position="attributes">
-    <attribute name="groups">Hide_Tax_from_Invoice.group_hide_tax</attribute>
-    </xpath>
-    <xpath expr="//table[@name='invoice_line_table']/tbody//t[@name='account_invoice_line_accountable']/td[last()-1]" position="attributes">
-    <attribute name="groups">Hide_Tax_from_Invoice.group_hide_tax</attribute>
-</xpath>
-
-
-    </template>
-
-
-    <template id="document_tax_totals_hide_tax"
-              inherit_id="account.document_tax_totals_template">
-
-        <xpath expr="//t[@t-as='tax_group']"
-               position="attributes">
-            <attribute name="t-if">not o.hide_tax</attribute>
         </xpath>
 
+        <!-- Hide Taxes column value -->
+        <xpath expr="//td[@name='td_taxes']" position="attributes">
+            <attribute name="t-if">
+                display_taxes and not request.env.user.has_group('Hide_Tax_from_Invoice.group_hide_tax')
+            </attribute>
+        </xpath>
+    </template>
+
+    <template id="document_tax_totals_hide_tax" inherit_id="account.document_tax_totals_template">
         <xpath expr="//t[@t-as='tax_group']" position="attributes">
-            <attribute name="groups">invoice_hide_taxes.group_customer_invoice_show_tax</attribute>
+            <attribute name="t-if">
+                not request.env.user.has_group('Hide_Tax_from_Invoice.group_hide_tax')
+            </attribute>
         </xpath>
     </template>
-
-    <!-- <template id="document_tax_totals_company_currency_template"
-              inherit_id="account.document_tax_totals_company_currency_template">
-
-        <xpath expr="//t[@t-as='tax_group']"
-               position="attributes">
-            <attribute name="t-if">not o.hide_tax</attribute>
-        </xpath>
-
-    </template> -->
-
 </odoo>
