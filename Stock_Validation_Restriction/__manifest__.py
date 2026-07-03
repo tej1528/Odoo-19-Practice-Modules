@@ -9,9 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "wizard/over_receipt_wizard.xml",
-        
     ],
-
     "assets": {
         "web.assets_backend": [
             "Stock_Validation_Restriction/static/src/js/barcode_scan.js",

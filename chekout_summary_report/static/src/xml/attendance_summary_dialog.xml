@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="chekout_summary_report.AttendanceSummaryDialog">
+        <Dialog title.translate="Today&apos;s Summary">
+            <div class="o_attendance_summary p-3">
+                <div class="mb-3">
+                    <h4 t-esc="props.summary.employee"/>
+                </div>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td><strong>Check In</strong></td>
+                        <td t-esc="props.summary.check_in"/>
+                    </tr>
+                    <tr>
+                        <td><strong>Check Out</strong></td>
+                        <td t-esc="props.summary.check_out"/>
+                    </tr>
+                    <tr>
+                        <td><strong>Worked Time</strong></td>
+                        <td t-esc="props.summary.worked_time"/>
+                    </tr>
+                </table>
+                <hr/>
+                <h5>Today's Activities</h5>
+                <t t-if="props.summary.activities.length">
+                    <div class="o_today_activity_list">
+                        <t t-foreach="props.summary.activities"
+                        t-as="activity"
+                        t-key="activity.id">
+                            <div class="border rounded p-2 mb-2">
+                                <strong t-esc="activity.description"/>
+                                <br/>
+                                <small>
+                                    <strong>Project :</strong>
+                                    <t t-esc="activity.project"/>
+                                </small>
+                                <br/>
+                                <small>
+                                    <strong>Task :</strong>
+                                    <t t-esc="activity.task"/>
+                                </small>
+                                <br/>
+                                <small>
+                                    <strong>Hours :</strong>
+                                    <t t-esc="activity.hours"/>
+                                </small>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-secondary text-center mb-3">
+                        No activities logged today.
+                    </div>
+                </t>
+                <hr/>
+                <h5>Tomorrow</h5>
+                <div class="alert alert-info">
+                    <span t-esc="props.summary.tomorrow.message"/>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button
+                    class="btn btn-secondary"
+                    t-on-click="props.close">
+                    Cancel
+                </button>
+                <button
+                    class="btn btn-warning"
+                    t-on-click="checkout">
+                    Check Out
+                </button>
+            </t>
+        </Dialog>
+    </t>
+</templates>
