@@ -1,74 +1,149 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-
     <t t-name="chekout_summary_report.AttendanceSummaryDialog">
-        <Dialog title.translate="Today&apos;s Summary">
+        <Dialog title.translate="Today's Summary">
             <div class="o_attendance_summary p-3">
-                <div class="mb-3">
-                    <h4 t-esc="props.summary.employee"/>
+                <!-- Greeting -->
+                <div class="mb-4">
+                    <h4 class="fw-bold mb-2">
+                        Hello, <span t-esc="props.summary.employee"/>
+                    </h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted">Worked Time :</span>
+                        <strong class="fs-5" t-esc="props.summary.worked_time"/>
+                    </div>
                 </div>
-                <table class="table table-sm table-borderless">
-                    <tr>
-                        <td><strong>Check In</strong></td>
-                        <td t-esc="props.summary.check_in"/>
-                    </tr>
-                    <tr>
-                        <td><strong>Check Out</strong></td>
-                        <td t-esc="props.summary.check_out"/>
-                    </tr>
-                    <tr>
-                        <td><strong>Worked Time</strong></td>
-                        <td t-esc="props.summary.worked_time"/>
-                    </tr>
-                </table>
-                <hr/>
-                <h5>Today's Activities</h5>
-                <t t-if="props.summary.activities.length">
-                    <div class="o_today_activity_list">
+                <!-- Attendance -->
+                <div class="border rounded p-3 mb-4">
+                    <div class="border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-primary mb-0">
+                            <i class="fa fa-clock-o me-2"/>
+                            Today's Attendance
+                        </h6>
+                    </div>
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Worked</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="props.summary.attendance_sessions"
+                               t-as="session"
+                               t-key="session.check_in">
+                                <tr>
+                                    <td t-esc="session.check_in"/>
+                                    <td t-esc="session.check_out or '-'"/>
+                                    <td>
+                                        <strong t-esc="session.worked"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Timesheet -->
+                <div class="border rounded p-3 mb-4">
+                    <div class="border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-primary mb-0">
+                            <i class="fa fa-list-alt me-2"/>
+                            Today's Timesheet
+                        </h6>
+                    </div>
+                    <t t-if="props.summary.activities.length">
                         <t t-foreach="props.summary.activities"
                         t-as="activity"
                         t-key="activity.id">
-                            <div class="border rounded p-2 mb-2">
-                                <strong t-esc="activity.description"/>
-                                <br/>
-                                <small>
-                                    <strong>Project :</strong>
-                                    <t t-esc="activity.project"/>
-                                </small>
-                                <br/>
-                                <small>
-                                    <strong>Task :</strong>
-                                    <t t-esc="activity.task"/>
-                                </small>
-                                <br/>
-                                <small>
-                                    <strong>Hours :</strong>
-                                    <t t-esc="activity.hours"/>
-                                </small>
+                            <div class="mb-3">
+                                <!-- Description -->
+                                <div class="d-flex align-items-start mb-3">
+                                <strong style="margin-right:6px;">
+                                    Description :
+                                </strong>
+                                <div style="flex:1;
+                                            white-space:normal;
+                                            word-break:break-word;
+                                            overflow-wrap:anywhere;"
+                                    t-esc="activity.description"/>
+                            </div>
+                                <!-- Details -->
+                                <div class="row">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">
+                                            Project
+                                        </small>
+                                        <strong t-esc="activity.project"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">
+                                            Task
+                                        </small>
+                                        <strong t-esc="activity.task"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">
+                                            Hours
+                                        </small>
+                                        <strong t-esc="activity.hours"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr t-if="!activity_last"/>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="alert alert-secondary text-center mb-0">
+                            No activities logged today.
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Tomorrow -->
+                <div class="border rounded p-3">
+                    <div class="border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-primary mb-0">
+                            <i class="fa fa-calendar me-2"/>
+                            Tomorrow
+                        </h6>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <!-- If Leave Exists -->
+                        <t t-if="props.summary.tomorrow.leaves.length">
+                            <t t-foreach="props.summary.tomorrow.leaves"
+                            t-as="leave"
+                            t-key="leave.type + leave.period">
+                                <div class="mb-3">
+                                    <div>
+                                        <strong>Leave : </strong>
+                                        <span t-esc="leave.type"/>
+                                    </div>
+                                    <div>
+                                        <strong>Leave Period : </strong>
+                                        <span t-esc="leave.period"/>
+                                    </div>
+                                </div>
+                                <hr t-if="!leave_last"/>
+                            </t>
+                            <div class="mt-3">
+                                <span t-esc="props.summary.tomorrow.good_message"/>
                             </div>
                         </t>
+
+                        <t t-else="">
+                            <div class="fw-bold"
+                                t-esc="props.summary.tomorrow.message"/>
+                            <div class="mt-2"
+                                t-esc="props.summary.tomorrow.good_message"/>
+                        </t>
                     </div>
-                </t>
-                <t t-else="">
-                    <div class="alert alert-secondary text-center mb-3">
-                        No activities logged today.
-                    </div>
-                </t>
-                <hr/>
-                <h5>Tomorrow</h5>
-                <div class="alert alert-info">
-                    <span t-esc="props.summary.tomorrow.message"/>
                 </div>
             </div>
             <t t-set-slot="footer">
-                <button
-                    class="btn btn-secondary"
-                    t-on-click="props.close">
-                    Cancel
-                </button>
-                <button
-                    class="btn btn-warning"
-                    t-on-click="checkout">
+                <button class="btn btn-secondary" t-on-click="props.close"> Cancel </button>
+                <button class="btn btn-warning" t-on-click="checkout">
                     Check Out
                 </button>
             </t>

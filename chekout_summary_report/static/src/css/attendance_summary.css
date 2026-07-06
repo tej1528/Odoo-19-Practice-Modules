@@ -1,0 +1,17 @@
+.o_attendance_summary .border,
+.o_attendance_summary .alert,
+.o_attendance_summary table,
+.o_attendance_summary td,
+.o_attendance_summary th,
+.o_attendance_summary strong,
+.o_attendance_summary div,
+.o_attendance_summary small,
+.o_attendance_summary span {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.o_attendance_summary .border {
+    overflow: hidden;
+}

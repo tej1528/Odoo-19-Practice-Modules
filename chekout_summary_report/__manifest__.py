@@ -10,6 +10,7 @@
     ],
     "assets": {
     "web.assets_backend": [
+        "chekout_summary_report/static/src/css/attendance_summary.css",
         "chekout_summary_report/static/src/js/attendance_summary_dialog.js",
         "chekout_summary_report/static/src/js/systray_patch.js",
         "chekout_summary_report/static/src/xml/attendance_summary_dialog.xml",
