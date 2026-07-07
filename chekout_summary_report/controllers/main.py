@@ -126,8 +126,7 @@ class AttendanceSummaryController(http.Controller):
                     employee.resource_calendar_id.id,
                 ),
             ],
-            limit=1,
-        )
+            limit=1,)
 
         if leave_list:
             tomorrow_summary = {

@@ -17,6 +17,7 @@ patch(ActivityMenu.prototype, {
             summary,
             onCheckout: async () => {
                 await this.checking();
+                await this.loadEmployeeAttendanceData?.();
             },
         });
     },
