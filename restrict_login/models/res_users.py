@@ -11,7 +11,6 @@ class ResUsers(models.Model):
 
     @api.model
     def _clear_expired_sessions(self):
-        """ ક્રોન જોબ દ્વારા ૩૦ મિનિટથી ઇન-એક્ટિવ યુઝર્સના ટોકન ક્લીયર કરવા માટે """
         limit_time = fields.Datetime.now() - timedelta(minutes=30)
         users = self.search([
             ("active_session_token", "!=", False),

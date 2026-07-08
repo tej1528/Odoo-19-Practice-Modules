@@ -17,9 +17,7 @@ class ResConfigSettings(models.TransientModel):
         
         if self.restrict_multiple_login and request and request.session.uid:
             user = self.env.user.sudo()
-            
             new_token = str(uuid.uuid4())
-
             user.write({
                 "active_session_token": new_token,
                 "last_activity": fields.Datetime.now(),

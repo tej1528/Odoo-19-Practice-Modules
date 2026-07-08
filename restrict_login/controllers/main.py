@@ -59,7 +59,6 @@ class RestrictLoginHome(Home):
             user = request.env["res.users"].sudo().search([("login", "=", login)], limit=1)
             force_login_checked = bool(request.params.get("force_login"))
 
-            # ૧. બ્લોક ટાઈમ ચેક
             if user and settings["restrict_login_attempts"] and user.login_blocked_until:
                 now = fields.Datetime.now()
                 if user.login_blocked_until > now:
@@ -67,13 +66,14 @@ class RestrictLoginHome(Home):
                     values.update({
                         "login_blocked": True,
                         "remaining_seconds": remaining_seconds,
-                        "error": False,
+                        "error": False, 
                     })
                     return request.render("web.login", values)
                 
                 user.write({"failed_login_attempts": 0, "login_blocked_until": False})
+                if "login_blocked" in values:
+                    del values["login_blocked"]
 
-            # ૨. મલ્ટીપલ લોગીન રિસ્ટ્રિક્શન (એક્ટિવ સેશન ચેક)
             limit_time = fields.Datetime.now() - timedelta(minutes=30)
             if (
                 user 
@@ -87,7 +87,6 @@ class RestrictLoginHome(Home):
                 values["error"] = _("You are already logged in on another browser.")
                 return request.render("web.login", values)
 
-            # ૩. ઓથેન્ટિકેશન પ્રોસેસ
             try:
                 auth_info = request.session.authenticate(request.env, credential)
                 request.params["login_success"] = True
@@ -96,7 +95,6 @@ class RestrictLoginHome(Home):
                 if settings["restrict_login_attempts"]:
                     current_user.write({"failed_login_attempts": 0, "login_blocked_until": False})
 
-                # સેશન ટોકન મેનેજમેન્ટ (છેલ્લે લોગીન કરનાર બ્રાઉઝર સેફ રહેશે)
                 if settings["restrict_multiple_login"]:
                     if force_login_checked or not current_user.active_session_token:
                         token = str(uuid.uuid4())
