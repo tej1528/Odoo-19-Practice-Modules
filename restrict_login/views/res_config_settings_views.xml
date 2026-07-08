@@ -7,28 +7,34 @@
         <field name="name">res.config.settings.restrict.login</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
-
         <field name="arch" type="xml">
-
             <xpath expr="//app[@name='general_settings']"
                    position="inside">
-
+                   
                 <block title="Login Security">
-
-                    <setting string="Restrict Multiple Login">
-                        <field name="restrict_multiple_login"/>
-                    </setting>
-
-                    <setting string="Force New Login" invisible="not restrict_multiple_login">
-                        <field name="force_new_login"/>
-                    </setting>
-
-                </block>
-
+                <setting string="Restrict Multiple Login">
+                    <field name="restrict_multiple_login"/>
+                </setting>
+                <setting string="Force New Login"
+                        invisible="not restrict_multiple_login">
+                    <field name="force_new_login"/>
+                </setting>
+                <setting string="Restrict Login Attempts">
+                    <field name="restrict_login_attempts"/>
+                </setting>
+                <setting invisible="not restrict_login_attempts">
+                    <label for="login_attempts"/>
+                    <field name="login_attempts"/>
+                </setting>
+                <setting invisible="not restrict_login_attempts">
+                    <label for="block_time"/>
+                    <div class="o_row">
+                        <field name="block_time"/>
+                        <field name="block_time_unit"/>
+                    </div>
+                </setting>
+            </block>
             </xpath>
-
         </field>
-
     </record>
-
 </odoo>
