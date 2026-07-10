@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-
     <t t-name="website_size_chart.ProductPageOption"
        t-inherit="website_sale.ProductPageOption"
        t-inherit-mode="extension">
-
-        <xpath expr="//BuilderRow[@id='o_we_actions_opt']"
-               position="after">
-
+        <xpath expr="//BuilderRow[@label.translate='Reviews']" position="after">
             <BuilderRow label.translate="Size Chart">
                 <BuilderCheckbox
                     action="'websiteConfig'"
                     actionParam="{ views: ['website_size_chart.website_sale_product_size_chart'] }"/>
             </BuilderRow>
-
         </xpath>
-
     </t>
-
 </templates>

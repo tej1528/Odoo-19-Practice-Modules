@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="website_sale_product_size_chart" inherit_id="website_sale.product" name="Website Product Size Chart" customize_show="True" active="True">
+        
+        <xpath expr="//div[contains(@t-attf-class,'o_wsale_product_details_content_section_attributes')]" position="after">
+            <t t-if="product.size_chart_id">
+                <div class="o_wsale_product_details_content_section mb-3 o_wsale_size_chart">
+                    <a href="#"
+                       class="text-decoration-none"
+                       data-bs-toggle="modal"
+                       data-bs-target="#sizeChartModal">
+                        <i class="fa fa-ruler me-1"/> Size Chart
+                    </a>
+                </div>
+            </t>
+        </xpath>
+
+        <xpath expr="//section[@id='product_detail']" position="inside">
+            <t t-if="product.size_chart_id">
+                <div class="modal fade" id="sizeChartModal" tabindex="-1" aria-labelledby="sizeChartModalLabel" aria-hidden="true" style="z-index: 99999 !important;">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="sizeChartModalLabel">
+                                    <t t-esc="product.size_chart_id.name"/>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+                            </div>
+                            <div class="modal-body">
+                                <t t-out="product.size_chart_id.description"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>
