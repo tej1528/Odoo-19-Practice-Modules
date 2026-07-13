@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 from odoo import api, fields, models
+
 
 class ResUsers(models.Model):
     _inherit = "res.users"
@@ -11,12 +13,19 @@ class ResUsers(models.Model):
 
     @api.model
     def _clear_expired_sessions(self):
-        limit_time = fields.Datetime.now() - timedelta(minutes=30)
+        company = self.env.company
+        timeout = company.session_timeout or 30
+        limit = fields.Datetime.now() - timedelta(minutes=timeout)
+
         users = self.search([
             ("active_session_token", "!=", False),
             "|",
             ("last_activity", "=", False),
-            ("last_activity", "<", limit_time),
+            ("last_activity", "<", limit),
         ])
+
         if users:
-            users.write({"active_session_token": False, "last_activity": False})
+            users.sudo().write({
+                "active_session_token": False,
+                "last_activity": False,
+            })

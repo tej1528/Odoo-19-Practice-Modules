@@ -2,7 +2,6 @@
 <odoo>
     <template id="restrict_login_checkbox" inherit_id="web.login">
         <xpath expr="//button[@type='submit']" position="before">
-            
             <t t-if="show_force_login_checkbox">
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" id="force_login" name="force_login"/>
@@ -11,7 +10,6 @@
                     </label>
                 </div>
             </t>
-
             <t t-if="login_blocked">
                 <input type="hidden" id="remaining_seconds" t-att-value="remaining_seconds"/>
                 <div class="alert alert-danger mt-2">
@@ -19,7 +17,6 @@
                     <span id="countdown_timer"><t t-esc="remaining_seconds"/> second(s)</span>
                 </div>
             </t>
-
         </xpath>
     </template>
 </odoo>
