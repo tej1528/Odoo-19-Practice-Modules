@@ -1,0 +1,51 @@
+.o_task_state_widget {
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+div.o_state_container {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+
+.custom-status-btn {
+    padding: 6px 16px !important;
+    height: 32px !important;
+    line-height: 1 !important;
+
+    .status-btn-icon {
+        font-size: 14px !important;
+    }
+
+    .status-btn-text {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+    }
+}
+
+.dropdown-status-icon {
+    font-size: 14px !important;
+}
+
+.dropdown-status-text {
+    font-size: 14px !important;
+}
+
+.status-icon-wrapper {
+    width: 18px;
+    height: 18px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid currentColor;
+}
+
+.status-icon-wrapper i {
+    font-size: 10px;
+    line-height: 1;
+}

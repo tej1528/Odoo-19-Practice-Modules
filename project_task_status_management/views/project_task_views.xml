@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="project_task_form_status" model="ir.ui.view">
+        <field name="name">project.task.form.status</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[contains(@class,'o_state_container')]/field[@name='state']" position="replace">
+                <field
+                    name="status_id"
+                    widget="status_selection"
+                    class="o_task_state_widget"
+                    options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

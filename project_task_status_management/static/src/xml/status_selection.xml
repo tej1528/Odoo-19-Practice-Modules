@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="project_task_status_management.StatusSelection">
+        <div class="dropdown d-inline-block align-middle">
+
+            <!-- Status Button -->
+            <button
+                type="button"
+                class="btn border-0 d-inline-flex align-items-center gap-2 rounded-pill shadow-none text-nowrap custom-status-btn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                t-att-style="state.currentStatus ? ('background-color:' + bgColorMap(state.currentStatus.icon_color)) : 'background-color:#f1f2f4;'">
+                <t t-if="state.currentStatus">
+                    <!-- Circle Icon -->
+                    <span
+                        class="status-icon-wrapper"
+                        t-att-style="'color:' + colorMap(state.currentStatus.icon_color)">
+                        <i t-attf-class="fa {{ iconMap(state.currentStatus.icon) }}" />
+                    </span>
+                    <span
+                        t-esc="state.currentStatus.name"
+                        class="fw-bold text-nowrap status-btn-text"
+                        t-att-style="'color:' + colorMap(state.currentStatus.icon_color)"
+                    />
+                </t>
+                <t t-else="">
+                    <span class="text-muted fw-bold">
+                        Select Status
+                    </span>
+                </t>
+                <i class="fa fa-caret-down text-muted small ms-1"/>
+            </button>
+
+            <!-- Dropdown -->
+            <ul class="dropdown-menu border-0 shadow-sm rounded-3 mt-1 py-1">
+                <t
+                    t-foreach="state.statuses"
+                    t-as="status"
+                    t-key="status.id">
+                    <li>
+                        <a
+                            href="#"
+                            class="dropdown-item d-flex align-items-center py-2 px-3"
+                            t-att-data-id="status.id"
+                            t-on-click.prevent="selectStatus">
+
+                            <!-- Selected Tick -->
+                            <t t-if="state.currentStatus and state.currentStatus.id == status.id">
+                                <i class="fa fa-check text-primary me-2"/>
+                            </t>
+
+                            <t t-else="">
+                                <span style="width:14px;" class="me-2"></span>
+                            </t>
+
+                            <!-- Circle -->
+                            <span
+                                class="status-icon-wrapper me-2"
+                                t-att-style="'color:' + colorMap(status.icon_color)">
+                                <i
+                                    t-attf-class="fa {{ iconMap(status.icon) }}"
+                                />
+                            </span>
+
+                            <!-- Status Name -->
+                            <span
+                                t-esc="status.name"
+                                class="fw-semibold"
+                                t-att-style="'color:' + colorMap(status.icon_color)"
+                            />
+                        </a>
+                    </li>
+                </t>
+            </ul>
+        </div>
+    </t>
+</templates>

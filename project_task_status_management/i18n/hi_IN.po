@@ -1,0 +1,44 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#   * project_task_status_management
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: hi_IN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: project_task_status_management
+#: model:ir.model.fields,field_description:project_task_status_management.field_project_task_type__allowed_next_stage_ids
+msgid "Allowed Next Stages"
+msgstr "अनुमत अगले चरण"
+
+#. module: project_task_status_management
+#: model:ir.model.fields,field_description:project_task_status_management.field_project_task_type__allow_manager_bypass
+msgid "Ignore Workflow"
+msgstr "प्रोजेक्ट मैनेजर बायपास की अनुमति दें"
+
+#. module: project_task_status_management
+#: model:ir.model.fields,help:project_task_status_management.field_project_task_type__allow_manager_bypass
+msgid "If enabled, Project Managers can move tasks from this stage to any stage."
+msgstr "यदि सक्षम है, तो प्रोजेक्ट मैनेजर इस चरण से किसी भी चरण में कार्य ले जा सकते हैं।"
+
+#. module: project_task_status_management
+#. odoo-python
+#: code:addons/project_task_status_management/models/project_task.py:0
+#: code:addons/project_task_status_management/models/test.py:0
+#, python-format
+msgid "You cannot move the task from '%s' to '%s'."
+msgstr "आप कार्य को '%s' चरण से '%s' चरण में नहीं ले जा सकते।"
+
+#. module: project_task_status_management
+#: code:addons/project_task_status_management/models/project_task_type.py:0
+msgid "Stage cannot be selected as its own next stage."
+msgstr "किसी चरण को उसके स्वयं के अगले चरण के रूप में नहीं चुना जा सकता।"
+
+#. module: project_task_status_management
+#: model:ir.model.fields,help:project_task_status_management.field_project_task_type__allowed_next_stage_ids
+msgid "Select the stages that users can move to from this stage."
+msgstr "इस चरण से उपयोगकर्ता किन चरणों में जा सकते हैं, उन्हें चुनें।"
