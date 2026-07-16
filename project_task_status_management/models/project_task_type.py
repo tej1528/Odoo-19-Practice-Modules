@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from odoo import _, api, fields, models
+
+from odoo import _, api, fields, models, Command
 from odoo.exceptions import ValidationError
+
 
 class ProjectTaskType(models.Model):
     _inherit = "project.task.type"
@@ -30,9 +32,23 @@ class ProjectTaskType(models.Model):
     allow_manager_bypass = fields.Boolean(
         string="Ignore Workflow",
         default=False,
-        help="If enabled, Project Managers can move tasks from this stage to any stage."
+        help="If enabled, Project Managers can move tasks from this stage to any stage.",
     )
-    
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        stages = super().create(vals_list)
+
+        statuses = self.env["project.task.status"].search([], order="sequence")
+
+        if statuses:
+            for stage in stages:
+                stage.write({
+                    "allowed_status_ids": [Command.set(statuses.ids)]
+                })
+
+        return stages
+
     @api.constrains("allowed_next_stage_ids")
     def _check_same_stage(self):
         for stage in self:

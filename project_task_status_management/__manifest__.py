@@ -10,6 +10,7 @@
     ],
     "data": [
         "security/ir.model.access.csv",
+        'data/project_task_status_data.xml',
         "views/project_task_status_views.xml",
         "views/project_task_type_views.xml",
         "views/project_task_views.xml",
