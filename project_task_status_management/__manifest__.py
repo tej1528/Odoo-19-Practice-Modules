@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 {
     "name": "Project Task Status Management",
     "version": "19.0.1.0.0",
@@ -10,7 +11,7 @@
     ],
     "data": [
         "security/ir.model.access.csv",
-        'data/project_task_status_data.xml',
+        "data/project_task_status_data.xml",
         "views/project_task_status_views.xml",
         "views/project_task_type_views.xml",
         "views/project_task_views.xml",

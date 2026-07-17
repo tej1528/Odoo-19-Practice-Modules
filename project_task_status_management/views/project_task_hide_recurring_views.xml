@@ -1,33 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
     <record id="view_project_task_hide_recurring" model="ir.ui.view">
         <field name="name">project.task.form.hide.recurring</field>
         <field name="model">project.task</field>
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
-
-            <!-- Hide Recurring Smart Button -->
             <xpath expr="//button[@name='action_recurring_tasks']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-
-            <!-- Hide Repeat Icon -->
             <xpath expr="//field[@name='recurring_task']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-
-            <!-- Hide 'Repeat Every' Label -->
             <xpath expr="//label[@for='repeat_interval']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-
-            <!-- Hide Repeat Configuration -->
             <xpath expr="//div[@name='repeat_intervals']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-
         </field>
     </record>
-
 </odoo>

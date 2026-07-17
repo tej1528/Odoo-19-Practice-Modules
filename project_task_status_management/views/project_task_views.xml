@@ -6,11 +6,8 @@
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
             <xpath expr="//div[contains(@class,'o_state_container')]/field[@name='state']" position="replace">
-                <field
-                    name="status_id"
-                    widget="status_selection"
-                    class="o_task_state_widget"
-                    options="{'no_create': True}"/>
+                <field name="stage_id" invisible="1"/>
+                <field name="status_id" widget="status_selection" class="o_task_state_widget" options="{'no_create': True}"/>
             </xpath>
         </field>
     </record>

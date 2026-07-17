@@ -6,15 +6,11 @@
         <field name="inherit_id" ref="project.task_type_edit"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='project_ids']" position="after">
-                <field name="allowed_next_stage_ids"
-                       widget="many2many_tags"
-                       options="{'no_create': True, 'no_create_edit': True}"/>
+                <field name="allowed_next_stage_ids" widget="many2many_tags" options="{'no_create': True, 'no_create_edit': True}"/>
                 <field name="allow_manager_bypass"/>
-                <field name="allowed_status_ids"
-                       widget="many2many_tags"
-                       options="{'no_create': True, 'no_create_edit': True}"/>
+                <field name="allowed_status_ids" widget="many2many_tags" options="{'no_create': True, 'no_create_edit': True}"/>
                 <field name="default_user_id"/>
             </xpath>
         </field>
     </record>
-</odoo> 
+</odoo>
