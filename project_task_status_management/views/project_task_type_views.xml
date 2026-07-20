@@ -13,4 +13,14 @@
             </xpath>
         </field>
     </record>
+    <record id="view_project_task_type_form_inherit_approval" model="ir.ui.view">
+        <field name="name">project.task.type.form.inherit.approval</field>
+        <field name="model">project.task.type</field>
+        <field name="inherit_id" ref="project.task_type_edit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='default_user_id']" position="after">
+                <field name="approved_user_id"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>

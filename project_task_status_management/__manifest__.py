@@ -6,16 +6,18 @@
     "summary": "Manage project task stage transitions and custom statuses",
     "author": "Tejash Ardeshna",
     "license": "LGPL-3",
-    "depends": [
-        "project",
-    ],
+    "depends": ["project","mail",],
     "data": [
         "security/ir.model.access.csv",
         "data/project_task_status_data.xml",
+        "data/mail_template_data.xml",
+        "wizard/project_task_reject_wizard_views.xml",
+        # "data/sequence.xml",
         "views/project_task_status_views.xml",
         "views/project_task_type_views.xml",
         "views/project_task_views.xml",
         "views/project_task_hide_recurring_views.xml",
+        # "views/project_task_approval_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

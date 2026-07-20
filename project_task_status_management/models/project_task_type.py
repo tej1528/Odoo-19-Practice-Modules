@@ -2,6 +2,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+
 class ProjectTaskType(models.Model):
     _inherit = "project.task.type"
 
@@ -32,7 +33,13 @@ class ProjectTaskType(models.Model):
         default=False,
         help="If enabled, Project Managers can move tasks from this stage to any stage."
     )
-    
+
+    approved_user_id = fields.Many2one(
+        comodel_name="res.users",
+        string="Approval Manager",
+        help="Manager required to approve before moving task out of this stage.",
+    )
+
     @api.constrains("allowed_next_stage_ids")
     def _check_same_stage(self):
         for stage in self:
