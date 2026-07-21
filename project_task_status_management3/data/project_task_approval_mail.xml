@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Template for Task Approval Request -->
+        <record id="email_template_task_approval_request" model="mail.template">
+            <field name="name">Task: Approval Request</field>
+            <field name="model_id" ref="project.model_project_task"/>
+            <field name="subject">Approval Request: {{ object.name }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; font-size:14px;">
+                    <p>Hello,</p>
+                    <p>
+                        <strong><t t-out="object.approval_requested_by.name"/></strong>
+                        has requested approval for the following task.
+                    </p>
+                    <ul>
+                        <li><strong>Task:</strong> <t t-out="object.name"/></li>
+                        <li><strong>Project:</strong> <t t-out="object.project_id.name or 'N/A'"/></li>
+                        <li><strong>Current Stage:</strong> <t t-out="object.stage_id.name"/></li>
+                    </ul>
+                    <br/>
+                    <div style="margin: 16px 0px 16px 0px;">
+                        <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                           style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            View Task
+                        </a>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <!-- Template for Task Approved -->
+        <record id="email_template_task_approved" model="mail.template">
+            <field name="name">Task: Approval Accepted</field>
+            <field name="model_id" ref="project.model_project_task"/>
+            <field name="subject">Task Approved: {{ object.name }}</field>
+            <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.approval_requested_by.email }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello <strong><t t-out="object.approval_requested_by.name"/></strong>,
+                        <br/><br/>
+                        Your approval request for the following task has been <strong>Approved</strong> by <t t-out="object.approved_by.name"/>.
+                        <br/><br/>
+                        <ul>
+                            <li><strong>Task:</strong> <t t-out="object.name"/></li>
+                            <li><strong>Project:</strong> <t t-out="object.project_id.name or 'N/A'"/></li>
+                        </ul>
+                        <br/>
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                               style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                View Task
+                            </a>
+                        </div>
+                        <br/>
+                        Thank you.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Template for Task Rejected -->
+        <record id="email_template_task_rejected" model="mail.template">
+            <field name="name">Task: Approval Rejected</field>
+            <field name="model_id" ref="project.model_project_task"/>
+            <field name="subject">Task Rejected: {{ object.name }}</field>
+            <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.approval_requested_by.email }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello <strong><t t-out="object.approval_requested_by.name"/></strong>,
+                        <br/><br/>
+                        Unfortunately, your approval request for the task has been <strong>Rejected</strong> by <t t-out="object.approved_by.name"/>.
+                        <br/><br/>
+                        <strong>Rejection Reason:</strong>
+                        <br/>
+                        <span style="color: red;"><t t-out="object.rejection_reason"/></span>
+                        <br/><br/>
+                        <ul>
+                            <li><strong>Task:</strong> <t t-out="object.name"/></li>
+                            <li><strong>Project:</strong> <t t-out="object.project_id.name or 'N/A'"/></li>
+                        </ul>
+                        <br/>
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                               style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                View Task
+                            </a>
+                        </div>
+                        <br/>
+                        Please review and make necessary changes.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>

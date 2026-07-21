@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo >
+    <record id="project.project_stage_0" model="project.task.type">
+        <field name="allowed_status_ids"
+               eval="[(6, 0, [
+                    ref('project_task_status_management.task_status_in_process'),
+                    ref('project_task_status_management.task_status_approved'),
+                    ref('project_task_status_management.task_status_change_requested'),
+                    ref('project_task_status_management.task_status_done'),
+                    ref('project_task_status_management.task_status_cancel'),
+               ])]"/>
+    </record>
+
+    <record id="project.project_stage_1" model="project.task.type">
+        <field name="allowed_status_ids"
+               eval="[(6, 0, [
+                    ref('project_task_status_management.task_status_in_process'),
+                    ref('project_task_status_management.task_status_approved'),
+                    ref('project_task_status_management.task_status_change_requested'),
+                    ref('project_task_status_management.task_status_done'),
+                    ref('project_task_status_management.task_status_cancel'),
+               ])]"/>
+    </record>
+
+    <record id="project.project_stage_2" model="project.task.type">
+        <field name="allowed_status_ids"
+               eval="[(6, 0, [
+                    ref('project_task_status_management.task_status_in_process'),
+                    ref('project_task_status_management.task_status_approved'),
+                    ref('project_task_status_management.task_status_change_requested'),
+                    ref('project_task_status_management.task_status_done'),
+                    ref('project_task_status_management.task_status_cancel'),
+               ])]"/>
+    </record>
+
+    <record id="project.project_stage_3" model="project.task.type">
+        <field name="allowed_status_ids"
+               eval="[(6, 0, [
+                    ref('project_task_status_management.task_status_in_process'),
+                    ref('project_task_status_management.task_status_approved'),
+                    ref('project_task_status_management.task_status_change_requested'),
+                    ref('project_task_status_management.task_status_done'),
+                    ref('project_task_status_management.task_status_cancel'),
+               ])]"/>
+    </record>
+</odoo>

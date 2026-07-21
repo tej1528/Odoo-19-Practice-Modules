@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="project_task_form_status" model="ir.ui.view">
+        <field name="name">project.task.form.status</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[contains(@class,'o_state_container')]/field[@name='state']" position="replace">
+                <field name="stage_id" invisible="1"/>
+                <field name="status_id"
+                       widget="status_selection"
+                       class="o_task_state_widget"
+                       options="{'no_create': True}"/>
+            </xpath>
+
+            <!-- Hidden Approval Fields for view computation -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Approval" invisible="1">
+                    <field name="approval_required"/>
+                    <field name="approval_state"/>
+                    <field name="approval_requested_by"/>
+                    <field name="approved_by"/>
+                    <field name="rejection_reason"/>
+                    <field name="can_approve"/>
+                </group>
+            </xpath>
+
+            <xpath expr="//header" position="inside">
+                <!-- Request for Approval Button (Only visible when required and not pending/approved) -->
+                <button name="action_request_for_approval"
+                        type="object"
+                        string="Request For Approval"
+                        class="btn btn-primary"
+                        invisible="not approval_required or approval_state in ('pending', 'approved')"/>
+                
+                <!-- Approve Button -->
+                <button name="action_approve_task"
+                        string="Approve"
+                        type="object"
+                        class="btn btn-success"
+                        invisible="approval_state != 'pending' or not approval_required or not can_approve"/>
+
+                <!-- Reject Button -->
+                <button name="action_open_reject_wizard"
+                        string="Reject"
+                        type="object"
+                        class="btn btn-danger"
+                        invisible="approval_state != 'pending' or not approval_required or not can_approve"/>
+            </xpath>
+            
+        </field>
+    </record>
+</odoo>

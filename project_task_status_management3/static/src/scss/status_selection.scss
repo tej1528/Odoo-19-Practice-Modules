@@ -1,0 +1,91 @@
+.o_task_state_widget {
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    vertical-align: middle !important;
+}
+
+div.o_state_container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+}
+
+.custom_state_selection_container {
+    display: inline-block !important;
+    position: relative !important;
+    vertical-align: middle !important;
+}
+
+.custom_status_bubble {
+    border: 1px solid var(--status-color) !important;
+    background-color: transparent !important;
+    color: var(--status-color) !important;
+    border-radius: 50rem !important;
+    padding: 3px 12px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+    box-shadow: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+
+    &:hover {
+        background-color: var(--status-color) !important;
+        color: #FFFFFF !important;
+        /* વાઇબ્રન્ટ લુક માટે હોવર અક્ષરો વ્હાઇટ */
+        border-color: var(--status-color) !important;
+    }
+
+    .status-btn-text {
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.03em !important;
+        line-height: 1 !important;
+    }
+}
+
+.dropdown-status-text {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+}
+
+.status-icon-wrapper {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid currentColor;
+
+    i {
+        font-size: 8px;
+        line-height: 1;
+    }
+}
+
+.dropdown-menu {
+    border-radius: 8px !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    min-width: 180px;
+
+    .dropdown-divider {
+        margin: 4px 0 !important;
+        opacity: 1;
+        border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .dropdown-item {
+        transition: background-color 0.1s ease;
+
+        &:hover {
+            background-color: #f8f9fa !important;
+        }
+    }
+}
