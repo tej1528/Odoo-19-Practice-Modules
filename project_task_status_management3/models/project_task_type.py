@@ -59,7 +59,7 @@ class ProjectTaskType(models.Model):
 
         return {
             "domain": {
-                "approval_manager_ids": [("id", "in", group.users.ids)]
+                "approval_manager_ids": [("id", "in", group.user_ids.ids)]
             }
         }
     @api.constrains("allowed_next_stage_ids")

@@ -113,7 +113,7 @@ class ProjectTask(models.Model):
             }
             for s in statuses
         ]
-    
+
     def write(self, vals):
         if "stage_id" in vals:
             new_stage = self.env["project.task.type"].browse(vals["stage_id"])
@@ -171,14 +171,13 @@ class ProjectTask(models.Model):
         if self.approval_state == "pending":
             raise UserError(_("Approval request is already pending for this task."))
 
-        # 1. Update State
+        # Update Approval State
         self.write({
             "approval_state": "pending",
             "approval_requested_by": self.env.user.id,
             "rejection_reason": False,
         })
 
-        # 2. Email & Chatter Message
         template = self.env.ref(
             "project_task_status_management3.email_template_task_approval_request",
             raise_if_not_found=False,
@@ -187,32 +186,43 @@ class ProjectTask(models.Model):
         if template:
             base_url = self.get_base_url()
 
-            # Chatter માં Blue Bubble બતાવવા comment Type વાપરીએ છીએ પણ Auto Notification બંધ રાખ્યું છે
-            body_chatter = template.with_context(base_url=base_url, hide_button=True)._render_field('body_html', self.ids)[self.id]
-            
+            # 1. Chatter Entry (No Followers notified)
+            body_chatter = template.with_context(
+                base_url=base_url,
+                hide_button=True,
+            )._render_field("body_html", self.ids)[self.id]
+
             self.with_context(
-                mail_notify_author=False, 
-                no_email_notification=True,
-                mail_post_autofollow=False
+                mail_notify_author=False,
+                mail_post_autofollow=False,
+                mail_create_nosubscribe=True,
+                mail_auto_subscribe_no_notify=True,
             ).message_post(
                 body=body_chatter,
                 message_type="comment",
-                subtype_xmlid="mail.mt_comment", # આનાથી સેકન્ડ પિક્ચર જેવો બ્લુ લુક આવશે
+                subtype_xmlid="mail.mt_comment",
+                partner_ids=[], 
             )
 
-            # send manager mail
-            for manager in self.stage_id.approval_manager_ids.filtered(lambda u: u.email):
-                template.with_context(base_url=base_url, hide_button=False).send_mail(
+            # 2. Extract Manager Emails in Python
+            managers = self.stage_id.approval_manager_ids.filtered(lambda u: u.email)
+            email_to_list = ",".join(managers.mapped("email"))
+
+            # 3. Send direct email ONLY to managers
+            if email_to_list:
+                template.with_context(
+                    base_url=base_url,
+                    hide_button=False,
+                ).send_mail(
                     self.id,
                     force_send=True,
                     email_values={
-                        "email_to": manager.email.strip(),
-                        "res_id": self.id,
-                        "model": "project.task",
+                        "email_to": email_to_list,
+                        "recipient_ids": [],
+                        "partner_ids": [],
                     },
                 )
 
-        # 3. Display Toast Message & Soft Reload
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -240,7 +250,7 @@ class ProjectTask(models.Model):
         current_stage = self.stage_id
         target_stage = False
 
-        # 1. Find the allowed next stages
+        # Find allowed next stages
         allowed_stages = current_stage.allowed_next_stage_ids.sorted("sequence")
 
         if not allowed_stages:
@@ -259,7 +269,7 @@ class ProjectTask(models.Model):
             else:
                 target_stage = allowed_stages[0]
 
-        # 2. Update Status and Approval State.
+        # Update Status and Approval State
         write_values = {
             "approval_state": "approved",
             "approved_by": self.env.user.id,
@@ -271,8 +281,9 @@ class ProjectTask(models.Model):
 
         self.write(write_values)
 
-        # 3. Chatter msg & Email Notification
-        if self.approval_requested_by and self.approval_requested_by.email:
+        # Chatter msg & Email Notification back to Requester
+        requester_email = self.approval_requested_by.email
+        if requester_email:
             template = self.env.ref(
                 "project_task_status_management3.email_template_task_approved",
                 raise_if_not_found=False,
@@ -280,11 +291,13 @@ class ProjectTask(models.Model):
             if template:
                 base_url = self.get_base_url()
                 
-                # Chatter meg without btn
-                body_chatter = template.with_context(base_url=base_url, hide_button=True)._render_field('body_html', self.ids)[self.id]
+                # Chatter msg without btn
+                body_chatter = template.with_context(
+                    base_url=base_url, hide_button=True
+                )._render_field("body_html", self.ids)[self.id]
+
                 self.with_context(
-                    mail_notify_author=False, 
-                    no_email_notification=True,
+                    mail_notify_author=False,
                     mail_post_autofollow=False
                 ).message_post(
                     body=body_chatter,
@@ -292,18 +305,21 @@ class ProjectTask(models.Model):
                     subtype_xmlid="mail.mt_comment",
                 )
 
-                # mail send with btn
-                template.with_context(base_url=base_url, hide_button=False).send_mail(
+                # Send mail strictly to Requester
+                template.with_context(
+                    base_url=base_url,
+                    hide_button=False,
+                ).send_mail(
                     self.id,
                     force_send=True,
                     email_values={
-                        "email_to": self.approval_requested_by.email.strip(),
-                        "res_id": self.id,
-                        "model": "project.task",
+                        "email_to": requester_email, # Direct email setting
+                        "partner_ids": [],
+                        "recipient_ids": [],
                     },
                 )
 
-        # 4. Client Response (Toast + Soft Reload)
+        # Client Response
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

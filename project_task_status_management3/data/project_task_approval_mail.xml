@@ -7,6 +7,7 @@
             <field name="name">Task: Approval Request</field>
             <field name="model_id" ref="project.model_project_task"/>
             <field name="subject">Approval Request: {{ object.name }}</field>
+            <field name="email_from">{{ user.email_formatted }}</field>
             <field name="body_html" type="html">
                 <div style="font-family: Arial, sans-serif; font-size:14px;">
                     <p>Hello,</p>
@@ -20,7 +21,6 @@
                         <li><strong>Current Stage:</strong> <t t-out="object.stage_id.name"/></li>
                     </ul>
                     <br/>
-                    <!-- બટન Chatter માં ન દેખાય તે માટે t-if મુકેલ છે -->
                     <t t-if="not ctx.get('hide_button')">
                         <div style="margin: 16px 0px 16px 0px;">
                             <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
@@ -39,7 +39,6 @@
             <field name="model_id" ref="project.model_project_task"/>
             <field name="subject">Task Approved: {{ object.name }}</field>
             <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
-            <field name="email_to">{{ object.approval_requested_by.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
@@ -73,7 +72,6 @@
             <field name="model_id" ref="project.model_project_task"/>
             <field name="subject">Task Rejected: {{ object.name }}</field>
             <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
-            <field name="email_to">{{ object.approval_requested_by.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">

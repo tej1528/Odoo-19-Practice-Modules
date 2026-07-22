@@ -38,7 +38,7 @@ class TaskRejectWizard(models.TransientModel):
             "rejection_reason": self.reason,
         })
 
-        # 2. Render Template and Post Chatter Msg (Button વગર) & Send Mail (Button સાથે)
+        # 2. Render Template and Post Chatter Msg (Button ) & Send Mail (Button )
         if task.approval_requested_by and task.approval_requested_by.email:
             template = self.env.ref(
                 "project_task_status_management3.email_template_task_rejected",
@@ -47,19 +47,23 @@ class TaskRejectWizard(models.TransientModel):
             if template:
                 base_url = task.get_base_url()
                 
-                # Chatter માં આખો મેઈલ બટન વગર પોસ્ટ થશે
+                # Chatter without btn
                 body_chatter = template.with_context(
                     base_url=base_url, 
                     hide_button=True
                 )._render_field('body_html', task.ids)[task.id]
 
-                task.message_post(
+                task.with_context(
+                    mail_notify_author=False,
+                    mail_post_autofollow=False
+                ).message_post(
                     body=body_chatter,
                     message_type="comment",
-                    subtype_xmlid="mail.mt_comment",
+                    subtype_xmlid="mail.mt_note",
+                    partner_ids=[],
                 )
                 
-                # ઈમેઈલ બટન સાથે Send થશે
+                # mail btn 
                 template.with_context(
                     base_url=base_url, 
                     hide_button=False
