@@ -20,12 +20,15 @@
                         <li><strong>Current Stage:</strong> <t t-out="object.stage_id.name"/></li>
                     </ul>
                     <br/>
-                    <div style="margin: 16px 0px 16px 0px;">
-                        <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
-                           style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
-                            View Task
-                        </a>
-                    </div>
+                    <!-- બટન Chatter માં ન દેખાય તે માટે t-if મુકેલ છે -->
+                    <t t-if="not ctx.get('hide_button')">
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                               style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                View Task
+                            </a>
+                        </div>
+                    </t>
                 </div>
             </field>
         </record>
@@ -49,12 +52,14 @@
                             <li><strong>Project:</strong> <t t-out="object.project_id.name or 'N/A'"/></li>
                         </ul>
                         <br/>
-                        <div style="margin: 16px 0px 16px 0px;">
-                            <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
-                               style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
-                                View Task
-                            </a>
-                        </div>
+                        <t t-if="not ctx.get('hide_button')">
+                            <div style="margin: 16px 0px 16px 0px;">
+                                <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                                   style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                    View Task
+                                </a>
+                            </div>
+                        </t>
                         <br/>
                         Thank you.
                     </p>
@@ -85,12 +90,14 @@
                             <li><strong>Project:</strong> <t t-out="object.project_id.name or 'N/A'"/></li>
                         </ul>
                         <br/>
-                        <div style="margin: 16px 0px 16px 0px;">
-                            <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
-                               style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
-                                View Task
-                            </a>
-                        </div>
+                        <t t-if="not ctx.get('hide_button')">
+                            <div style="margin: 16px 0px 16px 0px;">
+                                <a t-att-href="ctx.get('base_url', '') + '/web#id=' + str(object.id) + '&amp;model=project.task&amp;view_type=form'"
+                                   style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #ffffff; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                    View Task
+                                </a>
+                            </div>
+                        </t>
                         <br/>
                         Please review and make necessary changes.
                     </p>

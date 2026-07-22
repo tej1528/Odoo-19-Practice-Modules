@@ -178,35 +178,41 @@ class ProjectTask(models.Model):
             "rejection_reason": False,
         })
 
-        # 2. Chatter msg
-        self.message_post(
-            body=_("Approval requested by %s. Status updated to Pending.") % self.env.user.name,
-            message_type="notification",
-            subtype_xmlid="mail.mt_note",
-        )
-
-        # 3. Direct Email Notification to Managers
+        # 2. Email & Chatter Message
         template = self.env.ref(
             "project_task_status_management3.email_template_task_approval_request",
             raise_if_not_found=False,
         )
 
         if template:
-            # Base URL 
             base_url = self.get_base_url()
+
+            # Chatter માં Blue Bubble બતાવવા comment Type વાપરીએ છીએ પણ Auto Notification બંધ રાખ્યું છે
+            body_chatter = template.with_context(base_url=base_url, hide_button=True)._render_field('body_html', self.ids)[self.id]
             
+            self.with_context(
+                mail_notify_author=False, 
+                no_email_notification=True,
+                mail_post_autofollow=False
+            ).message_post(
+                body=body_chatter,
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment", # આનાથી સેકન્ડ પિક્ચર જેવો બ્લુ લુક આવશે
+            )
+
+            # send manager mail
             for manager in self.stage_id.approval_manager_ids.filtered(lambda u: u.email):
-                template.with_context(base_url=base_url).send_mail(
+                template.with_context(base_url=base_url, hide_button=False).send_mail(
                     self.id,
                     force_send=True,
                     email_values={
                         "email_to": manager.email.strip(),
-                        "res_id": 0,  
-                        "model": False,
+                        "res_id": self.id,
+                        "model": "project.task",
                     },
                 )
 
-        # 4. Display Toast Message & Soft Reload
+        # 3. Display Toast Message & Soft Reload
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -234,10 +240,9 @@ class ProjectTask(models.Model):
         current_stage = self.stage_id
         target_stage = False
 
-        # 1. Find the allowed next stages from the current stage.
+        # 1. Find the allowed next stages
         allowed_stages = current_stage.allowed_next_stage_ids.sorted("sequence")
 
-        # If specific 'Allowed Next Stages' are not set, find all subsequent stages according to the sequence.
         if not allowed_stages:
             allowed_stages = self.env["project.task.type"].search([
                 ("id", "!=", current_stage.id),
@@ -252,7 +257,6 @@ class ProjectTask(models.Model):
             if in_progress_stage:
                 target_stage = in_progress_stage[0]
             else:
-                # If 'In Progress' is not found, select the very first stage according to the flow.
                 target_stage = allowed_stages[0]
 
         # 2. Update Status and Approval State.
@@ -267,37 +271,39 @@ class ProjectTask(models.Model):
 
         self.write(write_values)
 
-        # 3. Chatter msg
-        self.message_post(
-            body=_("Task request APPROVED by Manager: %s. Task moved to stage '%s'.") % (
-                self.env.user.name,
-                self.stage_id.name
-            ),
-            message_type="notification",
-            subtype_xmlid="mail.mt_note",
-        )
-
-        # 4. Email Notification
+        # 3. Chatter msg & Email Notification
         if self.approval_requested_by and self.approval_requested_by.email:
             template = self.env.ref(
                 "project_task_status_management3.email_template_task_approved",
                 raise_if_not_found=False,
             )
             if template:
-                # Base URL 
                 base_url = self.get_base_url()
                 
-                template.with_context(base_url=base_url).send_mail(
+                # Chatter meg without btn
+                body_chatter = template.with_context(base_url=base_url, hide_button=True)._render_field('body_html', self.ids)[self.id]
+                self.with_context(
+                    mail_notify_author=False, 
+                    no_email_notification=True,
+                    mail_post_autofollow=False
+                ).message_post(
+                    body=body_chatter,
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment",
+                )
+
+                # mail send with btn
+                template.with_context(base_url=base_url, hide_button=False).send_mail(
                     self.id,
                     force_send=True,
                     email_values={
                         "email_to": self.approval_requested_by.email.strip(),
-                        "res_id": 0,
-                        "model": False,
+                        "res_id": self.id,
+                        "model": "project.task",
                     },
                 )
 
-        # 5. Client Response (Toast + Soft Reload)
+        # 4. Client Response (Toast + Soft Reload)
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

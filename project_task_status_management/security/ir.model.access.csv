@@ -1,4 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_project_task_status,project.task.status,model_project_task_status,,1,1,1,1
-access_project_task_approval_user,project.task.approval.user,model_project_task_approval,base.group_user,1,1,1,1
-access_project_task_reject_wizard,project.task.reject.wizard,model_project_task_reject_wizard,base.group_user,1,1,1,1

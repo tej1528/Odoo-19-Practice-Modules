@@ -38,38 +38,42 @@ class TaskRejectWizard(models.TransientModel):
             "rejection_reason": self.reason,
         })
 
-        # 2. Chatter Entry 
-        task.message_post(
-            body=_(
-                "Task REJECTED\n"
-                "Rejected By: %s\n"
-                "Reason: %s"
-            ) % (
-                self.env.user.name,
-                self.reason,
-            ),
-            message_type="notification", # Change type to notification
-            subtype_xmlid="mail.mt_note", # Change subtype to mt_note so no automatic email is sent!
-        )
-
-        # 3. Send Single Email Template to Requester
+        # 2. Render Template and Post Chatter Msg (Button વગર) & Send Mail (Button સાથે)
         if task.approval_requested_by and task.approval_requested_by.email:
             template = self.env.ref(
                 "project_task_status_management3.email_template_task_rejected",
                 raise_if_not_found=False,
             )
             if template:
-                template.send_mail(
+                base_url = task.get_base_url()
+                
+                # Chatter માં આખો મેઈલ બટન વગર પોસ્ટ થશે
+                body_chatter = template.with_context(
+                    base_url=base_url, 
+                    hide_button=True
+                )._render_field('body_html', task.ids)[task.id]
+
+                task.message_post(
+                    body=body_chatter,
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment",
+                )
+                
+                # ઈમેઈલ બટન સાથે Send થશે
+                template.with_context(
+                    base_url=base_url, 
+                    hide_button=False
+                ).send_mail(
                     task.id,
                     force_send=True,
                     email_values={
                         "email_to": task.approval_requested_by.email.strip(),
-                        "res_id": 0,  # Chatter સાથે link નહિ થાય
-                        "model": False,
+                        "res_id": task.id,
+                        "model": "project.task",
                     },
                 )
 
-        # 4. Fast close wizard and soft reload main form view
+        # 3. Fast close wizard and soft reload main form view
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

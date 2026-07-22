@@ -48,6 +48,20 @@ class ProjectTaskType(models.Model):
         required=True,
     )
     
+    @api.onchange("approval_manager_ids")
+    def _onchange_approval_manager_ids(self):
+        group = self.env.ref(
+            "project_task_status_management3.group_project_approval_manager",
+            raise_if_not_found=False,
+        )
+        if not group:
+            return
+
+        return {
+            "domain": {
+                "approval_manager_ids": [("id", "in", group.users.ids)]
+            }
+        }
     @api.constrains("allowed_next_stage_ids")
     def _check_same_stage(self):
         for stage in self:

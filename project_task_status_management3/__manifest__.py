@@ -10,9 +10,11 @@
         "project",
     ],
     "data": [
+        "security/security.xml",
         "security/ir.model.access.csv",
         "data/project_task_status_data.xml",
-        'data/project_task_approval_mail.xml',
+        "data/project_task_stage_status_data.xml",
+        "data/project_task_approval_mail.xml",
         "wizard/task_reject_wizard_views.xml",
         "views/project_task_status_views.xml",
         "views/project_task_type_views.xml",
