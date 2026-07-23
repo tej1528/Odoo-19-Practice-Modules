@@ -171,7 +171,6 @@ class ProjectTask(models.Model):
         if self.approval_state == "pending":
             raise UserError(_("Approval request is already pending for this task."))
 
-        # Update Approval State
         self.write({
             "approval_state": "pending",
             "approval_requested_by": self.env.user.id,
@@ -184,44 +183,19 @@ class ProjectTask(models.Model):
         )
 
         if template:
-            base_url = self.get_base_url()
-
-            # 1. Chatter Entry (No Followers notified)
-            body_chatter = template.with_context(
-                base_url=base_url,
-                hide_button=True,
-            )._render_field("body_html", self.ids)[self.id]
+            partner_ids = self.stage_id.approval_manager_ids.mapped("partner_id").ids
 
             self.with_context(
-                mail_notify_author=False,
-                mail_post_autofollow=False,
-                mail_create_nosubscribe=True,
-                mail_auto_subscribe_no_notify=True,
-            ).message_post(
-                body=body_chatter,
-                message_type="comment",
+                approval_request_only_managers=True,
+            ).message_post_with_source(
+                source_ref=template,
+                render_values={
+                    "base_url": self.get_base_url(),
+                    "hide_button": False,
+                },
                 subtype_xmlid="mail.mt_comment",
-                partner_ids=[], 
+                partner_ids=partner_ids,
             )
-
-            # 2. Extract Manager Emails in Python
-            managers = self.stage_id.approval_manager_ids.filtered(lambda u: u.email)
-            email_to_list = ",".join(managers.mapped("email"))
-
-            # 3. Send direct email ONLY to managers
-            if email_to_list:
-                template.with_context(
-                    base_url=base_url,
-                    hide_button=False,
-                ).send_mail(
-                    self.id,
-                    force_send=True,
-                    email_values={
-                        "email_to": email_to_list,
-                        "recipient_ids": [],
-                        "partner_ids": [],
-                    },
-                )
 
         return {
             "type": "ir.actions.client",
@@ -248,78 +222,45 @@ class ProjectTask(models.Model):
             raise UserError(_("This task is not waiting for approval."))
 
         current_stage = self.stage_id
-        target_stage = False
+        target_stage = current_stage.allowed_next_stage_ids.sorted("sequence")[:1]
 
-        # Find allowed next stages
-        allowed_stages = current_stage.allowed_next_stage_ids.sorted("sequence")
-
-        if not allowed_stages:
-            allowed_stages = self.env["project.task.type"].search([
+        if not target_stage:
+            target_stage = self.env["project.task.type"].search([
                 ("id", "!=", current_stage.id),
-                ("sequence", ">=", current_stage.sequence)
-            ], order="sequence asc")
+                ("sequence", ">=", current_stage.sequence),
+            ], order="sequence", limit=1)
 
-        if allowed_stages:
-            in_progress_stage = allowed_stages.filtered(
-                lambda s: "in progress" in (s.name or "").lower() or "progress" in (s.name or "").lower()
-            )
-            
-            if in_progress_stage:
-                target_stage = in_progress_stage[0]
-            else:
-                target_stage = allowed_stages[0]
-
-        # Update Status and Approval State
-        write_values = {
+        vals = {
             "approval_state": "approved",
             "approved_by": self.env.user.id,
             "rejection_reason": False,
         }
 
         if target_stage:
-            write_values["stage_id"] = target_stage.id
+            vals["stage_id"] = target_stage.id
 
-        self.write(write_values)
+        self.write(vals)
 
-        # Chatter msg & Email Notification back to Requester
-        requester_email = self.approval_requested_by.email
-        if requester_email:
-            template = self.env.ref(
-                "project_task_status_management3.email_template_task_approved",
-                raise_if_not_found=False,
+        template = self.env.ref(
+            "project_task_status_management3.email_template_task_approved",
+            raise_if_not_found=False,
+        )
+
+        if template and self.approval_requested_by.partner_id:
+            partner_ids = [self.approval_requested_by.partner_id.id]
+
+            self.with_context(
+                approval_request_only_managers=True,
+            ).message_post_with_source(
+                source_ref=template,
+                render_values={
+                    "base_url": self.get_base_url(),
+                    "hide_button": False,
+                },
+                subtype_xmlid="mail.mt_comment",
+                partner_ids=partner_ids,
             )
-            if template:
-                base_url = self.get_base_url()
-                
-                # Chatter msg without btn
-                body_chatter = template.with_context(
-                    base_url=base_url, hide_button=True
-                )._render_field("body_html", self.ids)[self.id]
 
-                self.with_context(
-                    mail_notify_author=False,
-                    mail_post_autofollow=False
-                ).message_post(
-                    body=body_chatter,
-                    message_type="comment",
-                    subtype_xmlid="mail.mt_comment",
-                )
-
-                # Send mail strictly to Requester
-                template.with_context(
-                    base_url=base_url,
-                    hide_button=False,
-                ).send_mail(
-                    self.id,
-                    force_send=True,
-                    email_values={
-                        "email_to": requester_email, # Direct email setting
-                        "partner_ids": [],
-                        "recipient_ids": [],
-                    },
-                )
-
-        # Client Response
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -334,7 +275,7 @@ class ProjectTask(models.Model):
                 },
             },
         }
-
+    
     def action_open_reject_wizard(self):
         self.ensure_one()
 
@@ -353,7 +294,6 @@ class ProjectTask(models.Model):
                 "project_task_status_management3.view_task_reject_wizard_form"
             ).id,
             "target": "new",
-            "res_id": False,
             "context": {
                 "default_task_id": self.id,
             },
