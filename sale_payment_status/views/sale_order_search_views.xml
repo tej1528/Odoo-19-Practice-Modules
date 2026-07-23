@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_sale_order_filter_payment_status"
+        model="ir.ui.view">
+
+    <field name="name">sale.order.search.payment.status</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+
+    <field name="arch" type="xml">
+
+        <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+
+            <separator/>
+
+            <filter name="filter_no_invoice"
+                    string="No Invoice"
+                    domain="[('payment_status','=','no_invoice')]"/>
+
+            <filter name="filter_not_paid"
+                    string="Not Paid"
+                    domain="[('payment_status','=','not_paid')]"/>
+
+            <filter name="filter_partial_paid"
+                    string="Partial Paid"
+                    domain="[('payment_status','=','partial_paid')]"/>
+
+            <filter name="filter_overdue"
+                    string="Overdue"
+                    domain="[('payment_status','=','overdue')]"/>
+
+            <filter name="filter_fully_paid"
+                    string="Fully Paid"
+                    domain="[('payment_status','=','fully_paid')]"/>
+
+        </xpath>
+
+    </field>
+
+</record>
+</odoo>

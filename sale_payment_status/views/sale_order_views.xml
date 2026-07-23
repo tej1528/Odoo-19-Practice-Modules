@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===========================================================
+         Sale Order Form View
+    ============================================================ -->
+    <record id="view_sale_order_form_payment_status" model="ir.ui.view">
+        <field name="name">sale.order.form.payment.status</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+
+                <field name="payment_status"
+                       widget="badge"
+                       readonly="1"/>
+
+                <field name="amount_due"
+                       widget="monetary"
+                       options="{'currency_field': 'currency_id'}"
+                       readonly="1"/>
+
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ===========================================================
+         Sale Order List View
+    ============================================================ -->
+    <record id="view_sale_order_list_payment_status" model="ir.ui.view">
+        <field name="name">sale.order.list.payment.status</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="payment_status"
+                       optional="show"/>
+                <field name="amount_due"
+                       optional="show"/>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
