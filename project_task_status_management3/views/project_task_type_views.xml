@@ -16,11 +16,11 @@
                        options="{'no_create': True, 'no_create_edit': True}"/>
                 <field name="default_user_id"/>
                 <field name="approval_required"/>
+                <field name="approval_manager_domain_ids" invisible="1"/>
+
                 <field name="approval_manager_ids"
-                        widget="many2many_tags"
-                        context="{'approval_manager_only': True}"
-                        options="{'no_create': True}"
-                        invisible="not approval_required"/>
+                    widget="many2many_tags"
+                    domain="[('id', 'in', approval_manager_domain_ids)]"/>
             </xpath>
         </field>
     </record>

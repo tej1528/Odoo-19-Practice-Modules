@@ -40,28 +40,31 @@ class ProjectTaskType(models.Model):
 )
 
     approval_manager_ids = fields.Many2many(
-        "res.users",
-        "project_task_stage_approval_user_rel",
-        "stage_id",
-        "user_id",
-        string="Approval Managers",
-        required=True,
-    )
+    "res.users",
+    "project_task_stage_approval_user_rel",
+    "stage_id",
+    "user_id",
+    string="Approval Managers",
+    required=True,
+)
     
-    @api.onchange("approval_manager_ids")
-    def _onchange_approval_manager_ids(self):
+    approval_manager_domain_ids = fields.Many2many(
+        "res.users",
+        compute="_compute_approval_manager_domain_ids",
+    )
+
+    @api.depends()
+    def _compute_approval_manager_domain_ids(self):
         group = self.env.ref(
             "project_task_status_management3.group_project_approval_manager",
             raise_if_not_found=False,
         )
-        if not group:
-            return
 
-        return {
-            "domain": {
-                "approval_manager_ids": [("id", "in", group.user_ids.ids)]
-            }
-        }
+        users = group.user_ids if group else self.env["res.users"]
+
+        for rec in self:
+            rec.approval_manager_domain_ids = users
+    
     @api.constrains("allowed_next_stage_ids")
     def _check_same_stage(self):
         for stage in self:
