@@ -16,23 +16,28 @@
 
             <filter name="filter_no_invoice"
                     string="No Invoice"
-                    domain="[('payment_status','=','no_invoice')]"/>
+                    domain="[('payment_status','=','no_invoice')]"
+                    groups="account.group_account_manager"/>
 
             <filter name="filter_not_paid"
                     string="Not Paid"
-                    domain="[('payment_status','=','not_paid')]"/>
+                    domain="[('payment_status','=','not_paid')]"
+                    groups="account.group_account_manager"/>
 
             <filter name="filter_partial_paid"
                     string="Partial Paid"
-                    domain="[('payment_status','=','partial_paid')]"/>
+                    domain="[('payment_status','=','partial_paid')]"
+                    groups="account.group_account_manager"/>
 
             <filter name="filter_overdue"
                     string="Overdue"
-                    domain="[('payment_status','=','overdue')]"/>
+                    domain="[('payment_status','=','overdue')]"
+                    groups="account.group_account_manager"/>
 
             <filter name="filter_fully_paid"
                     string="Fully Paid"
-                    domain="[('payment_status','=','fully_paid')]"/>
+                    domain="[('payment_status','=','fully_paid')]"
+                    groups="account.group_account_manager"/>
 
         </xpath>
 

@@ -22,7 +22,7 @@
                 <t t-foreach="state.statuses" t-as="status" t-key="status.id">
                     <t t-if="dividerStatusId === status.id and !status_first">
                         <li class="dropdown-divider border-top my-1" style="border-color: rgba(0, 0, 0, 0.08) !important;"/>
-                    </t>
+                            </t>
                     <li>
                         <a href="#" class="dropdown-item d-flex align-items-center py-2 px-3" t-att-data-id="status.id" t-on-click.prevent="selectStatus">
                             <t t-if="state.currentStatus and state.currentStatus.id == status.id">

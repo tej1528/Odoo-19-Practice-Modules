@@ -1,49 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
 
-    <!-- ===========================================================
-         Sale Order Form View
-    ============================================================ -->
+<odoo>
+    <!-- =========================================================
+         Sale Order Form
+    ========================================================== -->
     <record id="view_sale_order_form_payment_status" model="ir.ui.view">
         <field name="name">sale.order.form.payment.status</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
-            <xpath expr="//field[@name='payment_term_id']" position="after">
+            <!-- Payment Status below Sale Order statusbar -->
+            <xpath expr="//sheet" position="inside">
+                <!-- No Invoice -->
+                <widget name="web_ribbon"
+                        title="No Invoice"
+                        bg_color="text-bg-secondary"
+                        invisible="state not in ('sale', 'done') or payment_status != 'no_invoice'"/>
 
-                <field name="payment_status"
-                       widget="badge"
-                       readonly="1"/>
+                <!-- Not Paid -->
+                <widget name="web_ribbon"
+                        title="Not Paid"
+                        bg_color="text-bg-warning"
+                        invisible="state not in ('sale', 'done') or payment_status != 'not_paid'"/>
 
-                <field name="amount_due"
-                       widget="monetary"
-                       options="{'currency_field': 'currency_id'}"
-                       readonly="1"/>
+                <!-- Partial Paid -->
+                <widget name="web_ribbon"
+                        title="Partial Paid"
+                        bg_color="text-bg-info"
+                        invisible="state not in ('sale', 'done') or payment_status != 'partial_paid'"/>
+
+                <!-- Overdue -->
+                <widget name="web_ribbon"
+                        title="Overdue"
+                        bg_color="text-bg-danger"
+                        invisible="state not in ('sale', 'done') or payment_status != 'overdue'"/>
+
+                <!-- Fully Paid -->
+                <widget name="web_ribbon"
+                        title="Fully Paid"
+                        bg_color="text-bg-success"
+                        invisible="state not in ('sale', 'done') or payment_status != 'fully_paid'"/>
 
             </xpath>
 
+            <!-- Payment Information -->
+             <xpath expr="//notebook" position="inside">
+                <page string="Payment Info"
+                      name="payment_info"
+                      groups="account.group_account_manager"
+                      invisible="state not in ('sale', 'done')">
+                    <group>
+                        <group string="Payment Information">
+                            <field name="payment_status"
+                                   widget="badge"
+                                   readonly="1"
+                                   decoration-muted="payment_status == 'no_invoice'"
+                                   decoration-warning="payment_status == 'not_paid'"
+                                   decoration-info="payment_status == 'partial_paid'"
+                                   decoration-danger="payment_status == 'overdue'"
+                                   decoration-success="payment_status == 'fully_paid'"/>
+
+                            <field name="invoiced_amount"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+
+                            <field name="paid_amount"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+
+                            <field name="amount_due"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Register Payment Button -->
+            <xpath expr="//header" position="inside">
+                <field name="show_register_payment"
+                       invisible="1"
+                       groups="account.group_account_manager"/>
+
+                <button name="action_register_payment"
+                        string="Register Payment"
+                        type="object"
+                        class="btn-primary"
+                        groups="account.group_account_manager"
+                        invisible="not show_register_payment"/>
+            </xpath>
         </field>
     </record>
 
-    <!-- ===========================================================
-         Sale Order List View
-    ============================================================ -->
     <record id="view_sale_order_list_payment_status" model="ir.ui.view">
-        <field name="name">sale.order.list.payment.status</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
-        <field name="arch" type="xml">
-
-            <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="payment_status"
-                       optional="show"/>
-                <field name="amount_due"
-                       optional="show"/>
-
-            </xpath>
-
-        </field>
-    </record>
-
+    <field name="name">sale.order.list.payment.status</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.sale_order_list_upload"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='amount_total']" position="after">
+            <!-- Payment Status -->
+            <field name="payment_status"
+                   widget="badge"
+                   optional="show"
+                   groups="account.group_account_manager"
+                   decoration-muted="payment_status == 'no_invoice'"
+                   decoration-warning="payment_status == 'not_paid'"
+                   decoration-info="payment_status == 'partial_paid'"
+                   decoration-danger="payment_status == 'overdue'"
+                   decoration-success="payment_status == 'fully_paid'"/>
+            <!-- Amount Due -->
+            <field name="amount_due"
+                   widget="monetary"
+                   optional="show"
+                   groups="account.group_account_manager"/>
+        </xpath>
+    </field>
+</record>
 </odoo>
