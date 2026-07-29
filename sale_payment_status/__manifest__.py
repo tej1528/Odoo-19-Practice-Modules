@@ -14,5 +14,10 @@
         "views/sale_order_views.xml",
         "views/sale_order_search_views.xml",
     ],
+    'assets': {
+    'web.assets_backend': [
+            'sale_payment_status/static/src/js/payment_notification.js',
+        ],
+    },
     "installable": True,
 }
