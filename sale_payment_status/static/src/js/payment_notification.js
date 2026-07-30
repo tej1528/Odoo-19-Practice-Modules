@@ -1,8 +1,5 @@
 /** @odoo-module **/
-
 import { registry } from "@web/core/registry";
-
-
 
 export const PaymentNotificationService = {
     dependencies: ["bus_service", "notification", "action"],
@@ -17,7 +14,7 @@ export const PaymentNotificationService = {
 
             // Notification Toast Show
             const closeNotification = notification.add(
-                `Payment of ₹${payload.amount} has been registered for ${payload.sale_order} by ${payload.registered_by}.`,
+                `Payment of ₹${payload.amount} has been registered for ${payload.invoice_name || payload.sale_order} by ${payload.registered_by}.`,
                 {
                     title: "Payment Registered",
                     type: "success",

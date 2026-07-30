@@ -149,43 +149,42 @@ class SaleOrder(models.Model):
             },
         }
 
-    def _send_payment_notification(self, amount, invoices):
-        group = self.env.ref("account.group_account_manager")
+    # def _send_payment_notification(self, amount, invoices):
+    #     group = self.env.ref("account.group_account_manager")
 
-        users = group.user_ids.filtered(
-            lambda u: u.active
-            and u.partner_id
-            and u != self.env.user
-        )
+    #     users = group.user_ids.filtered(
+    #         lambda u: u.active
+    #         and u.partner_id
+    #         and u != self.env.user
+    #     )
 
-        if len(invoices) == 1:
-            action = {
-                "type": "ir.actions.act_window",
-                "res_model": "account.move",
-                "res_id": invoices.id,
-                "views": [(False, "form")],
-                "target": "current",
-            }
-        else:
-            action = {
-                "type": "ir.actions.act_window",
-                "name": "Invoices",
-                "res_model": "account.move",
-                "views": [(False, "list"), (False, "form")],
-                "domain": [("id", "in", invoices.ids)],
-                "target": "current",
-            }
+    #     if len(invoices) == 1:
+    #         action = {
+    #             "type": "ir.actions.act_window",
+    #             "res_model": "account.move",
+    #             "res_id": invoices.id,
+    #             "views": [(False, "form")],
+    #             "target": "current",
+    #         }
+    #     else:
+    #         action = {
+    #             "type": "ir.actions.act_window",
+    #             "name": "Invoices",
+    #             "res_model": "account.move",
+    #             "views": [(False, "list"), (False, "form")],
+    #             "domain": [("id", "in", invoices.ids)],
+    #             "target": "current",
+    #         }
 
-
-        for order in self:
-            for user in users:
-                self.env["bus.bus"]._sendone(
-                    user.partner_id,
-                    "payment_registered",
-                    {
-                        "sale_order": order.name,
-                        "registered_by": self.env.user.name,
-                        "amount": amount,
-                        "action": action,
-                    },
-                )
+    #     for order in self:
+    #         for user in users:
+    #             self.env["bus.bus"]._sendone(
+    #                 user.partner_id,
+    #                 "payment_registered",
+    #                 {
+    #                     "sale_order": order.name,
+    #                     "registered_by": self.env.user.name,
+    #                     "amount": amount,
+    #                     "action": action,
+    #                 },
+    #             )
